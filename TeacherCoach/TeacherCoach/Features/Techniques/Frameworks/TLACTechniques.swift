@@ -1,222 +1,226 @@
 import Foundation
 
-/// TLAC (Teach Like A Champion) technique definitions
-/// Based on Doug Lemov's research on high-performing teachers
+/// TLAC (Teach Like A Champion 3.0) technique definitions
+/// Curated for transcript-detectable techniques — techniques whose mechanics
+/// live in verbal patterns, conversational turns, and word choice.
+/// Based on Doug Lemov's 63 techniques, filtered to the 10 most reliably
+/// identifiable from teacher-student dialogue.
 struct TLACTechniques {
     static func createTechniques() -> [Technique] {
         [
-            // Questioning
+            // Dialogue Structure — identifiable by sequence and pattern of conversational turns
+
             Technique(
-                id: "wait-time",
-                name: "Wait Time",
-                category: .questioning,
-                description: "Providing 3-5 seconds of think time after asking a question before calling on students.",
+                id: "no-opt-out",
+                name: "No Opt Out",
+                category: .engagement,
+                description: "Ensuring that a sequence beginning with a student unable to answer ends with that same student saying the correct answer. The teacher routes the question to a peer or provides a cue, then returns to the original student — the 'conversational boomerang.'",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 1,
                 lookFors: [
-                    "Pause of 3+ seconds after asking question",
-                    "Teacher not answering own questions",
-                    "Silence allowed without rushing",
-                    "Students given time to formulate thoughts"
+                    "Student says 'I don't know' or gives no answer",
+                    "Teacher redirects to another student or provides a cue",
+                    "Teacher returns to the original student for the answer",
+                    "Original student successfully states the correct answer"
                 ],
                 exemplarPhrases: [
-                    "Take a moment to think about that",
-                    "I'll give you some time to consider",
-                    "Let's pause and think",
-                    "I want everyone to have time to think"
+                    "Who can help Marcus out?",
+                    "OK Marcus, now you tell me — what's the answer?",
+                    "Let's come back to you. What did Jasmine say?",
+                    "I'm going to come back to you in a moment"
                 ]
             ),
             Technique(
-                id: "higher-order-questions",
-                name: "Higher-Order Questions",
-                category: .questioning,
-                description: "Asking questions that require analysis, synthesis, or evaluation rather than simple recall.",
+                id: "cold-call",
+                name: "Cold Call",
+                category: .engagement,
+                description: "Calling on students regardless of whether they've raised their hands, framed as voice equity — telling every student their thinking matters. The signature is question-first, name-second, with a deliberate pause between.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 2,
                 lookFors: [
-                    "Questions starting with 'why', 'how', 'what if'",
-                    "Requests for comparison or contrast",
-                    "Asking for predictions or hypotheses",
-                    "Questions requiring justification or evidence"
+                    "Question posed before student is named",
+                    "Deliberate pause between question and name",
+                    "Absence of 'Who can tell me...?' or 'Raise your hand if...'",
+                    "Multiple different students called across consecutive questions"
                 ],
                 exemplarPhrases: [
-                    "Why do you think that happened?",
-                    "How would you solve this differently?",
-                    "What evidence supports your answer?",
-                    "What would happen if we changed...?",
-                    "How does this compare to...?"
+                    "What is the setting of this story? ... Marcus?",
+                    "How would you solve step two? ... Jasmine?",
+                    "I'm going to Cold Call on this one",
+                    "What's the evidence for that claim? ... Table three, Carlton?"
                 ]
             ),
-
-            // Engagement
             Technique(
-                id: "cold-calling",
-                name: "Cold Calling",
-                category: .engagement,
-                description: "Calling on students regardless of whether they raised their hand, in a supportive and predictable manner.",
+                id: "stretch-it",
+                name: "Stretch It",
+                category: .questioning,
+                description: "When a student answers correctly, the teacher doesn't simply praise and move on — they immediately ask a deeper follow-up. The reward for being right is a harder question. Look for escalating cognitive demand across a question sequence.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 3,
                 lookFors: [
-                    "Random or strategic student selection",
-                    "Questions posed before naming student",
-                    "All students appear engaged/ready to respond",
-                    "Positive, low-stakes atmosphere maintained"
+                    "Correct answer followed by immediate extension question",
+                    "Absence of terminal praise ('Great, let's move on')",
+                    "Successive deepening questions to the same student",
+                    "Escalating cognitive demand across the sequence"
                 ],
                 exemplarPhrases: [
-                    "Let's see... Marcus, what do you think?",
-                    "I'm going to call on someone to share",
-                    "Everyone should be ready to answer",
-                    "[Student name], can you add to that?"
+                    "Good — now tell me why",
+                    "Correct — can you say more?",
+                    "That's right. Is there a different approach?",
+                    "Where in the text do you see evidence for that?",
+                    "What if I changed this variable — would your answer change?"
                 ]
             ),
             Technique(
-                id: "think-pair-share",
-                name: "Think-Pair-Share",
+                id: "call-and-response",
+                name: "Call and Response",
                 category: .engagement,
-                description: "Structured collaborative learning where students think individually, discuss with a partner, then share with the class.",
+                description: "Asking the whole class to answer in unison, triggered by specific verbal cues. Includes countdown cues, fill-in-the-blank prompts, and the reinforcement variant where one student's answer is repeated by the whole class.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 4,
                 lookFors: [
-                    "Clear signal for think time",
-                    "Partner discussion observed",
-                    "Whole-class sharing follows",
-                    "Structured timing for each phase"
+                    "Group-addressing language before a choral response",
+                    "Countdown cues or fill-in-the-blank prompts",
+                    "Choral student responses in unison",
+                    "Reinforcement pattern: one student answers, class repeats"
                 ],
                 exemplarPhrases: [
-                    "First, think on your own for 30 seconds",
-                    "Now turn to your partner and discuss",
-                    "Let's hear what you and your partner talked about",
-                    "Share your thinking with your elbow partner"
+                    "Class, what is this called?",
+                    "On three — one, two, three —",
+                    "A solid always keeps its... [Students: Shape!]",
+                    "Everyone, what did Marcus just say?"
                 ]
             ),
 
-            // Feedback
+            // Teacher Word Choice — identifiable by specific language at decision points
+
             Technique(
-                id: "specific-praise",
-                name: "Specific Praise",
+                id: "format-matters",
+                name: "Format Matters",
                 category: .feedback,
-                description: "Providing precise, behavior-focused positive feedback that identifies exactly what the student did well.",
+                description: "Holding students accountable not just for what they say but how they say it — complete sentences, correct grammar, technical vocabulary, audible volume. Uses ultra-short correction prompts and micro-correction sequences.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 5,
                 lookFors: [
-                    "Names specific action or behavior",
-                    "Connects praise to learning objective",
-                    "Genuine and proportionate",
-                    "Focuses on effort or strategy, not ability"
+                    "Brief correction prompts: 'Complete sentence,' 'Voice,' 'Use the technical term'",
+                    "Three-turn micro-sequence: fragment → correction cue → improved restatement",
+                    "Rollback technique: repeating the error back as a question",
+                    "Sentence starters or partial prompts provided"
                 ],
                 exemplarPhrases: [
-                    "I noticed you used evidence from the text",
-                    "Your strategy of breaking it into steps worked well",
-                    "That's a clear topic sentence that sets up your argument",
-                    "You showed persistence when you tried a different approach"
+                    "Complete sentence.",
+                    "Voice.",
+                    "Use the technical term.",
+                    "We was walking?",
+                    "Tell me in a complete sentence...",
+                    "The setting is..."
                 ]
             ),
-            Technique(
-                id: "check-for-understanding",
-                name: "Check for Understanding",
-                category: .feedback,
-                description: "Systematically gathering evidence of student comprehension during instruction.",
-                frameworkId: TeachingFramework.tlac.rawValue,
-                sortOrder: 6,
-                lookFors: [
-                    "Frequent pauses to check learning",
-                    "Multiple students sampled",
-                    "Variety of checking methods used",
-                    "Instruction adjusted based on responses"
-                ],
-                exemplarPhrases: [
-                    "Show me thumbs up if you've got it",
-                    "Quick write: What's the main idea so far?",
-                    "Turn and tell your partner the steps",
-                    "On your whiteboard, show me...",
-                    "Before we move on, who can summarize?"
-                ]
-            ),
-
-            // Management
             Technique(
                 id: "positive-framing",
                 name: "Positive Framing",
                 category: .management,
-                description: "Guiding behavior through positive narration of expectations and highlighting desired behaviors.",
+                description: "Delivering corrections, redirections, and information in language that communicates belief in students. Six verbal habits: Assume the Best, Live in the Now, Narrate the Positive, Plausible Anonymity, Challenge, and Talk Expectations.",
+                frameworkId: TeachingFramework.tlac.rawValue,
+                sortOrder: 6,
+                lookFors: [
+                    "Softening attributions: 'forgot,' 'seem to have,' 'I must not have been clear'",
+                    "Forward-looking directives instead of backward-looking reprimands",
+                    "Narrating compliant behavior by name: 'I see row two ready'",
+                    "Corrections without naming names (plausible anonymity)",
+                    "Absence of accusatory language, past-tense dwelling, or punitive threats"
+                ],
+                exemplarPhrases: [
+                    "Show me your pencil moving",
+                    "I see row two ready. Table five is there. Just waiting on a few more",
+                    "Check yourself to make sure you've followed the directions",
+                    "Let's see if we can beat our record",
+                    "Write like the college students you're becoming"
+                ]
+            ),
+            Technique(
+                id: "right-is-right",
+                name: "Right is Right",
+                category: .questioning,
+                description: "Not accepting partially correct answers as fully correct — refusing to 'round up' student responses. The teacher acknowledges partial correctness but withholds validation until the answer is genuinely complete and accurate.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 7,
                 lookFors: [
-                    "Describes what students should do, not what they shouldn't",
-                    "Highlights students meeting expectations",
-                    "Redirects with positive language",
-                    "Assumes best intentions"
+                    "Refusal to say 'correct' until the answer genuinely is",
+                    "Redirecting off-topic answers back to the original question",
+                    "Pushing for domain-specific technical vocabulary",
+                    "Absence of premature 'Right!' or 'Good!' on incomplete answers"
                 ],
                 exemplarPhrases: [
-                    "I see table 3 is ready to begin",
-                    "Thank you for tracking the speaker",
-                    "When you're ready, your eyes will be on me",
-                    "I'm looking for voices off and materials out"
+                    "You're on the right track, but I want the complete answer",
+                    "Almost — what's missing?",
+                    "That's true, but it doesn't answer my question",
+                    "That's interesting, but my question was...",
+                    "What's the mathematical word for that?"
                 ]
             ),
-
-            // Instruction
             Technique(
-                id: "modeling-think-aloud",
-                name: "Modeling/Think Aloud",
+                id: "without-apology",
+                name: "Without Apology",
                 category: .instruction,
-                description: "Demonstrating thinking processes explicitly by verbalizing thoughts while solving problems or completing tasks.",
+                description: "Never apologizing for worthy content. Avoiding hedging, apologetic, or blame-shifting language, and instead framing content as valuable, challenging, and exciting. Identifiable by both presence of positive framing and absence of undermining language.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 8,
                 lookFors: [
-                    "Teacher verbalizes internal thinking",
-                    "Shows struggle and recovery",
-                    "Makes expert strategies visible",
-                    "Connects steps to concepts"
+                    "Absence of 'I know this is boring/dry' hedging language",
+                    "Absence of blame-shifting to external mandates",
+                    "Content framed as valuable, challenging, or exciting",
+                    "No lowering of expectations for certain students"
                 ],
                 exemplarPhrases: [
-                    "Watch me as I work through this...",
-                    "I'm noticing that... so I'm going to...",
-                    "When I see this, I ask myself...",
-                    "Let me show you what I'm thinking",
-                    "Here's where I might get stuck, so I..."
+                    "This is one of the most powerful ideas you'll encounter this year",
+                    "Scientists have spent decades wrestling with this very question",
+                    "This is challenging work — and that's exactly why it matters",
+                    "You're ready for this level of complexity"
                 ]
             ),
             Technique(
-                id: "scaffolded-practice",
-                name: "Scaffolded Practice",
-                category: .instruction,
-                description: "Gradually releasing responsibility from teacher to students through structured practice phases.",
+                id: "precise-praise",
+                name: "Precise Praise",
+                category: .feedback,
+                description: "Praise that is specific, action-focused, and differentiated from routine acknowledgment. Reinforces actions rather than traits, and conserves superlatives for genuinely exceptional moments. The ratio of precise-to-generic praise is a clean transcript metric.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 9,
                 lookFors: [
-                    "Clear 'I do, we do, you do' structure",
-                    "Decreasing support over time",
-                    "Checks before releasing to independent work",
-                    "Returns to guided practice when needed"
+                    "Praise names the specific behavior or action",
+                    "Reinforces actions rather than traits ('You found evidence' vs. 'You're smart')",
+                    "Differentiated from routine acknowledgment ('Thank you' for compliance)",
+                    "Superlatives reserved for genuinely exceptional moments"
                 ],
                 exemplarPhrases: [
-                    "Let me show you first, then we'll try together",
-                    "Now let's do one as a class",
-                    "Try the next one with your partner",
-                    "When you're confident, start the independent practice"
+                    "I noticed you went back to the text three times to support your argument — that's strong analytical reading",
+                    "You found three pieces of evidence before drawing a conclusion",
+                    "The way you revised your thesis after peer feedback shows real growth",
+                    "You used the domain-specific vocabulary we practiced — that precision matters"
                 ]
             ),
 
-            // Differentiation
+            // Student Language — identifiable through student speech patterns
+
             Technique(
-                id: "strategic-grouping",
-                name: "Strategic Grouping",
-                category: .differentiation,
-                description: "Intentionally organizing students into groups based on learning needs, readiness, or interests.",
+                id: "habits-of-discussion",
+                name: "Habits of Discussion",
+                category: .engagement,
+                description: "Normalizing conversational moves that make peer discussion coherent and connected. Uniquely identifiable through student speech patterns — peer references, building language, and structured sentence starters — measuring technique impact rather than just teacher intent.",
                 frameworkId: TeachingFramework.tlac.rawValue,
                 sortOrder: 10,
                 lookFors: [
-                    "Different groups working on varied tasks/levels",
-                    "Flexible grouping changes over time",
-                    "Teacher circulates strategically to groups",
-                    "Materials/scaffolds vary by group"
+                    "Students referencing peers by name in their responses",
+                    "Building language: 'I'd like to build on what Marcus said...'",
+                    "Agreement/disagreement with reasoning: 'I agree because...'",
+                    "Teacher scaffolding: 'Who can respond to what Sara just said?'"
                 ],
                 exemplarPhrases: [
-                    "Today you'll work with your blue group",
-                    "This group will have sentence starters to help",
-                    "Your extension activity is...",
-                    "I'll meet with this small group while you..."
+                    "I'd like to build on what Marcus said...",
+                    "I agree with Jasmine because...",
+                    "Something that argument doesn't account for is...",
+                    "Who can respond to what Sara just said?",
+                    "Add on, Carlton"
                 ]
             )
         ]
