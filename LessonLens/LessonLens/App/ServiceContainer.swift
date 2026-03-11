@@ -57,7 +57,7 @@ struct AppConfiguration: Codable {
     static func load() -> AppConfiguration {
         // Default configuration - can be overridden by config file
         AppConfiguration(
-            backendURL: URL(string: "https://teacher-coach-api-885969573209.us-west1.run.app")!,
+            backendURL: URL(string: "https://lessonlens-api-885969573209.us-west1.run.app")!,
             googleClientID: "885969573209-spelnfqo14pamiqtdc6st6c35auoe5ub.apps.googleusercontent.com",
             allowedDomain: "psd401.net",
             minRecordingDuration: 5 * 60,  // 5 minutes

@@ -28,15 +28,13 @@
 		0019 /* AnalysisFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1019 /* AnalysisFeedbackView.swift */; };
 		0020 /* TechniqueService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1020 /* TechniqueService.swift */; };
 		0021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1021 /* SettingsView.swift */; };
+		0022 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3001 /* WhisperKit */; };
+		0024 /* Models in Resources */ = {isa = PBXBuildFile; fileRef = 29C274B02F1C7E6D00B3F6F3 /* Models */; };
 		0025 /* AudioImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1024 /* AudioImportService.swift */; };
 		0026 /* TeachingFramework.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1025 /* TeachingFramework.swift */; };
 		0027 /* FrameworkRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1026 /* FrameworkRegistry.swift */; };
 		0028 /* TLACTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1027 /* TLACTechniques.swift */; };
 		0029 /* DanielsonTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1028 /* DanielsonTechniques.swift */; };
-		0037 /* RosenshineTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1036 /* RosenshineTechniques.swift */; };
-		0038 /* AVIDTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1037 /* AVIDTechniques.swift */; };
-		0039 /* NationalBoardTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1038 /* NationalBoardTechniques.swift */; };
-		0045 /* PSDEssentialsTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1045 /* PSDEssentialsTechniques.swift */; };
 		0030 /* FrameworkSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1029 /* FrameworkSelectionView.swift */; };
 		0031 /* TechniqueChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1030 /* TechniqueChecklistView.swift */; };
 		0032 /* AnalysisConfigurationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1031 /* AnalysisConfigurationSheet.swift */; };
@@ -44,21 +42,23 @@
 		0034 /* ExportConfigurationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1033 /* ExportConfigurationSheet.swift */; };
 		0035 /* ExportableAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1034 /* ExportableAnalysisView.swift */; };
 		0036 /* ExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1035 /* ExportService.swift */; };
-		8166 /* PDFLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6351 /* PDFLayout.swift */; };
-		6333 /* PDFContentBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6745 /* PDFContentBlock.swift */; };
-		8105 /* PDFBlockViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7815 /* PDFBlockViews.swift */; };
-		6024 /* PDFBlockMeasurer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252 /* PDFBlockMeasurer.swift */; };
-		6834 /* PDFPagePacker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8581 /* PDFPagePacker.swift */; };
-		8630 /* PDFPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8657 /* PDFPageView.swift */; };
+		0037 /* RosenshineTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1036 /* RosenshineTechniques.swift */; };
+		0038 /* AVIDTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1037 /* AVIDTechniques.swift */; };
+		0039 /* NationalBoardTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1038 /* NationalBoardTechniques.swift */; };
 		0040 /* VideoImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1040 /* VideoImportService.swift */; };
 		0041 /* VideoAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1041 /* VideoAnalysisService.swift */; };
 		0042 /* AudioExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1042 /* AudioExtractionService.swift */; };
 		0043 /* VideoImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1043 /* VideoImportView.swift */; };
 		0044 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1044 /* VideoPlayerView.swift */; };
+		0045 /* PSDEssentialsTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1045 /* PSDEssentialsTechniques.swift */; };
 		0046 /* PSDColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1046 /* PSDColors.swift */; };
 		0047 /* PSDTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1047 /* PSDTheme.swift */; };
 		0048 /* PSDTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1048 /* PSDTypography.swift */; };
 		0049 /* PSDViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1049 /* PSDViewModifiers.swift */; };
+		0050 /* JosefinSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1050 /* JosefinSans-Bold.ttf */; };
+		0051 /* JosefinSlab-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1051 /* JosefinSlab-Regular.ttf */; };
+		0052 /* JosefinSlab-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1052 /* JosefinSlab-Bold.ttf */; };
+		0053 /* psd-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1053 /* psd-logo.png */; };
 		0054 /* Reflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1054 /* Reflection.swift */; };
 		0055 /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1055 /* ChatSession.swift */; };
 		0056 /* SelfRatingPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1056 /* SelfRatingPicker.swift */; };
@@ -69,14 +69,14 @@
 		0061 /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1061 /* ChatMessageView.swift */; };
 		0062 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1062 /* ChatListView.swift */; };
 		0063 /* GrowthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1063 /* GrowthDashboardView.swift */; };
-		0050 /* JosefinSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1050 /* JosefinSans-Bold.ttf */; };
-		0051 /* JosefinSlab-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1051 /* JosefinSlab-Regular.ttf */; };
-		0052 /* JosefinSlab-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1052 /* JosefinSlab-Bold.ttf */; };
-		0053 /* psd-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1053 /* psd-logo.png */; };
 		0064 /* lessonlens-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1064 /* lessonlens-logo.png */; };
 		0065 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1065 /* Assets.xcassets */; };
-		0022 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3001 /* WhisperKit */; };
-		0024 /* Models in Resources */ = {isa = PBXBuildFile; fileRef = 29C274B02F1C7E6D00B3F6F3 /* Models */; };
+		6024 /* PDFBlockMeasurer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9252 /* PDFBlockMeasurer.swift */; };
+		6333 /* PDFContentBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6745 /* PDFContentBlock.swift */; };
+		6834 /* PDFPagePacker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8581 /* PDFPagePacker.swift */; };
+		8105 /* PDFBlockViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7815 /* PDFBlockViews.swift */; };
+		8166 /* PDFLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6351 /* PDFLayout.swift */; };
+		8630 /* PDFPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8657 /* PDFPageView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -101,17 +101,13 @@
 		1019 /* AnalysisFeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisFeedbackView.swift; sourceTree = "<group>"; };
 		1020 /* TechniqueService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechniqueService.swift; sourceTree = "<group>"; };
 		1021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		1024 /* AudioImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioImportService.swift; sourceTree = "<group>"; };
 		1022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1023 /* LessonLens.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LessonLens.entitlements; sourceTree = "<group>"; };
+		1024 /* AudioImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioImportService.swift; sourceTree = "<group>"; };
 		1025 /* TeachingFramework.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachingFramework.swift; sourceTree = "<group>"; };
 		1026 /* FrameworkRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameworkRegistry.swift; sourceTree = "<group>"; };
 		1027 /* TLACTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLACTechniques.swift; sourceTree = "<group>"; };
 		1028 /* DanielsonTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DanielsonTechniques.swift; sourceTree = "<group>"; };
-		1036 /* RosenshineTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosenshineTechniques.swift; sourceTree = "<group>"; };
-		1037 /* AVIDTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVIDTechniques.swift; sourceTree = "<group>"; };
-		1038 /* NationalBoardTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NationalBoardTechniques.swift; sourceTree = "<group>"; };
-		1045 /* PSDEssentialsTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSDEssentialsTechniques.swift; sourceTree = "<group>"; };
 		1029 /* FrameworkSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameworkSelectionView.swift; sourceTree = "<group>"; };
 		1030 /* TechniqueChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechniqueChecklistView.swift; sourceTree = "<group>"; };
 		1031 /* AnalysisConfigurationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisConfigurationSheet.swift; sourceTree = "<group>"; };
@@ -119,17 +115,15 @@
 		1033 /* ExportConfigurationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportConfigurationSheet.swift; sourceTree = "<group>"; };
 		1034 /* ExportableAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportableAnalysisView.swift; sourceTree = "<group>"; };
 		1035 /* ExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportService.swift; sourceTree = "<group>"; };
-		6351 /* PDFLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFLayout.swift; sourceTree = "<group>"; };
-		6745 /* PDFContentBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFContentBlock.swift; sourceTree = "<group>"; };
-		7815 /* PDFBlockViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockViews.swift; sourceTree = "<group>"; };
-		9252 /* PDFBlockMeasurer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockMeasurer.swift; sourceTree = "<group>"; };
-		8581 /* PDFPagePacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPagePacker.swift; sourceTree = "<group>"; };
-		8657 /* PDFPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPageView.swift; sourceTree = "<group>"; };
+		1036 /* RosenshineTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosenshineTechniques.swift; sourceTree = "<group>"; };
+		1037 /* AVIDTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVIDTechniques.swift; sourceTree = "<group>"; };
+		1038 /* NationalBoardTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NationalBoardTechniques.swift; sourceTree = "<group>"; };
 		1040 /* VideoImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoImportService.swift; sourceTree = "<group>"; };
 		1041 /* VideoAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAnalysisService.swift; sourceTree = "<group>"; };
 		1042 /* AudioExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractionService.swift; sourceTree = "<group>"; };
 		1043 /* VideoImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoImportView.swift; sourceTree = "<group>"; };
 		1044 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
+		1045 /* PSDEssentialsTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSDEssentialsTechniques.swift; sourceTree = "<group>"; };
 		1046 /* PSDColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSDColors.swift; sourceTree = "<group>"; };
 		1047 /* PSDTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSDTheme.swift; sourceTree = "<group>"; };
 		1048 /* PSDTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSDTypography.swift; sourceTree = "<group>"; };
@@ -138,8 +132,6 @@
 		1051 /* JosefinSlab-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JosefinSlab-Regular.ttf"; sourceTree = "<group>"; };
 		1052 /* JosefinSlab-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JosefinSlab-Bold.ttf"; sourceTree = "<group>"; };
 		1053 /* psd-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "psd-logo.png"; sourceTree = "<group>"; };
-		1064 /* lessonlens-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "lessonlens-logo.png"; sourceTree = "<group>"; };
-		1065 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1054 /* Reflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflection.swift; sourceTree = "<group>"; };
 		1055 /* ChatSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSession.swift; sourceTree = "<group>"; };
 		1056 /* SelfRatingPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfRatingPicker.swift; sourceTree = "<group>"; };
@@ -150,7 +142,15 @@
 		1061 /* ChatMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
 		1062 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
 		1063 /* GrowthDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthDashboardView.swift; sourceTree = "<group>"; };
+		1064 /* lessonlens-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "lessonlens-logo.png"; sourceTree = "<group>"; };
+		1065 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2001 /* LessonLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LessonLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6351 /* PDFLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFLayout.swift; sourceTree = "<group>"; };
+		6745 /* PDFContentBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFContentBlock.swift; sourceTree = "<group>"; };
+		7815 /* PDFBlockViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockViews.swift; sourceTree = "<group>"; };
+		8581 /* PDFPagePacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPagePacker.swift; sourceTree = "<group>"; };
+		8657 /* PDFPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPageView.swift; sourceTree = "<group>"; };
+		9252 /* PDFBlockMeasurer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockMeasurer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -302,28 +302,6 @@
 			path = Techniques;
 			sourceTree = "<group>";
 		};
-		5017 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1027 /* TLACTechniques.swift */,
-				1028 /* DanielsonTechniques.swift */,
-				1036 /* RosenshineTechniques.swift */,
-				1037 /* AVIDTechniques.swift */,
-				1038 /* NationalBoardTechniques.swift */,
-				1045 /* PSDEssentialsTechniques.swift */,
-			);
-			path = Frameworks;
-			sourceTree = "<group>";
-		};
-		5018 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				1029 /* FrameworkSelectionView.swift */,
-				1030 /* TechniqueChecklistView.swift */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
 		5013 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -332,32 +310,6 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
-		5019 /* Export */ = {
-			isa = PBXGroup;
-			children = (
-				1032 /* ExportConfiguration.swift */,
-				1033 /* ExportConfigurationSheet.swift */,
-				1034 /* ExportableAnalysisView.swift */,
-				1035 /* ExportService.swift */,
-				7472 /* PDF */,
-			);
-			path = Export;
-			sourceTree = "<group>";
-		};
-		7472 /* PDF */ = {
-			isa = PBXGroup;
-			children = (
-				6351 /* PDFLayout.swift */,
-				6745 /* PDFContentBlock.swift */,
-				7815 /* PDFBlockViews.swift */,
-				9252 /* PDFBlockMeasurer.swift */,
-				8581 /* PDFPagePacker.swift */,
-				8657 /* PDFPageView.swift */,
-			);
-			path = PDF;
-			sourceTree = "<group>";
-		};
-
 		5014 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -388,6 +340,40 @@
 				1010 /* KeychainService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		5017 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1027 /* TLACTechniques.swift */,
+				1028 /* DanielsonTechniques.swift */,
+				1036 /* RosenshineTechniques.swift */,
+				1037 /* AVIDTechniques.swift */,
+				1038 /* NationalBoardTechniques.swift */,
+				1045 /* PSDEssentialsTechniques.swift */,
+			);
+			path = Frameworks;
+			sourceTree = "<group>";
+		};
+		5018 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1029 /* FrameworkSelectionView.swift */,
+				1030 /* TechniqueChecklistView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5019 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				1032 /* ExportConfiguration.swift */,
+				1033 /* ExportConfigurationSheet.swift */,
+				1034 /* ExportableAnalysisView.swift */,
+				1035 /* ExportService.swift */,
+				7472 /* PDF */,
+			);
+			path = Export;
 			sourceTree = "<group>";
 		};
 		5020 /* Theme */ = {
@@ -438,6 +424,19 @@
 				1063 /* GrowthDashboardView.swift */,
 			);
 			path = Growth;
+			sourceTree = "<group>";
+		};
+		7472 /* PDF */ = {
+			isa = PBXGroup;
+			children = (
+				6351 /* PDFLayout.swift */,
+				6745 /* PDFContentBlock.swift */,
+				7815 /* PDFBlockViews.swift */,
+				9252 /* PDFBlockMeasurer.swift */,
+				8581 /* PDFPagePacker.swift */,
+				8657 /* PDFPageView.swift */,
+			);
+			path = PDF;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
