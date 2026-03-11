@@ -17,7 +17,7 @@ Native macOS app for Peninsula SD teachers to record teaching sessions, receive 
 - **Multiple Frameworks** - Six research-based teaching evaluation frameworks
 - **Star Ratings** - Optional 1-5 star ratings with visual legend
 - **PDF & Markdown Export** - Export analysis reports with customizable content, including self-reflection data
-- **Domain-Restricted Auth** - Google SSO limited to @psd401.net accounts
+- **Domain-Restricted Auth** - Google OAuth (ASWebAuthenticationSession) limited to @psd401.net accounts
 
 ## Architecture
 
@@ -60,11 +60,11 @@ Native macOS app for Peninsula SD teachers to record teaching sessions, receive 
 
 ```
 lessonlens/
-├── TeacherCoach/                 # macOS App
-│   ├── TeacherCoach/
+├── LessonLens/                   # macOS App
+│   ├── LessonLens/
 │   │   ├── App/                  # Entry point, AppState, ServiceContainer
 │   │   ├── Features/
-│   │   │   ├── Authentication/   # Google SSO, session management
+│   │   │   ├── Authentication/   # Google OAuth (ASWebAuthenticationSession)
 │   │   │   ├── Recording/        # Audio/video recording & import
 │   │   │   ├── Transcription/    # WhisperKit integration
 │   │   │   ├── Analysis/         # Gemini API integration
@@ -78,7 +78,7 @@ lessonlens/
 │   │       ├── Views/            # Shared UI components
 │   │       ├── Theme/            # PSD branding (colors, typography, modifiers)
 │   │       └── Services/         # Utility services
-│   └── TeacherCoach.xcodeproj
+│   └── LessonLens.xcodeproj
 ├── CloudRunBackend/              # Primary backend (Google Cloud Run)
 │   └── src/routes/               # API routes (auth, analyze, chat, upload)
 ├── shared/                       # Shared prompt templates (text, video, chat)
@@ -237,23 +237,22 @@ gcloud run deploy lessonlens-api --source .
 ### 3. Build macOS App
 
 ```bash
-cd TeacherCoach
+cd LessonLens
 
 # Open in Xcode
-open TeacherCoach.xcodeproj
+open LessonLens.xcodeproj
 
 # In Xcode:
-# 1. Set your Development Team in Signing & Capabilities
-# 2. Update GOOGLE_CLIENT_ID in environment or config
-# 3. Build and run (⌘R)
+# 1. Build and run (⌘R)
+# 2. Google Client ID is configured in ServiceContainer.swift
 ```
 
 ### 4. Environment Variables
 
 #### macOS App (Xcode Scheme)
 ```
-GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-DEV_BYPASS_AUTH=1  # Optional: bypass OAuth for local testing
+DEV_BYPASS_AUTH=1        # Optional: bypass OAuth for local testing
+DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 ```
 
 #### Backend (Cloud Run)
@@ -302,7 +301,7 @@ DEV_BYPASS_AUTH=1  # Optional: bypass OAuth for local testing
 - **Reflections stored locally** - Self-reflection data stays on device, optionally included in chat context
 - **Chat messages stored locally** - Conversation history persisted in SwiftData
 - **Domain-restricted** - Only @psd401.net accounts can sign in
-- **Secure storage** - Session tokens stored in macOS Keychain
+- **Secure storage** - Session tokens stored in macOS Keychain (sandboxed)
 - **Rate limiting** - Per-user hourly limits prevent abuse (separate limits for analysis, video, and chat)
 
 ## Development
