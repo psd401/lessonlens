@@ -367,4 +367,8 @@ For full multi-district deployment instructions, see [docs/DEPLOYMENT.md](docs/D
 
 ## License
 
-Copyright 2024-2026 Peninsula School District. Internal use only.
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Peninsula School District.
+
+See [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) for attribution of open-source dependencies.
