@@ -2,6 +2,16 @@
 
 Native macOS app for Peninsula SD teachers to record teaching sessions, receive local transcription via WhisperKit, and get AI-powered feedback on specific teaching techniques. Teachers complete a guided self-reflection before viewing AI analysis, then can dig deeper through interactive coaching chat.
 
+## Screenshots
+
+| Home | AI Feedback |
+|:---:|:---:|
+| ![Home](docs/screenshots/home.png) | ![AI Feedback](docs/screenshots/feedback.png) |
+
+| Framework Explorer | How It Works |
+|:---:|:---:|
+| ![Framework Explorer](docs/screenshots/frameworks.png) | ![How It Works](docs/screenshots/how-it-works.png) |
+
 ## Features
 
 - **Live Recording** - Record teaching sessions directly in the app
