@@ -9,7 +9,7 @@ struct FrameworkExplorerView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        HStack(spacing: 0) {
             List(Self.sortedFrameworks, selection: $selectedFramework) { framework in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(framework.shortName)
@@ -22,8 +22,8 @@ struct FrameworkExplorerView: View {
                 .tag(framework)
             }
             .listStyle(.sidebar)
-            .navigationTitle("Frameworks")
-        } detail: {
+            .frame(width: 200)
+
             FrameworkDetailView(framework: selectedFramework)
         }
     }
