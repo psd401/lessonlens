@@ -102,7 +102,44 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
         return currentSession
     }
 
+    /// Returns a valid session, attempting refresh then re-authentication if needed.
+    /// Updates appState on successful recovery so global auth state stays consistent.
+    func getValidSession(updating appState: AppState? = nil) async throws -> SessionToken {
+        // 1. Current session still valid
+        if let session = getCurrentSession() {
+            return session
+        }
+
+        // 2. Access token expired but refresh token may still be valid (30-day lifetime)
+        if let rawSession = getRawSession(), rawSession.refreshToken != nil {
+            do {
+                let session = try await refreshSession(rawSession)
+                appState?.isAuthenticated = true
+                appState?.currentUser = session.user
+                return session
+            } catch {
+                // Refresh failed (refresh token also expired), fall through to sign-in
+            }
+        }
+
+        // 3. Full re-authentication via Google Sign-In
+        let session = try await signIn()
+        appState?.isAuthenticated = true
+        appState?.currentUser = session.user
+        return session
+    }
+
     // MARK: - Private Methods
+
+    /// Loads session from keychain without checking expiry, preserving the refresh token
+    private func getRawSession() -> SessionToken? {
+        guard let data = keychain.retrieve(key: KeychainKeys.sessionToken),
+              let session = try? JSONDecoder().decode(SessionToken.self, from: data) else {
+            return nil
+        }
+        return session
+    }
+
 
     private func performGoogleSignIn() async throws -> String {
         guard !config.googleClientID.isEmpty else {

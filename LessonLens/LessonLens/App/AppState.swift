@@ -41,8 +41,10 @@ final class AppState: ObservableObject {
                 isAuthenticated = true
                 currentUser = session.user
             } else {
-                // Token expired, clear it
-                KeychainService.shared.delete(key: KeychainKeys.sessionToken)
+                // Keep session in keychain — refresh token may still be valid (30-day expiry).
+                // getValidSession() will handle refresh or re-auth when needed.
+                isAuthenticated = false
+                currentUser = nil
             }
         }
     }

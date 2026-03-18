@@ -245,8 +245,7 @@ struct ChatPanelView: View {
     private func sendMessage() {
         let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty,
-              let analysis = recording.analysis,
-              let session = services.authService.getCurrentSession() else { return }
+              let analysis = recording.analysis else { return }
 
         let userMessage = text
         messageText = ""
@@ -268,6 +267,8 @@ struct ChatPanelView: View {
 
         Task {
             do {
+                let session = try await services.authService.getValidSession(updating: appState)
+
                 // Build transcript context
                 let transcriptText: String
                 if let transcript = recording.transcript {
@@ -307,6 +308,8 @@ struct ChatPanelView: View {
                 assistantMessage.session = chatSession
                 try? modelContext.save()
 
+            } catch AuthError.cancelled {
+                // User dismissed sign-in popup, no error to show
             } catch {
                 errorMessage = error.localizedDescription
             }

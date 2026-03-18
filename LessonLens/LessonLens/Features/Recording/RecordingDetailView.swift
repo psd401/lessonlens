@@ -203,16 +203,14 @@ struct RecordingDetailView: View {
     }
 
     private func startAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
-        guard let transcript = recording.transcript,
-              let session = services.authService.getCurrentSession() else {
-            return
-        }
+        guard let transcript = recording.transcript else { return }
 
         isProcessing = true
         recording.status = .analyzing
 
         Task {
             do {
+                let session = try await services.authService.getValidSession(updating: appState)
                 try modelContext.save()
 
                 // Get enabled techniques for the selected framework
@@ -238,6 +236,8 @@ struct RecordingDetailView: View {
                 recording.status = .complete
                 try modelContext.save()
 
+            } catch AuthError.cancelled {
+                recording.status = .transcribed
             } catch {
                 recording.status = .transcribed
                 appState.handleError(.analysis(.apiError(500, error.localizedDescription)))
@@ -274,16 +274,14 @@ struct RecordingDetailView: View {
     }
 
     private func startVideoAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
-        guard let videoURL = recording.absoluteVideoPath,
-              let session = services.authService.getCurrentSession() else {
-            return
-        }
+        guard let videoURL = recording.absoluteVideoPath else { return }
 
         isProcessing = true
         recording.status = .uploading
 
         Task {
             do {
+                let session = try await services.authService.getValidSession(updating: appState)
                 try modelContext.save()
 
                 // Get enabled techniques for the selected framework
@@ -318,6 +316,8 @@ struct RecordingDetailView: View {
                 recording.status = .complete
                 try modelContext.save()
 
+            } catch AuthError.cancelled {
+                recording.status = .recorded
             } catch {
                 recording.status = .recorded
                 appState.handleError(.videoAnalysisError(.apiError(500, error.localizedDescription)))
