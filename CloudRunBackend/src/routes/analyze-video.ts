@@ -210,8 +210,7 @@ async function waitForFileProcessing(
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to check file status: ${response.status} ${errorText}`);
+      throw new Error(`Failed to check file status: ${response.status}`);
     }
 
     const fileStatus = await response.json() as GeminiFileStatusResponse;
@@ -273,8 +272,7 @@ async function callGeminiWithVideo(
   );
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} ${errorText}`);
+    throw new Error(`Gemini API error: ${response.status}`);
   }
 
   return response.json() as Promise<GeminiGenerateResponse>;
@@ -290,6 +288,6 @@ async function deleteGeminiFile(fileName: string, apiKey: string): Promise<void>
   );
 
   if (!response.ok && response.status !== 404) {
-    console.error('Failed to delete Gemini file:', await response.text());
+    console.error('Failed to delete Gemini file:', response.status);
   }
 }

@@ -98,8 +98,7 @@ uploadRoutes.post('/initiate', async (c) => {
     );
 
     if (!startResponse.ok) {
-      const errorText = await startResponse.text();
-      console.error('Gemini upload initiation failed:', startResponse.status, errorText);
+      console.error('Gemini upload initiation failed:', startResponse.status);
       return c.json({
         error: 'Failed to initiate upload'
       }, 502);
@@ -153,7 +152,7 @@ uploadRoutes.post('/status', async (c) => {
     );
 
     if (!response.ok) {
-      console.error('Failed to get file status:', response.status, await response.text());
+      console.error('Failed to get file status:', response.status);
       return c.json({
         error: 'Failed to get file status'
       }, response.status);
@@ -201,7 +200,7 @@ uploadRoutes.delete('/:fileName{.+}', async (c) => {
     );
 
     if (!response.ok && response.status !== 404) {
-      console.error('Failed to delete file:', response.status, await response.text());
+      console.error('Failed to delete file:', response.status);
       return c.json({
         error: 'Failed to delete file'
       }, response.status);

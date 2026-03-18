@@ -115,8 +115,7 @@ chatRoutes.post('/', async (c) => {
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Gemini API error:', response.status);
       return c.json({
         error: 'Chat service error',
         status: response.status,

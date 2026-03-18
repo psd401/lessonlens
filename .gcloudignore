@@ -1,0 +1,11 @@
+# Ignore everything except backend and shared modules
+LessonLens/
+docs/
+scripts/
+.git/
+.github/
+*.md
+*.png
+*.jpg
+LICENSE
+.gitignore

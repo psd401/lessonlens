@@ -204,6 +204,7 @@ prompt_secret GEMINI_API_KEY "Gemini API key"
 prompt_value GOOGLE_CLIENT_ID "Google OAuth Client ID (from GCP Console)"
 prompt_value RATE_LIMIT "Text analysis rate limit per user per hour" "20"
 prompt_value VIDEO_RATE_LIMIT "Video analysis rate limit per user per hour" "5"
+prompt_value ALERT_EMAIL "Email for error/downtime alerts"
 
 echo ""
 echo -e "${BOLD}Configuration summary:${NC}"
@@ -212,6 +213,7 @@ echo "  Region:         $GCP_REGION"
 echo "  Domain:         $ALLOWED_DOMAIN"
 echo "  Client ID:      $GOOGLE_CLIENT_ID"
 echo "  Rate limit:     $RATE_LIMIT/hr (text), $VIDEO_RATE_LIMIT/hr (video)"
+echo "  Alert email:    $ALERT_EMAIL"
 echo "  Gemini key:     ****${GEMINI_API_KEY: -4}"
 echo ""
 
@@ -234,6 +236,8 @@ APIS=(
   "secretmanager.googleapis.com"
   "artifactregistry.googleapis.com"
   "cloudbuild.googleapis.com"
+  "monitoring.googleapis.com"
+  "logging.googleapis.com"
 )
 
 for api in "${APIS[@]}"; do
@@ -287,7 +291,7 @@ if ! confirm "Deploy backend to Cloud Run in $GCP_REGION?"; then
 else
   DEPLOY_CMD=(
     gcloud run deploy "$SERVICE_NAME"
-    --source "$BACKEND_DIR"
+    --source "$REPO_ROOT"
     --region "$GCP_REGION"
     --allow-unauthenticated
     --set-secrets="JWT_SECRET=jwt-secret:latest,GEMINI_API_KEY=gemini-api-key:latest,GOOGLE_CLIENT_ID=google-client-id:latest"
@@ -335,6 +339,194 @@ else
   fi
 fi
 
+# --- Step 9: Set up monitoring & alerting ---
+print_header "Step 9: Setting Up Monitoring & Alerting"
+
+if [ -z "$CLOUD_RUN_URL" ] || [ "$CLOUD_RUN_URL" = "https://lessonlens-api-PLACEHOLDER.$GCP_REGION.run.app" ]; then
+  print_warn "No Cloud Run URL available — skipping monitoring setup."
+  print_warn "You can set up monitoring manually in the GCP Console later."
+else
+  # Create notification channel (email)
+  print_step "Creating email notification channel..."
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN]${NC} Would create email notification channel for $ALERT_EMAIL"
+    NOTIFICATION_CHANNEL_ID="PLACEHOLDER_CHANNEL_ID"
+  else
+    NOTIFICATION_CHANNEL_ID=$(gcloud beta monitoring channels create \
+      --display-name="LessonLens Alert Email" \
+      --type=email \
+      --channel-labels="email_address=$ALERT_EMAIL" \
+      --project="$GCP_PROJECT" \
+      --format='value(name)' 2>/dev/null || true)
+
+    if [ -n "$NOTIFICATION_CHANNEL_ID" ]; then
+      print_success "Notification channel created: $ALERT_EMAIL"
+    else
+      print_warn "Failed to create notification channel. Set up manually in GCP Console."
+    fi
+  fi
+
+  # Create log-based metric for Cloud Run errors
+  print_step "Creating log-based metric for backend errors..."
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN]${NC} Would create log-based metric: lessonlens-api-errors"
+  else
+    gcloud logging metrics create lessonlens-api-errors \
+      --description="LessonLens API error log entries" \
+      --log-filter="resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"$SERVICE_NAME\" AND severity>=ERROR" \
+      --project="$GCP_PROJECT" 2>/dev/null && \
+      print_success "Log-based metric created: lessonlens-api-errors" || \
+      print_warn "Log-based metric may already exist or failed to create"
+  fi
+
+  # Create alerting policy for errors
+  if [ -n "$NOTIFICATION_CHANNEL_ID" ]; then
+    print_step "Creating error alerting policy..."
+    if [ "$DRY_RUN" = true ]; then
+      echo -e "${YELLOW}[DRY RUN]${NC} Would create alerting policy for backend errors"
+    else
+      ALERT_POLICY_JSON=$(cat <<ALERTEOF
+{
+  "displayName": "LessonLens API Errors",
+  "documentation": {
+    "content": "The LessonLens backend logged errors. Check Cloud Run logs for details:\nhttps://console.cloud.google.com/run/detail/$GCP_REGION/$SERVICE_NAME/logs?project=$GCP_PROJECT"
+  },
+  "conditions": [
+    {
+      "displayName": "Error log entries > 0",
+      "conditionThreshold": {
+        "filter": "metric.type=\"logging.googleapis.com/user/lessonlens-api-errors\" AND resource.type=\"cloud_run_revision\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0,
+        "duration": "0s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_COUNT"
+          }
+        ],
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "1800s"
+  },
+  "combiner": "OR",
+  "enabled": true,
+  "notificationChannels": ["$NOTIFICATION_CHANNEL_ID"]
+}
+ALERTEOF
+      )
+
+      echo "$ALERT_POLICY_JSON" | gcloud alpha monitoring policies create \
+        --policy-from-file=- \
+        --project="$GCP_PROJECT" 2>/dev/null && \
+        print_success "Error alerting policy created — alerts will go to $ALERT_EMAIL" || \
+        print_warn "Failed to create alerting policy. Set up manually in GCP Console > Monitoring > Alerting."
+    fi
+  fi
+
+  # Create uptime check on /health endpoint
+  print_step "Creating uptime check on /health endpoint..."
+  if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}[DRY RUN]${NC} Would create uptime check for $CLOUD_RUN_URL"
+  else
+    # Extract host from Cloud Run URL
+    CLOUD_RUN_HOST=$(echo "$CLOUD_RUN_URL" | sed 's|https://||')
+
+    UPTIME_CHECK_JSON=$(cat <<UPTIMEEOF
+{
+  "displayName": "LessonLens API Health",
+  "monitoredResource": {
+    "type": "uptime_url",
+    "labels": {
+      "host": "$CLOUD_RUN_HOST",
+      "project_id": "$GCP_PROJECT"
+    }
+  },
+  "httpCheck": {
+    "path": "/",
+    "port": 443,
+    "useSsl": true,
+    "validateSsl": true,
+    "acceptedResponseStatusCodes": [
+      { "statusClass": "STATUS_CLASS_2XX" }
+    ]
+  },
+  "period": "300s",
+  "timeout": "10s"
+}
+UPTIMEEOF
+    )
+
+    UPTIME_CHECK_ID=$(echo "$UPTIME_CHECK_JSON" | gcloud alpha monitoring uptime create \
+      --config-from-file=- \
+      --project="$GCP_PROJECT" \
+      --format='value(name)' 2>/dev/null || true)
+
+    if [ -n "$UPTIME_CHECK_ID" ]; then
+      print_success "Uptime check created — checks /health every 5 minutes"
+
+      # Create uptime alert policy
+      if [ -n "$NOTIFICATION_CHANNEL_ID" ]; then
+        print_step "Creating uptime failure alerting policy..."
+        UPTIME_ALERT_JSON=$(cat <<UPALERTEOF
+{
+  "displayName": "LessonLens API Down",
+  "documentation": {
+    "content": "The LessonLens health endpoint is failing. Check Cloud Run status:\nhttps://console.cloud.google.com/run/detail/$GCP_REGION/$SERVICE_NAME/metrics?project=$GCP_PROJECT"
+  },
+  "conditions": [
+    {
+      "displayName": "Health check failing",
+      "conditionThreshold": {
+        "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.labels.check_id=\"$UPTIME_CHECK_ID\" AND resource.type=\"uptime_url\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 1,
+        "duration": "300s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_NEXT_OLDER",
+            "crossSeriesReducer": "REDUCE_COUNT_FALSE"
+          }
+        ],
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "1800s"
+  },
+  "combiner": "OR",
+  "enabled": true,
+  "notificationChannels": ["$NOTIFICATION_CHANNEL_ID"]
+}
+UPALERTEOF
+        )
+
+        echo "$UPTIME_ALERT_JSON" | gcloud alpha monitoring policies create \
+          --policy-from-file=- \
+          --project="$GCP_PROJECT" 2>/dev/null && \
+          print_success "Uptime alerting policy created — notifies on downtime" || \
+          print_warn "Failed to create uptime alert policy. Set up manually in GCP Console."
+      fi
+    else
+      print_warn "Failed to create uptime check. Set up manually in GCP Console > Monitoring > Uptime checks."
+    fi
+  fi
+
+  echo ""
+  print_success "Monitoring setup complete. You will be notified at $ALERT_EMAIL for:"
+  echo "    - Backend error log entries (within 5 minutes)"
+  echo "    - Health endpoint failures (within 5 minutes)"
+fi
+
 # --- Summary ---
 print_header "Setup Complete"
 
@@ -349,6 +541,11 @@ echo "  Secrets stored in Secret Manager:"
 echo "    - jwt-secret"
 echo "    - gemini-api-key"
 echo "    - google-client-id"
+echo ""
+echo "  Monitoring:"
+echo "    - Log-based metric: lessonlens-api-errors"
+echo "    - Alert policy: error log entries → $ALERT_EMAIL"
+echo "    - Uptime check: /health every 5 minutes → $ALERT_EMAIL"
 echo ""
 echo "  APIs enabled:"
 for api in "${APIS[@]}"; do
