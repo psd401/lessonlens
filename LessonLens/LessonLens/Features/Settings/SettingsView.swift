@@ -332,7 +332,7 @@ struct AboutTab: View {
                 Text("LessonLens")
                     .font(PSDFonts.title)
 
-                Text("Version 1.0.0")
+                Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"))")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

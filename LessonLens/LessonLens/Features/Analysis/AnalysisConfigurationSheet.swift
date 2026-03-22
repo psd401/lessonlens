@@ -89,7 +89,6 @@ struct AnalysisConfigurationSheet: View {
             .padding()
             .background(.bar)
         }
-        .frame(minWidth: 450, idealWidth: 550, minHeight: 500, idealHeight: 600)
         .onAppear {
             loadPreferences()
         }

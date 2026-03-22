@@ -15,6 +15,7 @@ final class TranscriptionService: ObservableObject {
 
     private var isModelLoaded = false
     private var loadedModelName: String = ""
+    private var progressTimer: Timer?
 
     init(config: AppConfiguration) {
         self.config = config
@@ -102,6 +103,7 @@ final class TranscriptionService: ObservableObject {
         isTranscribing = true
         progress = 0
         error = nil
+        startProgressPolling()
 
         let startTime = Date()
 
@@ -113,6 +115,7 @@ final class TranscriptionService: ObservableObject {
 
             let transcript = try await transcriptionTask!.value
 
+            stopProgressPolling()
             isTranscribing = false
             progress = 1.0
 
@@ -128,9 +131,11 @@ final class TranscriptionService: ObservableObject {
             )
 
         } catch is CancellationError {
+            stopProgressPolling()
             isTranscribing = false
             throw TranscriptionError.cancelled
         } catch {
+            stopProgressPolling()
             isTranscribing = false
             let transcriptionError = TranscriptionError.processingFailed(error)
             self.error = transcriptionError
@@ -142,8 +147,25 @@ final class TranscriptionService: ObservableObject {
     func cancelTranscription() {
         transcriptionTask?.cancel()
         transcriptionTask = nil
+        stopProgressPolling()
         isTranscribing = false
         progress = 0
+    }
+
+    // MARK: - Progress Polling
+
+    private func startProgressPolling() {
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.isTranscribing else { return }
+                self.progress = min(self.whisperKit?.progress.fractionCompleted ?? 0, 0.99)
+            }
+        }
+    }
+
+    private func stopProgressPolling() {
+        progressTimer?.invalidate()
+        progressTimer = nil
     }
 
     // MARK: - Private Methods
@@ -167,15 +189,7 @@ final class TranscriptionService: ObservableObject {
                 clipTimestamps: [],
                 chunkingStrategy: .vad  // Voice Activity Detection for natural breaks
             )
-        ) { progressInfo in
-            // Update progress on main thread
-            Task { @MainActor in
-                // Estimate progress based on transcription info
-                let timings = progressInfo.timings
-                let currentTime = timings.fullPipeline
-                let totalTime = timings.audioLoading
-                self.progress = min(currentTime / max(totalTime, 1), 0.99)
-            }
+        ) { _ in
             return true  // Continue transcription
         }
 
@@ -245,13 +259,6 @@ final class TranscriptionService: ObservableObject {
         let words = text.split(separator: " ")
         let firstWords = words.prefix(count)
         return firstWords.joined(separator: " ")
-    }
-
-    /// Estimates transcription time based on audio duration
-    func estimateTranscriptionTime(audioDuration: TimeInterval) -> TimeInterval {
-        // Rough estimate: WhisperKit processes at ~0.3-0.5x real-time on Apple Silicon
-        // For a 50-minute recording, expect ~15-25 minutes
-        return audioDuration * 0.4
     }
 
     /// Checks if sufficient memory is available for transcription
