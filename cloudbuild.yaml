@@ -1,34 +1,16 @@
-substitutions:
-  _TAG: latest
-
 steps:
-  # Build the Docker image (repo root as context so shared/ is accessible)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '-t'
+      - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:v1.1.0'
+      - '-t'
+      - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:latest'
       - '-f'
       - 'CloudRunBackend/Dockerfile'
-      - '-t'
-      - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:${_TAG}'
       - '.'
-
-  # Push the image
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:${_TAG}'
-
-  # Deploy to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    args:
-      - 'gcloud'
-      - 'run'
-      - 'deploy'
-      - 'lessonlens-api'
-      - '--image'
-      - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:${_TAG}'
-      - '--region'
-      - 'us-west1'
-
 images:
-  - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:${_TAG}'
+  - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:v1.1.0'
+  - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:latest'
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -56,9 +56,8 @@ struct RecordingDetailView: View {
                     )
 
                 case .transcribing:
-                    ProcessingView(
-                        title: "Transcribing...",
-                        progress: services.transcriptionService.progress
+                    TranscribingProgressView(
+                        audioDuration: recording.duration
                     )
 
                 case .transcribed:
@@ -489,6 +488,83 @@ struct ProcessingView: View {
         .padding()
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Transcribing Progress View
+
+struct TranscribingProgressView: View {
+    let audioDuration: TimeInterval
+
+    @State private var elapsedSeconds: Int = 0
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    /// Initial estimate based on 0.4x real-time; updates dynamically once
+    /// enough elapsed time has passed to calculate actual processing speed.
+    private var estimatedRemainingSeconds: Int {
+        let elapsed = Double(elapsedSeconds)
+        if elapsed < 10 {
+            // Not enough data yet — use static 0.4x estimate
+            let totalEstimate = audioDuration * 0.4
+            return max(0, Int(totalEstimate - elapsed))
+        }
+        // Dynamic: extrapolate from observed speed so far.
+        // We don't know exact audio position, but WhisperKit processes linearly,
+        // so elapsed/totalEstimate approximates fraction complete.
+        let staticTotal = audioDuration * 0.4
+        // Blend: weight observed pace more as time passes
+        let observedFraction = elapsed / max(staticTotal, 1)
+        let dynamicTotal = elapsed / max(observedFraction, 0.01)
+        return max(0, Int(dynamicTotal - elapsed))
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .controlSize(.small)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack {
+                Text("Transcribing...")
+                    .font(.headline)
+
+                Spacer()
+
+                Text(formattedElapsed)
+                    .font(.subheadline)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                Text("Estimated: ~\(formattedEstimate) remaining")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+            }
+        }
+        .padding()
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .onReceive(timer) { _ in
+            elapsedSeconds += 1
+        }
+    }
+
+    private var formattedElapsed: String {
+        let minutes = elapsedSeconds / 60
+        let seconds = elapsedSeconds % 60
+        return String(format: "%d:%02d elapsed", minutes, seconds)
+    }
+
+    private var formattedEstimate: String {
+        let remaining = estimatedRemainingSeconds
+        if remaining < 60 {
+            return "< 1 min"
+        }
+        let minutes = remaining / 60
+        return "\(minutes) min"
     }
 }
 

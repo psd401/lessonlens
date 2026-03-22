@@ -59,7 +59,7 @@ struct AnalysisConfigurationSheet: View {
                                 .padding(.top, 4)
                         }
                     }
-                    .padding(20)
+                    .padding(16)
                     .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
@@ -89,7 +89,7 @@ struct AnalysisConfigurationSheet: View {
             .padding()
             .background(.bar)
         }
-        .frame(width: 450, height: 500)
+        .frame(minWidth: 450, idealWidth: 550, minHeight: 500, idealHeight: 600)
         .onAppear {
             loadPreferences()
         }

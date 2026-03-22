@@ -26,7 +26,7 @@ export const env: Env = {
   ALLOWED_DOMAIN: process.env.ALLOWED_DOMAIN || 'psd401.net',
   RATE_LIMIT_PER_HOUR: parseInt(process.env.RATE_LIMIT_PER_HOUR || '20', 10),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-  GEMINI_TEXT_MODEL: process.env.GEMINI_TEXT_MODEL || 'gemini-3-pro-preview',
+  GEMINI_TEXT_MODEL: process.env.GEMINI_TEXT_MODEL || 'gemini-3.1-pro-preview',
   GEMINI_VIDEO_MODEL: process.env.GEMINI_VIDEO_MODEL || 'gemini-3-flash-preview',
   VIDEO_RATE_LIMIT_PER_HOUR: parseInt(process.env.VIDEO_RATE_LIMIT_PER_HOUR || '5', 10),
   CHAT_RATE_LIMIT_PER_HOUR: parseInt(process.env.CHAT_RATE_LIMIT_PER_HOUR || '50', 10),

@@ -54,7 +54,7 @@ struct FrameworkSelectionView: View {
                     .foregroundStyle(enabledTechniqueIds.count > 8 ? .orange : .secondary)
             }
         }
-        .padding(20)
+        .padding(16)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }

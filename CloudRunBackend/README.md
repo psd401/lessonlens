@@ -7,7 +7,7 @@ Backend API for LessonLens macOS app. Handles authentication, text analysis, and
 - **Runtime**: Bun
 - **Framework**: Hono.js
 - **Deployment**: Google Cloud Run
-- **AI**: Gemini 3 Pro (text) + Gemini 3 Flash (video)
+- **AI**: Gemini 3.1 Pro (text) + Gemini 3 Flash (video)
 
 ## Endpoints
 
@@ -32,7 +32,7 @@ Backend API for LessonLens macOS app. Handles authentication, text analysis, and
 | `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth client ID |
 | `JWT_SECRET` | Yes | - | Secret for signing tokens |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Email domain restriction |
-| `GEMINI_TEXT_MODEL` | No | `gemini-3-pro-preview` | Text analysis model |
+| `GEMINI_TEXT_MODEL` | No | `gemini-3.1-pro-preview` | Text analysis model |
 | `GEMINI_VIDEO_MODEL` | No | `gemini-3-flash-preview` | Video analysis model |
 | `RATE_LIMIT_PER_HOUR` | No | `20` | Text analysis rate limit |
 | `VIDEO_RATE_LIMIT_PER_HOUR` | No | `5` | Video analysis rate limit |

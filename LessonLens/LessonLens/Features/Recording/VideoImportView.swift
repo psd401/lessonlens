@@ -29,7 +29,7 @@ struct VideoImportView: View {
 
             // Video preview or placeholder
             if let player = videoPlayer {
-                VideoPlayer(player: player)
+                NativeVideoPlayer(player: player)
                     .frame(height: 300)
                     .cornerRadius(12)
                     .overlay(

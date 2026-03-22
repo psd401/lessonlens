@@ -1,6 +1,24 @@
 import SwiftUI
 import AVKit
 
+/// NSViewRepresentable wrapper around AVPlayerView.
+/// Bypasses _AVKit_SwiftUI's VideoPlayer which has a Swift runtime
+/// metadata crash on macOS Tahoe 26.x (getSuperclassMetadata failure).
+struct NativeVideoPlayer: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.player = player
+        view.controlsStyle = .inline
+        return view
+    }
+
+    func updateNSView(_ nsView: AVPlayerView, context: Context) {
+        nsView.player = player
+    }
+}
+
 /// Simple video player view for previewing recordings
 struct VideoPlayerView: View {
     let videoURL: URL?
@@ -11,7 +29,7 @@ struct VideoPlayerView: View {
     var body: some View {
         Group {
             if let player = player {
-                VideoPlayer(player: player)
+                NativeVideoPlayer(player: player)
                     .cornerRadius(8)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)

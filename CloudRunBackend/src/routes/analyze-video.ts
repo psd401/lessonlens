@@ -266,6 +266,7 @@ async function callGeminiWithVideo(
         generationConfig: {
           temperature: 0.4,
           maxOutputTokens: 8192,
+          responseMimeType: 'application/json',
         },
       }),
     }
