@@ -91,7 +91,6 @@ struct ExportConfigurationSheet: View {
             .padding()
             .background(.bar)
         }
-        .frame(width: 450, height: 550)
         .onAppear {
             // Initialize with all techniques selected
             configuration.includedTechniqueIds = allTechniqueIds

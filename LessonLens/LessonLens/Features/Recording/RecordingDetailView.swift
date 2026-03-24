@@ -1177,7 +1177,6 @@ struct VideoAnalysisConfigurationSheet: View {
             .padding()
             .background(.bar)
         }
-        .frame(width: 450, height: 550)
         .onAppear {
             loadUserPreferences()
         }
