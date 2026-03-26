@@ -6,11 +6,11 @@ Native macOS app for Peninsula SD teachers to record teaching sessions, receive 
 
 | Home | AI Feedback |
 |:---:|:---:|
-| ![Home](docs/screenshots/home.png) | ![AI Feedback](docs/screenshots/feedback.png) |
+| ![Home](https://raw.githubusercontent.com/psd401/lessonlens/main/docs/screenshots/home.png) | ![AI Feedback](https://raw.githubusercontent.com/psd401/lessonlens/main/docs/screenshots/feedback.png) |
 
 | Framework Explorer | How It Works |
 |:---:|:---:|
-| ![Framework Explorer](docs/screenshots/frameworks.png) | ![How It Works](docs/screenshots/how-it-works.png) |
+| ![Framework Explorer](https://raw.githubusercontent.com/psd401/lessonlens/main/docs/screenshots/frameworks.png) | ![How It Works](https://raw.githubusercontent.com/psd401/lessonlens/main/docs/screenshots/how-it-works.png) |
 
 ## Features
 
