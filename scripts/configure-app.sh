@@ -17,13 +17,14 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP_DIR="$REPO_ROOT/LessonLens/LessonLens"
 XCODEPROJ="$REPO_ROOT/LessonLens/LessonLens.xcodeproj/project.pbxproj"
 
-# Current PSD values (what we're replacing)
-OLD_BUNDLE_ID="com.peninsula.lessonlens"
-OLD_BACKEND_URL="https://lessonlens-api-885969573209.us-west1.run.app"
-OLD_GOOGLE_CLIENT_ID="885969573209-spelnfqo14pamiqtdc6st6c35auoe5ub.apps.googleusercontent.com"
-OLD_ALLOWED_DOMAIN="psd401.net"
-OLD_DISTRICT_NAME="Peninsula School District"
-OLD_GOOGLE_URL_SCHEME="com.googleusercontent.apps.885969573209-spelnfqo14pamiqtdc6st6c35auoe5ub"
+# Default placeholder values (what we're replacing)
+# If you've already configured these for your district, update them here
+OLD_BUNDLE_ID="com.example.lessonlens"
+OLD_BACKEND_URL="https://your-backend-url.run.app"
+OLD_GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+OLD_ALLOWED_DOMAIN="example.org"
+OLD_DISTRICT_NAME="Your School District"
+OLD_GOOGLE_URL_SCHEME="com.googleusercontent.apps.YOUR_GOOGLE_CLIENT_ID"
 
 # Colors
 RED='\033[0;31m'

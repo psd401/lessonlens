@@ -17,9 +17,19 @@ NC='\033[0m'
 
 # --- Configuration ---
 APP_PATH="${1:-}"
-PKG_IDENTIFIER="net.psd401.lessonlens"
+PKG_IDENTIFIER="${PKG_BUNDLE_ID:-net.example.lessonlens}"
 PKG_VERSION="1.0"
-SIGNING_IDENTITY="Developer ID Installer: Peninsula School District (87DL7L9GU6)"
+APPLE_TEAM_ID="${APPLE_TEAM_ID:-}"
+APPLE_DEVELOPER_NAME="${APPLE_DEVELOPER_NAME:-}"
+
+if [ -z "$APPLE_TEAM_ID" ]; then
+  read -r -p "$(echo -e "${BOLD}Apple Developer Team ID:${NC} ")" APPLE_TEAM_ID
+fi
+if [ -z "$APPLE_DEVELOPER_NAME" ]; then
+  read -r -p "$(echo -e "${BOLD}Developer name (as shown in certificate):${NC} ")" APPLE_DEVELOPER_NAME
+fi
+
+SIGNING_IDENTITY="Developer ID Installer: ${APPLE_DEVELOPER_NAME} (${APPLE_TEAM_ID})"
 OUTPUT_DIR="$HOME/Desktop"
 OUTPUT_PKG="$OUTPUT_DIR/LessonLens.pkg"
 PAYLOAD_DIR=$(mktemp -d)

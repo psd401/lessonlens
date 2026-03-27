@@ -33,26 +33,6 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
 
         defer { isAuthenticating = false }
 
-        // MARK: - Development Bypass
-        if config.devBypassAuth {
-            let mockUser = User(
-                id: "dev-user",
-                email: "developer@psd401.net",
-                displayName: "Dev User",
-                photoURL: nil
-            )
-            let mockSession = SessionToken(
-                accessToken: "dev-token",
-                refreshToken: nil,
-                expiresAt: Date().addingTimeInterval(86400 * 365),
-                user: mockUser
-            )
-            if let sessionData = try? JSONEncoder().encode(mockSession) {
-                _ = keychain.store(key: KeychainKeys.sessionToken, data: sessionData)
-            }
-            return mockSession
-        }
-
         do {
             let idToken = try await performGoogleSignIn()
             let session = try await validateWithBackend(idToken: idToken)

@@ -18,7 +18,11 @@ NC='\033[0m'
 # --- Configuration ---
 PKG_PATH="$HOME/Desktop/LessonLens.pkg"
 APP_PATH="$HOME/Desktop/LessonLens.app"
-TEAM_ID="87DL7L9GU6"
+TEAM_ID="${APPLE_TEAM_ID:-}"
+
+if [ -z "$TEAM_ID" ]; then
+  read -r -p "$(echo -e "${BOLD}Apple Developer Team ID:${NC} ")" TEAM_ID
+fi
 
 # --- Validate ---
 if [ ! -f "$PKG_PATH" ]; then

@@ -16,10 +16,20 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-# --- PSD constants ---
-TEAM_ID="87DL7L9GU6"
-APP_SIGNING_IDENTITY="Developer ID Application: Peninsula School District ($TEAM_ID)"
-PKG_SIGNING_IDENTITY="Developer ID Installer: Peninsula School District ($TEAM_ID)"
+# --- Signing configuration ---
+# Set APPLE_TEAM_ID and APPLE_DEVELOPER_NAME environment variables, or the script will prompt
+TEAM_ID="${APPLE_TEAM_ID:-}"
+DEVELOPER_NAME="${APPLE_DEVELOPER_NAME:-}"
+
+if [ -z "$TEAM_ID" ]; then
+  read -r -p "$(echo -e "${BOLD}Apple Developer Team ID:${NC} ")" TEAM_ID
+fi
+if [ -z "$DEVELOPER_NAME" ]; then
+  read -r -p "$(echo -e "${BOLD}Developer name (as shown in certificate):${NC} ")" DEVELOPER_NAME
+fi
+
+APP_SIGNING_IDENTITY="Developer ID Application: ${DEVELOPER_NAME} ($TEAM_ID)"
+PKG_SIGNING_IDENTITY="Developer ID Installer: ${DEVELOPER_NAME} ($TEAM_ID)"
 
 # --- Validate input ---
 APP_PATH="${1:-}"

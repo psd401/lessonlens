@@ -3,14 +3,14 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:v1.1.0'
+      - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:v1.1.0'
       - '-t'
-      - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:latest'
+      - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:latest'
       - '-f'
       - 'CloudRunBackend/Dockerfile'
       - '.'
 images:
-  - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:v1.1.0'
-  - 'us-west1-docker.pkg.dev/teacher-coach-485623/cloud-run-source-deploy/lessonlens-api:latest'
+  - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:v1.1.0'
+  - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:latest'
 options:
   logging: CLOUD_LOGGING_ONLY
