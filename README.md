@@ -1,6 +1,6 @@
 # LessonLens
 
-Native macOS app for Peninsula SD teachers to record teaching sessions, receive local transcription via WhisperKit, and get AI-powered feedback on specific teaching techniques. Teachers complete a guided self-reflection before viewing AI analysis, then can dig deeper through interactive coaching chat.
+A privacy-first AI coaching tool for Peninsula SD teachers. Record or import a lesson, get AI-powered feedback on specific teaching techniques, and reflect on your practice — all without administrators, evaluators, or anyone else seeing your data.
 
 ## Screenshots
 
@@ -14,6 +14,18 @@ Native macOS app for Peninsula SD teachers to record teaching sessions, receive 
 <td align="center"><strong>How It Works</strong><br><img src="docs/screenshots/how-it-works.png" alt="How It Works" width="400"></td>
 </tr>
 </table>
+
+## Your Data Is Private
+
+LessonLens is **voluntary** and is **not an evaluation tool**. It is not used for personnel decisions, performance reviews, or administrative oversight of any kind.
+
+- **Only you can see your data.** No administrator, evaluator, or colleague has access to your recordings, transcripts, analysis, reflections, or chat conversations.
+- **Audio never leaves your device.** Transcription happens entirely on your Mac using an on-device AI model — no audio is uploaded anywhere.
+- **Video is deleted immediately after analysis.** When you submit a video for analysis, it is automatically deleted from Google as soon as the analysis completes.
+- **The district cannot see what you do.** The backend server stores nothing — no transcripts, no results, no session history. The tech team can see aggregate usage counts but not who made the requests or what was in them.
+- **Google cannot use your data.** Processing is governed by the district's Data Processing Agreement with Google. Your data is not used to train AI models.
+
+For full details, see the [Terms of Use and Privacy Policy](docs/TERMS_AND_PRIVACY_DRAFT.md).
 
 ## Features
 
@@ -315,24 +327,17 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 
 ## Privacy & Security
 
-- **Audio stays local** - Recordings stored only on user's device
-- **Transcripts sent for analysis** - Audio transcribed locally, only text sent to Gemini
-- **Videos uploaded to Gemini** - Deleted after analysis completion
-- **Reflections stored locally** - Self-reflection data stays on device, optionally included in chat context
-- **Chat messages stored locally** - Conversation history persisted in SwiftData
-- **Domain-restricted** - Only @psd401.net accounts can sign in
-- **Secure storage** - Session tokens stored in macOS Keychain (sandboxed)
-- **Rate limiting** - Per-user hourly limits prevent abuse (separate limits for analysis, video, and chat)
+See [Your Data Is Private](#your-data-is-private) above and the full [Terms of Use and Privacy Policy](docs/TERMS_AND_PRIVACY_DRAFT.md).
+
+**Technical details:**
+- **Domain-restricted** — Only @psd401.net accounts can sign in (enforced on both client and server)
+- **Stateless backend** — The Cloud Run proxy stores no transcripts, analysis results, or session data
+- **On-device transcription** — WhisperKit runs locally on Apple Silicon; no audio uploaded
+- **Video auto-deletion** — Videos are deleted from Google's Gemini API immediately after analysis
+- **Secure storage** — Session tokens stored in macOS Keychain (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`)
+- **Rate limiting** — Per-user hourly limits (20 text, 5 video, 50 chat)
 
 ## Development
-
-### Local Development (No OAuth)
-
-Set `DEV_BYPASS_AUTH=1` in your Xcode scheme environment variables to bypass Google authentication during development.
-
-1. In Xcode, select Product → Scheme → Edit Scheme
-2. Select Run → Arguments → Environment Variables
-3. Add `DEV_BYPASS_AUTH` with value `1`
 
 ### Run Backend Locally
 ```bash
