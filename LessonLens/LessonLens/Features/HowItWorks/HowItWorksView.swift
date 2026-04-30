@@ -71,6 +71,12 @@ struct HowItWorksView: View {
             }
             .padding(20)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+
+            Text("Teach Like a Champion / TLAC, AVID and WICOR, the Danielson Framework, and NBPTS are trademarks of their respective owners. LessonLens is not affiliated with, endorsed by, or sponsored by these organizations.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 500)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

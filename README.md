@@ -143,14 +143,15 @@ The app ships with seven research-based frameworks for evaluating teaching:
 
 ### TLAC (Teach Like a Champion)
 
+Curated subset of Doug Lemov's techniques, filtered to those most reliably identifiable from teacher-student dialogue.
+
 | Category | Techniques |
 |----------|------------|
-| Questioning | Wait Time, Higher-Order Questions |
-| Engagement | Cold Calling, Think-Pair-Share |
-| Feedback | Specific Praise, Check for Understanding |
+| Engagement | No Opt Out, Cold Call, Call and Response, Habits of Discussion |
+| Questioning | Stretch It, Right is Right |
+| Feedback | Format Matters, Precise Praise |
 | Management | Positive Framing |
-| Instruction | Modeling/Think Aloud, Scaffolded Practice |
-| Differentiation | Strategic Grouping |
+| Instruction | Without Apology |
 
 ### Danielson Framework for Teaching
 
@@ -382,6 +383,10 @@ For full multi-district deployment instructions, see [docs/DEPLOYMENT.md](docs/D
 3. Notarize the app
 4. Package as `.pkg`: `pkgbuild --component LessonLens.app --install-location /Applications LessonLens.pkg`
 5. Upload to your MDM (Jamf, Mosyle, Kandji, etc.) for distribution
+
+## Trademarks and Attribution
+
+LessonLens analyzes against several published instructional frameworks, with attribution to their originators throughout the app and documentation. Framework, technique, and program names referenced in this project — including but not limited to *Teach Like a Champion* and *TLAC* (Doug Lemov / Uncommon Schools), *AVID* and *WICOR* (AVID Center), the *Danielson Framework for Teaching* (The Danielson Group), and *NBPTS* / *National Board for Professional Teaching Standards* (National Board for Professional Teaching Standards) — are trademarks of their respective owners. LessonLens is not affiliated with, endorsed by, or sponsored by any of these organizations. References are descriptive and intended for nominative identification only.
 
 ## License
 
