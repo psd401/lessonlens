@@ -152,7 +152,7 @@ gcloud run deploy lessonlens-api \
   --region YOUR_REGION \
   --allow-unauthenticated \
   --set-secrets="JWT_SECRET=jwt-secret:latest,GEMINI_API_KEY=gemini-api-key:latest,GOOGLE_CLIENT_ID=google-client-id:latest" \
-  --set-env-vars="ALLOWED_DOMAIN=yourdomain.org,RATE_LIMIT_PER_HOUR=20,GEMINI_TEXT_MODEL=gemini-3-pro-preview,GEMINI_VIDEO_MODEL=gemini-3-flash-preview,VIDEO_RATE_LIMIT_PER_HOUR=5,CHAT_RATE_LIMIT_PER_HOUR=50"
+  --set-env-vars="ALLOWED_DOMAIN=yourdomain.org,RATE_LIMIT_PER_HOUR=20,GEMINI_TEXT_MODEL=gemini-3.8-flash,GEMINI_VIDEO_MODEL=gemini-3.8-flash,VIDEO_RATE_LIMIT_PER_HOUR=5,CHAT_RATE_LIMIT_PER_HOUR=50"
 ```
 
 **Step 4: Verify deployment**
@@ -354,8 +354,8 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | `RATE_LIMIT_PER_HOUR` | No | `20` | Text analysis rate limit per user |
 | `VIDEO_RATE_LIMIT_PER_HOUR` | No | `5` | Video analysis rate limit per user |
 | `CHAT_RATE_LIMIT_PER_HOUR` | No | `50` | Chat rate limit per user |
-| `GEMINI_TEXT_MODEL` | No | `gemini-3-pro-preview` | Model for text analysis |
-| `GEMINI_VIDEO_MODEL` | No | `gemini-3-flash-preview` | Model for video analysis |
+| `GEMINI_TEXT_MODEL` | No | `gemini-3.8-flash` | Model for text analysis |
+| `GEMINI_VIDEO_MODEL` | No | `gemini-3.8-flash` | Model for video analysis |
 | `PORT` | No | `8080` | Server port (set automatically by Cloud Run) |
 
 ---

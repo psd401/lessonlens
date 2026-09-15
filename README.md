@@ -201,7 +201,7 @@ Each technique includes:
 ### Audio Analysis (Gemini)
 - Records or imports audio
 - Transcribes locally via WhisperKit
-- Analyzes transcript for teaching techniques (Gemini 3 Pro)
+- Analyzes transcript for teaching techniques (Gemini 3.8 Flash)
 - Detects wait time pauses (3+ seconds)
 - Cost: ~$0.01-0.03 per analysis
 - Rate limit: 20 analyses/hour
@@ -209,7 +209,7 @@ Each technique includes:
 ### Video Analysis (Gemini)
 - Imports video recordings (5-50 minutes, max 2GB)
 - Uploads directly to Google Gemini
-- Analyzes visual + audio content (Gemini 3 Flash)
+- Analyzes visual + audio content (Gemini 3.8 Flash)
 - Observes teacher positioning, student engagement, non-verbal cues
 - Cost: ~$0.15-0.27 per analysis
 - Rate limit: 5 analyses/hour
@@ -293,8 +293,8 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `JWT_SECRET` - Secret for signing session tokens (min 32 chars)
 - `ALLOWED_DOMAIN` - Email domain restriction (e.g., `psd401.net`)
-- `GEMINI_TEXT_MODEL` - Text analysis model (default: `gemini-3-pro-preview`)
-- `GEMINI_VIDEO_MODEL` - Video analysis model (default: `gemini-3-flash-preview`)
+- `GEMINI_TEXT_MODEL` - Text analysis model (default: `gemini-3.8-flash`)
+- `GEMINI_VIDEO_MODEL` - Video analysis model (default: `gemini-3.8-flash`)
 - `RATE_LIMIT_PER_HOUR` - Text analysis rate limit (default: 20)
 - `VIDEO_RATE_LIMIT_PER_HOUR` - Video analysis rate limit (default: 5)
 - `CHAT_RATE_LIMIT_PER_HOUR` - Chat message rate limit (default: 50)

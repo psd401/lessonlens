@@ -77,7 +77,7 @@ analyzeRoutes.post('/', async (c) => {
   // Build the analysis prompt
   const prompt = buildAnalysisPrompt({ transcript, techniques, includeRatings, pauseData });
 
-  const model = c.env.GEMINI_TEXT_MODEL || 'gemini-3-pro-preview';
+  const model = c.env.GEMINI_TEXT_MODEL || 'gemini-3.8-flash';
 
   // Call Gemini API
   try {
