@@ -1,0 +1,9 @@
+name: License Check
+
+on:
+  pull_request:
+
+jobs:
+  license-check:
+    uses: PSD401/.github/.github/workflows/reusable-license-check.yml@main
+    secrets: inherit

@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# TODO: The Swift app (LessonLens/) is not covered by this gate — the org
+# reusable workflow runs on ubuntu-latest and the app needs a macOS runner
+# with Xcode. Add a macOS build/test job when runner budget allows.
+jobs:
+  psd-ci-cloudrun-backend:
+    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
+    secrets: inherit
+    with:
+      working-directory: CloudRunBackend
+
+  psd-ci-cloudflare-worker:
+    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
+    secrets: inherit
+    with:
+      working-directory: CloudflareWorker
