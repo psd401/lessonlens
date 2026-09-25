@@ -15,7 +15,7 @@ window.LESSONLENS_HELP = {
         "From <b>Home</b>, choose <b>New Recording</b>, <b>Import Audio</b>, or <b>Import Video</b>. The <b>+</b> button at the top right does the same from anywhere.",
         "<b>New Recording:</b> add an optional title, click the big record button, and click <b>Done</b> when you finish. <b>Import:</b> pick an audio file (such as a Voice Memo) or a video file.",
         "Open the session and click <b>Start Transcription</b>. Your audio is turned into text on your Mac and is not uploaded.",
-        "Review the <b>Transcript</b> and <b>Wait Time Pauses</b> to see how long you waited after questions."
+        "Review the <b>Transcript</b>. Each line has a timestamp, and long pauses may be marked as wait time."
       ],
       "image": "../screenshots/home.png",
       "alt": "LessonLens home screen with New Recording, Import Audio, and Import Video tiles",
@@ -74,38 +74,38 @@ window.LESSONLENS_HELP = {
         "Leave <b>Include Star Ratings</b> on if you want 1 to 5 star ratings and growth tracking.",
         "Click <b>Start Analysis</b>."
       ],
-      "image": null,
-      "alt": "The Configure Analysis sheet",
+      "image": "img/analyze.png",
+      "alt": "The Configure Analysis sheet with the Danielson framework and four techniques selected",
       "tour": [
         {
-          "x": 8,
-          "y": 14,
-          "w": 84,
-          "h": 12,
+          "x": 21.9,
+          "y": 19.6,
+          "w": 54.3,
+          "h": 12.8,
           "title": "Teaching Framework",
           "text": "Seven frameworks to choose from."
         },
         {
-          "x": 8,
-          "y": 30,
-          "w": 84,
-          "h": 40,
+          "x": 43,
+          "y": 37.6,
+          "w": 31.5,
+          "h": 4.6,
+          "title": "4 selected",
+          "text": "3 to 5 techniques gives the most focused feedback. The tip turns orange if you pick too many."
+        },
+        {
+          "x": 21.9,
+          "y": 43,
+          "w": 54.3,
+          "h": 47.4,
           "title": "Techniques",
-          "text": "3 to 5 techniques gives the most focused feedback."
+          "text": "Click ⓘ on any technique to see its look-fors."
         },
         {
-          "x": 8,
-          "y": 74,
-          "w": 84,
-          "h": 8,
-          "title": "Include Star Ratings",
-          "text": "Needed for the Growth dashboard and self vs. AI comparison."
-        },
-        {
-          "x": 64,
-          "y": 86,
-          "w": 28,
-          "h": 9,
+          "x": 65.6,
+          "y": 93.6,
+          "w": 13,
+          "h": 4.8,
           "title": "Start Analysis",
           "text": "Your choices are remembered for next time."
         }
@@ -123,40 +123,40 @@ window.LESSONLENS_HELP = {
         "Click <b>Submit Reflection</b>, or <b>Skip to Feedback</b> at any step."
       ],
       "note": "Skipping is final for that session. Your reflection is shown next to the AI's view afterward.",
-      "image": null,
-      "alt": "The five-step self-reflection flow",
+      "image": "img/reflect.png",
+      "alt": "Step 1 of the self-reflection, with a sample answer",
       "tour": [
         {
-          "x": 8,
-          "y": 8,
-          "w": 84,
-          "h": 10,
-          "title": "Step X of 5",
-          "text": "Five short steps."
+          "x": 31.3,
+          "y": 28.4,
+          "w": 65.9,
+          "h": 7,
+          "title": "Step 1 of 5",
+          "text": "Five short steps before you see the AI's feedback."
         },
         {
-          "x": 8,
-          "y": 24,
-          "w": 84,
-          "h": 50,
+          "x": 33.1,
+          "y": 44.5,
+          "w": 62.4,
+          "h": 21.5,
           "title": "Your reflection",
           "text": "Your own view of the lesson, in your words."
         },
         {
-          "x": 8,
-          "y": 84,
-          "w": 30,
-          "h": 9,
+          "x": 32.2,
+          "y": 72.7,
+          "w": 11.1,
+          "h": 4,
           "title": "Skip to Feedback",
           "text": "Available on every step."
         },
         {
-          "x": 62,
-          "y": 84,
-          "w": 30,
-          "h": 9,
-          "title": "Submit Reflection",
-          "text": "Unlocks the Self vs AI Comparison."
+          "x": 88.9,
+          "y": 72.1,
+          "w": 7.6,
+          "h": 5.2,
+          "title": "Next",
+          "text": "The last step has Submit Reflection, which unlocks the Self vs AI Comparison."
         }
       ]
     },
@@ -170,40 +170,40 @@ window.LESSONLENS_HELP = {
         "If you reflected, compare your view with the AI's in <b>Self vs AI Comparison</b>.",
         "Finish with <b>Next Steps to Consider</b>."
       ],
-      "image": null,
-      "alt": "The feedback view with summary, strengths, growth areas, and technique feedback",
+      "image": "img/feedback.png",
+      "alt": "Feedback for a sample lesson: summary, strengths, and potential growth areas",
       "tour": [
         {
-          "x": 4,
-          "y": 4,
-          "w": 92,
-          "h": 16,
+          "x": 31.4,
+          "y": 26.8,
+          "w": 63.9,
+          "h": 8.1,
+          "title": "Self vs AI Comparison",
+          "text": "If you reflected, open this to compare your ratings with the AI's."
+        },
+        {
+          "x": 31.4,
+          "y": 39.6,
+          "w": 63.9,
+          "h": 23.6,
           "title": "Summary",
           "text": "A short overview of the lesson."
         },
         {
-          "x": 4,
-          "y": 24,
-          "w": 45,
-          "h": 22,
+          "x": 31.4,
+          "y": 67,
+          "w": 31,
+          "h": 32.5,
           "title": "Strengths",
           "text": "What worked, tied to techniques."
         },
         {
-          "x": 51,
-          "y": 24,
-          "w": 45,
-          "h": 22,
+          "x": 64.2,
+          "y": 67,
+          "w": 31.1,
+          "h": 26.8,
           "title": "Potential Growth Areas",
-          "text": "Ideas to try next."
-        },
-        {
-          "x": 4,
-          "y": 52,
-          "w": 92,
-          "h": 40,
-          "title": "Technique Feedback",
-          "text": "Expand a technique for evidence quotes and suggestions."
+          "text": "Ideas to try next. Scroll down for Technique Feedback with evidence quotes and suggestions."
         }
       ]
     },
@@ -217,24 +217,32 @@ window.LESSONLENS_HELP = {
         "Pick a suggested question or type your own in <b>Ask a question...</b>",
         "Start as many chats per lesson as you like."
       ],
-      "image": null,
-      "alt": "A coaching chat with suggested starter questions",
+      "image": "img/chat.png",
+      "alt": "A new coaching chat with three suggested questions",
       "tour": [
         {
-          "x": 4,
-          "y": 8,
-          "w": 92,
-          "h": 30,
+          "x": 24,
+          "y": 21.8,
+          "w": 52,
+          "h": 28.2,
           "title": "Suggested questions",
-          "text": "Starters based on your feedback."
+          "text": "Starters based on your feedback. Click one to ask it."
         },
         {
-          "x": 4,
-          "y": 84,
-          "w": 92,
-          "h": 10,
+          "x": 24,
+          "y": 91.7,
+          "w": 52.7,
+          "h": 5.8,
           "title": "Ask a question...",
           "text": "Type anything about your lesson."
+        },
+        {
+          "x": 23.3,
+          "y": 9.5,
+          "w": 3.4,
+          "h": 4.7,
+          "title": "Back",
+          "text": "Returns to the list of chats for this lesson."
         }
       ]
     },
