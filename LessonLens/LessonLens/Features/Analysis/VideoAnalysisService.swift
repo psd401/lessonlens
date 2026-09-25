@@ -267,6 +267,8 @@ final class VideoAnalysisService: ObservableObject {
             throw VideoAnalysisError.rateLimited
         case 401, 403:
             throw VideoAnalysisError.apiError(httpResponse.statusCode, "Authentication failed")
+        case 500...599:
+            throw VideoAnalysisError.serviceUnavailable
         default:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw VideoAnalysisError.apiError(httpResponse.statusCode, errorMessage)
@@ -423,12 +425,15 @@ enum VideoAnalysisError: Error, LocalizedError {
     case invalidResponse
     case networkUnavailable
     case uploadFailed
+    case serviceUnavailable
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .apiError(let code, let message):
             return "API error (\(code)): \(message)"
+        case .serviceUnavailable:
+            return "Analysis isn't available right now. Your recording is saved. Please try again later."
         case .rateLimited:
             return "Video analysis rate limit reached. Maximum 5 per hour."
         case .invalidResponse:

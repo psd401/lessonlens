@@ -237,6 +237,9 @@ struct RecordingDetailView: View {
 
             } catch AuthError.cancelled {
                 recording.status = .transcribed
+            } catch let error as AnalysisError {
+                recording.status = .transcribed
+                appState.handleError(.analysis(error))
             } catch {
                 recording.status = .transcribed
                 appState.handleError(.analysis(.apiError(500, error.localizedDescription)))
@@ -317,6 +320,9 @@ struct RecordingDetailView: View {
 
             } catch AuthError.cancelled {
                 recording.status = .recorded
+            } catch let error as VideoAnalysisError {
+                recording.status = .recorded
+                appState.handleError(.videoAnalysisError(error))
             } catch {
                 recording.status = .recorded
                 appState.handleError(.videoAnalysisError(.apiError(500, error.localizedDescription)))

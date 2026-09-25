@@ -208,12 +208,15 @@ enum AnalysisError: Error, LocalizedError {
     case rateLimited
     case invalidResponse
     case networkUnavailable
+    case serviceUnavailable
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .apiError(let code, let message):
             return "API error (\(code)): \(message)"
+        case .serviceUnavailable:
+            return "Analysis isn't available right now. Your recording and transcript are saved. Please try again later."
         case .rateLimited:
             return "Rate limit reached. Please wait before analyzing another session."
         case .invalidResponse:
