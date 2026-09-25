@@ -19,10 +19,10 @@ build/
 .build/
 .swiftpm/
 Package.resolved
+!LessonLens/LessonLens.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # CocoaPods
 Pods/
-*.xcworkspace
 
 # Carthage
 Carthage/Build/
