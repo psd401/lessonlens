@@ -7,8 +7,6 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var settings: UserSettings?
-    @State private var autoStartTranscription = true
-    @State private var autoStartAnalysis = false
     @State private var showTimestamps = true
     @State private var selectedFramework: TeachingFramework = .tlac
     @State private var enabledTechniqueIds: Set<String> = []
@@ -16,8 +14,6 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             GeneralSettingsTab(
-                autoStartTranscription: $autoStartTranscription,
-                autoStartAnalysis: $autoStartAnalysis,
                 showTimestamps: $showTimestamps
             )
             .tabItem {
@@ -46,8 +42,6 @@ struct SettingsView: View {
         .onAppear {
             loadSettings()
         }
-        .onChange(of: autoStartTranscription) { _, _ in saveSettings() }
-        .onChange(of: autoStartAnalysis) { _, _ in saveSettings() }
         .onChange(of: showTimestamps) { _, _ in saveSettings() }
         .onChange(of: selectedFramework) { oldValue, newValue in
             // Load technique IDs for new framework
@@ -70,8 +64,6 @@ struct SettingsView: View {
 
         if let existingSettings = try? modelContext.fetch(descriptor).first {
             settings = existingSettings
-            autoStartTranscription = existingSettings.autoStartTranscription
-            autoStartAnalysis = existingSettings.autoStartAnalysis
             showTimestamps = existingSettings.showTimestamps
             selectedFramework = existingSettings.selectedFramework
             enabledTechniqueIds = Set(existingSettings.enabledTechniqueIds(for: selectedFramework))
@@ -88,8 +80,6 @@ struct SettingsView: View {
     private func saveSettings() {
         guard let settings = settings else { return }
 
-        settings.autoStartTranscription = autoStartTranscription
-        settings.autoStartAnalysis = autoStartAnalysis
         settings.showTimestamps = showTimestamps
         settings.selectedFramework = selectedFramework
         settings.setEnabledTechniqueIds(Array(enabledTechniqueIds), for: selectedFramework)
@@ -101,18 +91,10 @@ struct SettingsView: View {
 // MARK: - General Settings Tab
 
 struct GeneralSettingsTab: View {
-    @Binding var autoStartTranscription: Bool
-    @Binding var autoStartAnalysis: Bool
     @Binding var showTimestamps: Bool
 
     var body: some View {
         Form {
-            Section("Processing") {
-                Toggle("Auto-start transcription after recording", isOn: $autoStartTranscription)
-                Toggle("Auto-start analysis after transcription", isOn: $autoStartAnalysis)
-                    .disabled(!autoStartTranscription)
-            }
-
             Section("Display") {
                 Toggle("Show timestamps in transcript", isOn: $showTimestamps)
             }
