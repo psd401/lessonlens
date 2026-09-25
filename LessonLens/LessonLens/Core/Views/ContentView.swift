@@ -63,7 +63,7 @@ struct MainView: View {
             )
         } detail: {
             if let recording = selectedRecording {
-                RecordingDetailView(recording: recording)
+                RecordingDetailView(recording: recording, onReanalyze: { selectedRecording = $0 })
             } else if showingTermsAndPrivacy {
                 TermsAndPrivacyView()
             } else if showingHowItWorks {
