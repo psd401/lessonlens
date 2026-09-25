@@ -67,6 +67,7 @@
 		0059 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1059 /* ChatService.swift */; };
 		0060 /* ChatPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1060 /* ChatPanelView.swift */; };
 		0061 /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1061 /* ChatMessageView.swift */; };
+		0072 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1072 /* MarkdownText.swift */; };
 		0062 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1062 /* ChatListView.swift */; };
 		0063 /* GrowthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1063 /* GrowthDashboardView.swift */; };
 		0064 /* lessonlens-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1064 /* lessonlens-logo.png */; };
@@ -82,6 +83,16 @@
 		8700 /* BehaviorSupportTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9300 /* BehaviorSupportTechniques.swift */; };
 		8701 /* FrameworkExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9301 /* FrameworkExplorerView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A007 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6001;
+			remoteInfo = LessonLens;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		1001 /* LessonLensApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonLensApp.swift; sourceTree = "<group>"; };
@@ -144,6 +155,7 @@
 		1059 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		1060 /* ChatPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanelView.swift; sourceTree = "<group>"; };
 		1061 /* ChatMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
+		1072 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		1062 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
 		1063 /* GrowthDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthDashboardView.swift; sourceTree = "<group>"; };
 		1064 /* lessonlens-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "lessonlens-logo.png"; sourceTree = "<group>"; };
@@ -151,6 +163,7 @@
 		1070 /* HowItWorksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowItWorksView.swift; sourceTree = "<group>"; };
 		1071 /* TermsAndPrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TermsAndPrivacyView.swift; sourceTree = "<group>"; };
 		2001 /* LessonLens.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LessonLens.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A001 /* LessonLensTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LessonLensTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6351 /* PDFLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFLayout.swift; sourceTree = "<group>"; };
 		6745 /* PDFContentBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFContentBlock.swift; sourceTree = "<group>"; };
 		7815 /* PDFBlockViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockViews.swift; sourceTree = "<group>"; };
@@ -163,6 +176,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		29C274B02F1C7E6D00B3F6F3 /* Models */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Models; sourceTree = "<group>"; };
+		A002 /* LessonLensTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LessonLensTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +188,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -181,6 +202,7 @@
 			isa = PBXGroup;
 			children = (
 				5002 /* LessonLens */,
+				A002 /* LessonLensTests */,
 				5003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -200,6 +222,7 @@
 			isa = PBXGroup;
 			children = (
 				2001 /* LessonLens.app */,
+				A001 /* LessonLensTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -425,6 +448,7 @@
 				1059 /* ChatService.swift */,
 				1060 /* ChatPanelView.swift */,
 				1061 /* ChatMessageView.swift */,
+				1072 /* MarkdownText.swift */,
 				1062 /* ChatListView.swift */,
 			);
 			path = Chat;
@@ -493,6 +517,27 @@
 			productReference = 2001 /* LessonLens.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A006 /* LessonLensTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A009 /* Build configuration list for PBXNativeTarget "LessonLensTests" */;
+			buildPhases = (
+				A003 /* Sources */,
+				A004 /* Frameworks */,
+				A005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A002 /* LessonLensTests */,
+			);
+			name = LessonLensTests;
+			productName = LessonLensTests;
+			productReference = A001 /* LessonLensTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -505,6 +550,10 @@
 				TargetAttributes = {
 					6001 = {
 						CreatedOnToolsVersion = 15.2;
+					};
+					A006 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 6001;
 					};
 				};
 			};
@@ -525,6 +574,7 @@
 			projectRoot = "";
 			targets = (
 				6001 /* LessonLens */,
+				A006 /* LessonLensTests */,
 			);
 		};
 /* End PBXProject section */
@@ -541,6 +591,13 @@
 				0053 /* psd-logo.png in Resources */,
 				0064 /* lessonlens-logo.png in Resources */,
 				0065 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -613,6 +670,7 @@
 				0059 /* ChatService.swift in Sources */,
 				0060 /* ChatPanelView.swift in Sources */,
 				0061 /* ChatMessageView.swift in Sources */,
+				0072 /* MarkdownText.swift in Sources */,
 				0062 /* ChatListView.swift in Sources */,
 				0063 /* GrowthDashboardView.swift in Sources */,
 				0070 /* HowItWorksView.swift in Sources */,
@@ -620,7 +678,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6001 /* LessonLens */;
+			targetProxy = A007 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8002 /* Debug */ = {
@@ -803,6 +876,40 @@
 			};
 			name = Release;
 		};
+		A010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LessonLens.app/Contents/MacOS/LessonLens";
+			};
+			name = Debug;
+		};
+		A011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LessonLens.app/Contents/MacOS/LessonLens";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -820,6 +927,15 @@
 			buildConfigurations = (
 				8002 /* Debug */,
 				8003 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A009 /* Build configuration list for PBXNativeTarget "LessonLensTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A010 /* Debug */,
+				A011 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
