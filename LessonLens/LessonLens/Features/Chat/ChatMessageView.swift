@@ -9,10 +9,16 @@ struct ChatMessageView: View {
             if message.isUser { Spacer(minLength: 60) }
 
             VStack(alignment: message.isUser ? .trailing : .leading, spacing: 4) {
-                Text(message.content)
-                    .font(.body)
-                    .foregroundStyle(message.isUser ? .white : .primary)
-                    .textSelection(.enabled)
+                Group {
+                    if message.isAssistant {
+                        MarkdownText(text: message.content)
+                    } else {
+                        Text(message.content)
+                    }
+                }
+                .font(.body)
+                .foregroundStyle(message.isUser ? .white : .primary)
+                .textSelection(.enabled)
 
                 Text(message.createdAt, format: .dateTime.hour().minute())
                     .font(.caption2)

@@ -67,6 +67,7 @@
 		0059 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1059 /* ChatService.swift */; };
 		0060 /* ChatPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1060 /* ChatPanelView.swift */; };
 		0061 /* ChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1061 /* ChatMessageView.swift */; };
+		0072 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1072 /* MarkdownText.swift */; };
 		0062 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1062 /* ChatListView.swift */; };
 		0063 /* GrowthDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1063 /* GrowthDashboardView.swift */; };
 		0064 /* lessonlens-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1064 /* lessonlens-logo.png */; };
@@ -144,6 +145,7 @@
 		1059 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		1060 /* ChatPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPanelView.swift; sourceTree = "<group>"; };
 		1061 /* ChatMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageView.swift; sourceTree = "<group>"; };
+		1072 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		1062 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
 		1063 /* GrowthDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowthDashboardView.swift; sourceTree = "<group>"; };
 		1064 /* lessonlens-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "lessonlens-logo.png"; sourceTree = "<group>"; };
@@ -425,6 +427,7 @@
 				1059 /* ChatService.swift */,
 				1060 /* ChatPanelView.swift */,
 				1061 /* ChatMessageView.swift */,
+				1072 /* MarkdownText.swift */,
 				1062 /* ChatListView.swift */,
 			);
 			path = Chat;
@@ -613,6 +616,7 @@
 				0059 /* ChatService.swift in Sources */,
 				0060 /* ChatPanelView.swift in Sources */,
 				0061 /* ChatMessageView.swift in Sources */,
+				0072 /* MarkdownText.swift in Sources */,
 				0062 /* ChatListView.swift in Sources */,
 				0063 /* GrowthDashboardView.swift in Sources */,
 				0070 /* HowItWorksView.swift in Sources */,
