@@ -17,46 +17,46 @@ window.LESSONLENS_HELP = {
         "Open the session and click <b>Start Transcription</b>. Your audio is turned into text on your Mac and is not uploaded.",
         "Review the <b>Transcript</b>. Each line has a timestamp, and long pauses may be marked as wait time."
       ],
-      "image": "../screenshots/home.png",
+      "image": "img/home.png",
       "alt": "LessonLens home screen with New Recording, Import Audio, and Import Video tiles",
       "tour": [
         {
-          "x": 34.4,
+          "x": 33.2,
           "y": 58.6,
-          "w": 18.2,
-          "h": 19.5,
+          "w": 19.6,
+          "h": 20,
           "title": "New Recording",
           "text": "Record a lesson with your Mac's microphone."
         },
         {
-          "x": 54.3,
+          "x": 54.6,
           "y": 58.6,
-          "w": 18.2,
-          "h": 19.5,
+          "w": 19.6,
+          "h": 20,
           "title": "Import Audio",
           "text": "Use a Voice Memo or other audio file."
         },
         {
-          "x": 74.2,
-          "y": 59,
-          "w": 18.2,
+          "x": 75.9,
+          "y": 59.2,
+          "w": 19.6,
           "h": 19,
           "title": "Import Video",
           "text": "Use a classroom video recording."
         },
         {
-          "x": 94,
-          "y": 1.5,
-          "w": 5.5,
-          "h": 6,
+          "x": 94.1,
+          "y": 1.2,
+          "w": 5,
+          "h": 5.5,
           "title": "Add from anywhere",
           "text": "The + menu has the same three options on every screen."
         },
         {
-          "x": 2,
-          "y": 35.5,
-          "w": 24,
-          "h": 7.5,
+          "x": 1.3,
+          "y": 36.8,
+          "w": 25.5,
+          "h": 14.7,
           "title": "Your sessions",
           "text": "Every lesson appears here, newest first. Right-click one to rename it."
         }
