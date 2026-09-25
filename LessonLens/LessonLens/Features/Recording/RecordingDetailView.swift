@@ -609,6 +609,15 @@ struct TranscriptSection: View {
     @State private var isExpanded = true
     @State private var showPauses = true
 
+    @EnvironmentObject private var appState: AppState
+    @Query private var allSettings: [UserSettings]
+
+    /// Reads the user's "Show timestamps in transcript" preference; defaults to on
+    private var showTimestamps: Bool {
+        guard let email = appState.currentUser?.email else { return true }
+        return allSettings.first { $0.userEmail == email }?.showTimestamps ?? true
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button {
@@ -639,7 +648,7 @@ struct TranscriptSection: View {
                 }
 
                 // Transcript content with inline pause markers
-                TranscriptContentView(transcript: transcript, showPauses: showPauses)
+                TranscriptContentView(transcript: transcript, showPauses: showPauses, showTimestamps: showTimestamps)
             }
         }
         .padding()
@@ -656,6 +665,7 @@ struct TranscriptSection: View {
 struct TranscriptContentView: View {
     let transcript: Transcript
     let showPauses: Bool
+    var showTimestamps: Bool = true
 
     var body: some View {
         Group {
@@ -684,11 +694,13 @@ struct TranscriptContentView: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(segments) { segment in
                     HStack(alignment: .top, spacing: 8) {
-                        Text(formatStartTime(segment.startTime))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                            .frame(width: 32, alignment: .trailing)
+                        if showTimestamps {
+                            Text(formatStartTime(segment.startTime))
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .monospacedDigit()
+                                .frame(width: 32, alignment: .trailing)
+                        }
                         Text(segment.text)
                             .font(.body)
                     }
@@ -706,11 +718,13 @@ struct TranscriptContentView: View {
                 switch item.type {
                 case .segment(let text):
                     HStack(alignment: .top, spacing: 8) {
-                        Text(item.timestamp)
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                            .frame(width: 32, alignment: .trailing)
+                        if showTimestamps {
+                            Text(item.timestamp)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .monospacedDigit()
+                                .frame(width: 32, alignment: .trailing)
+                        }
                         Text(text)
                             .font(.body)
                         if let pause = item.followingPause {
