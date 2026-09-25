@@ -63,7 +63,7 @@ window.LESSONLENS_HISTORY = {
         {
           date: "2026-03-11",
           title: "Growth over time, renamed LessonLens",
-          body: "A dashboard shows growth across lessons. Teachers can choose the tone of their feedback, a seventh framework focuses on behavior support, and a Framework Explorer explains each framework. Teacher Coach becomes LessonLens.",
+          body: "A dashboard shows growth across lessons. Feedback is written in a warmer, more factual tone, a seventh framework focuses on behavior support, and a Framework Explorer explains each framework. Teacher Coach becomes LessonLens.",
           tags: ["growth dashboard", "new name"]
         },
         {
