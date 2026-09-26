@@ -9,3 +9,9 @@ scripts/
 *.jpg
 LICENSE
 .gitignore
+
+# Local drafts, worktrees, and review material (never part of the backend image)
+.claude/
+explainer-video/
+press-kit-draft/
+review/
