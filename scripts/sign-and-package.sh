@@ -44,6 +44,9 @@ if [ ! -d "$APP_PATH" ]; then
   exit 1
 fi
 
+# Refuse to ship a LessonLens build that is missing Local.xcconfig values
+bash "$(dirname "${BASH_SOURCE[0]}")/check-app-config.sh" "$APP_PATH"
+
 # Derive app name (e.g., "LessonLens" from "LessonLens.app")
 APP_BASENAME=$(basename "$APP_PATH")
 APP_NAME="${APP_BASENAME%.app}"
