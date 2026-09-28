@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { describeGeminiError } from '../gemini-error';
-import { env, checkRateLimit, getRateLimitStatus } from '../index';
+import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildAnalysisPrompt, type TechniqueDefinition, type PauseData, type GeminiGenerateResponse } from '../../../shared/prompts';
 
 export const analyzeRoutes = new Hono();
@@ -12,8 +12,6 @@ interface AnalyzeRequest {
   includeRatings?: boolean;
   pauseData?: PauseData;
 }
-
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com';
 
 /**
  * POST /analyze
@@ -78,29 +76,21 @@ analyzeRoutes.post('/', async (c) => {
 
   const model = env.GEMINI_TEXT_MODEL;
 
-  // Call Gemini API
+  // Call Gemini (API key or Vertex AI, per GEMINI_BACKEND)
   try {
-    const response = await fetch(
-      `${GEMINI_API_BASE}/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+    const response = await gemini.generateContent(model, {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+      ],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+      },
+    });
 
     if (!response.ok) {
       return c.json({

@@ -5,6 +5,7 @@ import { analyzeRoutes } from './routes/analyze';
 import { analyzeVideoRoutes } from './routes/analyze-video';
 import { uploadRoutes } from './routes/upload';
 import { chatRoutes } from './routes/chat';
+import { createGeminiClient, parseGeminiBackend, type GeminiBackend } from './gemini-client';
 
 // Environment configuration
 export interface Env {
@@ -12,7 +13,9 @@ export interface Env {
   JWT_SECRET: string;
   ALLOWED_DOMAIN: string;
   RATE_LIMIT_PER_HOUR: number;
+  GEMINI_BACKEND: GeminiBackend;
   GEMINI_API_KEY: string;
+  VERTEX_LOCATION: string;
   GEMINI_TEXT_MODEL: string;
   GEMINI_VIDEO_MODEL: string;
   VIDEO_RATE_LIMIT_PER_HOUR: number;
@@ -25,12 +28,22 @@ export const env: Env = {
   JWT_SECRET: process.env.JWT_SECRET || '',
   ALLOWED_DOMAIN: process.env.ALLOWED_DOMAIN || 'psd401.net',
   RATE_LIMIT_PER_HOUR: parseInt(process.env.RATE_LIMIT_PER_HOUR || '20', 10),
+  GEMINI_BACKEND: parseGeminiBackend(process.env.GEMINI_BACKEND),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  VERTEX_LOCATION: process.env.VERTEX_LOCATION || 'global',
   GEMINI_TEXT_MODEL: process.env.GEMINI_TEXT_MODEL || 'gemini-3.8-flash',
   GEMINI_VIDEO_MODEL: process.env.GEMINI_VIDEO_MODEL || 'gemini-3.8-flash',
   VIDEO_RATE_LIMIT_PER_HOUR: parseInt(process.env.VIDEO_RATE_LIMIT_PER_HOUR || '5', 10),
   CHAT_RATE_LIMIT_PER_HOUR: parseInt(process.env.CHAT_RATE_LIMIT_PER_HOUR || '50', 10),
 };
+
+// Text analysis and chat go through this client; GEMINI_BACKEND picks the
+// API key or Vertex AI. Video still uses the API key directly.
+export const gemini = createGeminiClient({
+  backend: env.GEMINI_BACKEND,
+  apiKey: env.GEMINI_API_KEY,
+  vertexLocation: env.VERTEX_LOCATION,
+});
 
 // Startup validation for critical security configuration
 const MIN_JWT_SECRET_LENGTH = 32;

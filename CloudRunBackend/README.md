@@ -28,7 +28,9 @@ Backend API for LessonLens macOS app. Handles authentication, text analysis, and
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | - | Google AI API key |
+| `GEMINI_API_KEY` | Yes | - | Google AI API key (video always uses it; text and chat only when `GEMINI_BACKEND=apikey`) |
+| `GEMINI_BACKEND` | No | `apikey` | Text analysis and chat backend: `apikey` or `vertex` (Vertex AI in the Cloud Run project, as the runtime service account) |
+| `VERTEX_LOCATION` | No | `global` | Vertex AI location when `GEMINI_BACKEND=vertex` |
 | `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth client ID |
 | `JWT_SECRET` | Yes | - | Secret for signing tokens |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Email domain restriction |

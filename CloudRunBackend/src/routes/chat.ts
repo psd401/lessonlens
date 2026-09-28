@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { describeGeminiError } from '../gemini-error';
-import { env, checkRateLimit, getRateLimitStatus } from '../index';
+import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildChatPrompt, type ChatMessage, type GeminiGenerateResponse } from '../../../shared/prompts';
 
 export const chatRoutes = new Hono();
@@ -14,8 +14,6 @@ interface ChatRequest {
   messages: ChatMessage[];
   technique_names: string[];
 }
-
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com';
 
 /**
  * POST /chat
@@ -95,25 +93,16 @@ chatRoutes.post('/', async (c) => {
   }));
 
   try {
-    const response = await fetch(
-      `${GEMINI_API_BASE}/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          contents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-          },
-        }),
-      }
-    );
+    const response = await gemini.generateContent(model, {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+    });
 
     if (!response.ok) {
       return c.json({
