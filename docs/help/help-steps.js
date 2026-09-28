@@ -313,7 +313,7 @@ window.LESSONLENS_HELP = {
     },
     {
       "q": "What does Re-analyze do?",
-      "a": "It runs the analysis again with the same framework and techniques. <b>It also erases that session's reflection and coaching chats.</b>"
+      "a": "It creates a new copy of the session, named with \"(Re-analysis)\" and today's date, and analyzes it with the framework and techniques you choose. The copy starts with a fresh reflection. <b>Your original feedback, reflection, and coaching chats stay as they are.</b>"
     }
   ]
 };
