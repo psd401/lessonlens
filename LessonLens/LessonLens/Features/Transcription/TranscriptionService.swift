@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import WhisperKit
 
 /// Service for transcribing audio using WhisperKit
@@ -209,8 +210,8 @@ final class TranscriptionService: ObservableObject {
             }
         }
 
-        // Detect pauses (gaps >= 3.0 seconds between segments)
-        let pauses = detectPauses(in: segments, threshold: 3.0)
+        // Detect pauses (gaps >= pauseThreshold seconds between segments)
+        let pauses = Self.detectPauses(in: segments, threshold: Self.pauseThreshold)
 
         let fullText = result.map { $0.text }.joined(separator: " ").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
@@ -224,8 +225,12 @@ final class TranscriptionService: ObservableObject {
         )
     }
 
-    /// Detects pauses (silence) between transcript segments
-    func detectPauses(in segments: [TranscriptSegment], threshold: TimeInterval) -> [TranscriptPause] {
+    /// Minimum gap between segments, in seconds, that counts as a pause
+    nonisolated static let pauseThreshold: TimeInterval = 3.0
+
+    /// Detects pauses (silence) between transcript segments.
+    /// Static so stored segments can be reprocessed without loading WhisperKit.
+    nonisolated static func detectPauses(in segments: [TranscriptSegment], threshold: TimeInterval) -> [TranscriptPause] {
         guard segments.count > 1 else { return [] }
 
         var pauses: [TranscriptPause] = []
@@ -248,15 +253,44 @@ final class TranscriptionService: ObservableObject {
         return pauses
     }
 
+    /// Recomputes pauses for saved transcripts that have segments but no pauses.
+    /// Transcripts saved before pauses were persisted have empty pausesData; their
+    /// segments are intact, so pauses can be rebuilt without re-running Whisper.
+    /// Safe to run on every launch: transcripts that already have pauses are skipped,
+    /// and one with no qualifying gaps just stays empty.
+    /// - Returns: The number of transcripts that gained pauses.
+    @discardableResult
+    static func backfillMissingPauses(in context: ModelContext) -> Int {
+        guard let transcripts = try? context.fetch(FetchDescriptor<Transcript>()) else { return 0 }
+
+        var updated = 0
+        for transcript in transcripts where transcript.pauses.isEmpty {
+            let segments = transcript.segments
+            guard segments.count > 1 else { continue }
+
+            let pauses = detectPauses(in: segments, threshold: pauseThreshold)
+            guard !pauses.isEmpty else { continue }
+
+            transcript.pauses = pauses
+            updated += 1
+        }
+
+        if updated > 0 {
+            try? context.save()
+            print("Backfilled pauses for \(updated) transcript(s)")
+        }
+        return updated
+    }
+
     /// Extracts the last N words from a string
-    private func extractLastWords(from text: String, count: Int) -> String {
+    private nonisolated static func extractLastWords(from text: String, count: Int) -> String {
         let words = text.split(separator: " ")
         let lastWords = words.suffix(count)
         return lastWords.joined(separator: " ")
     }
 
     /// Extracts the first N words from a string
-    private func extractFirstWords(from text: String, count: Int) -> String {
+    private nonisolated static func extractFirstWords(from text: String, count: Int) -> String {
         let words = text.split(separator: " ")
         let firstWords = words.prefix(count)
         return firstWords.joined(separator: " ")
