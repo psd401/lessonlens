@@ -90,7 +90,7 @@ struct LoginView: View {
         .padding(48)
         .background(
             LinearGradient(
-                colors: [Color.psdSkylight, Color.psdSeaFoam],
+                colors: [PSDTheme.pageBackground, PSDTheme.pageBackgroundGradientEnd],
                 startPoint: .top,
                 endPoint: .bottom
             )

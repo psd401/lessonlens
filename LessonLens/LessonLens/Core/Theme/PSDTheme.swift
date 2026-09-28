@@ -5,8 +5,9 @@ enum PSDTheme {
 
     // MARK: - Interactive Colors
 
-    /// Primary accent for buttons, links, interactive elements (WCAG AA on white)
-    static let accent = Color.psdSeaGlassAccessible
+    /// Primary accent for buttons, links, interactive elements.
+    /// Light: darkened Sea Glass (WCAG AA on white). Dark: Sea Glass (readable on dark backgrounds).
+    static let accent = Color(light: .psdSeaGlassAccessible, dark: .psdSeaGlass)
 
     /// Decorative accent — non-interactive use only (e.g., illustrations, dividers)
     static let accentDecorative = Color.psdSeaGlass
@@ -20,8 +21,11 @@ enum PSDTheme {
 
     // MARK: - Background Colors
 
-    /// Page-level background
-    static let pageBackground = Color.psdSkylight
+    /// Page-level background (Skylight in light mode, system window background in dark mode)
+    static let pageBackground = Color(light: .psdSkylight, dark: Color(nsColor: .windowBackgroundColor))
+
+    /// Bottom stop of the login gradient (Sea Foam in light mode, system window background in dark mode)
+    static let pageBackgroundGradientEnd = Color(light: .psdSeaFoam, dark: Color(nsColor: .windowBackgroundColor))
 
     /// Card background for PDF export (light bg context)
     static let pdfCardBackground = Color.psdSeaFoam
