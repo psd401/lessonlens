@@ -1,0 +1,19 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+jobs:
+  claude-review:
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write # reusable's claude-code-action OIDC exchange; caller must grant (org default is read-only)
+    # Dependabot-triggered runs cannot grant the called workflow's
+    # `id-token: write` permission, which fails the run at startup before the
+    # reusable workflow's own Dependabot guard can evaluate. Skip the call.
+    if: github.actor != 'dependabot[bot]'
+    uses: PSD401/.github/.github/workflows/reusable-claude-review.yml@main
+    secrets: inherit
