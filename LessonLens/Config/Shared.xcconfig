@@ -8,5 +8,6 @@ LL_BUNDLE_ID = com.example.lessonlens
 LL_DEVELOPMENT_TEAM =
 LL_BACKEND_HOST =
 LL_GOOGLE_CLIENT_ID_PREFIX =
+LL_ALLOWED_DOMAIN =
 
 #include? "Local.xcconfig"

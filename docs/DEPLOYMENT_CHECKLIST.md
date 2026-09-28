@@ -52,27 +52,17 @@ Cloud Run URL: `________________________________________`
 
 **Option A — Script** (recommended):
 - [ ] Ran `bash scripts/configure-app.sh`
-- [ ] Validation passed (no old references remaining)
+- [ ] Confirmed `LessonLens/Config/Local.xcconfig` was written with your values
 
 **Option B — Manual:**
-- [ ] Updated `ServiceContainer.swift` — backendURL, googleClientID, allowedDomain
-- [ ] Updated bundle ID in `project.pbxproj` (2 occurrences)
-- [ ] Updated bundle ID in `AppState.swift` (keychain keys)
-- [ ] Updated bundle ID in `KeychainService.swift`
-- [ ] Updated bundle ID in `Recording.swift`
-- [ ] Updated bundle ID in `RecordingService.swift`
-- [ ] Updated bundle ID in `AudioImportService.swift`
-- [ ] Updated bundle ID in `VideoImportService.swift`
-- [ ] Updated bundle ID in `AudioExtractionService.swift`
-- [ ] Updated bundle ID in `SettingsView.swift`
-- [ ] Updated district name in `LoginView.swift`
-- [ ] Updated domain text in `LoginView.swift`
-- [ ] Verified: `grep -r "com.peninsula.lessonlens"` returns zero results
+- [ ] Copied `LessonLens/Config/Local.example.xcconfig` to `Local.xcconfig`
+- [ ] Set `LL_BUNDLE_ID`, `LL_DEVELOPMENT_TEAM`, `LL_BACKEND_HOST`, `LL_GOOGLE_CLIENT_ID_PREFIX`, `LL_ALLOWED_DOMAIN`
+- [ ] (Optional) Updated district name in `LoginView.swift`
+- [ ] Stored a backup copy of `Local.xcconfig` (it is git-ignored)
 
 ## Phase 4: Build, Sign & Distribute
 
 - [ ] Opened `LessonLens.xcodeproj` in Xcode
-- [ ] Selected Apple Developer team in Signing & Capabilities
 - [ ] Verified bundle ID matches: `________________________`
 - [ ] Built successfully (Product → Build)
 - [ ] Archived (Product → Archive)

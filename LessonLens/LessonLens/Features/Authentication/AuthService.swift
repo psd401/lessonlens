@@ -250,7 +250,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
                 user: authResponse.user
             )
         case 403:
-            throw AuthError.invalidDomain
+            throw AuthError.invalidDomain(allowedDomain: config.allowedDomain)
         case 401:
             throw AuthError.tokenExpired
         default:

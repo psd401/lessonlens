@@ -37,6 +37,8 @@
     </array>
     <key>LLBackendHost</key>
     <string>$(LL_BACKEND_HOST)</string>
+    <key>LLAllowedDomain</key>
+    <string>$(LL_ALLOWED_DOMAIN)</string>
     <key>LLGoogleClientIDPrefix</key>
     <string>$(LL_GOOGLE_CLIENT_ID_PREFIX)</string>
     <key>LSApplicationCategoryType</key>

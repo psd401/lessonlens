@@ -11,3 +11,6 @@ LL_BACKEND_HOST = your-backend-url.run.app
 
 // Google OAuth client ID without the ".apps.googleusercontent.com" suffix
 LL_GOOGLE_CLIENT_ID_PREFIX = YOUR_GOOGLE_CLIENT_ID
+
+// Google Workspace domain allowed to sign in (must match the backend ALLOWED_DOMAIN)
+LL_ALLOWED_DOMAIN = example.org

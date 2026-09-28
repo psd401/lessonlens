@@ -54,16 +54,17 @@ struct AppConfiguration: Codable {
     let devUseBundledModel: Bool
 
     static func load() -> AppConfiguration {
-        // Backend host and OAuth client come from Config/Local.xcconfig via Info.plist.
+        // Backend host, OAuth client, and allowed domain come from Config/Local.xcconfig via Info.plist.
         // When unset, sign-in fails with AuthError.missingClientID.
         let info = Bundle.main.infoDictionary ?? [:]
         let backendHost = info["LLBackendHost"] as? String ?? ""
         let clientIDPrefix = info["LLGoogleClientIDPrefix"] as? String ?? ""
+        let allowedDomain = info["LLAllowedDomain"] as? String ?? ""
 
         return AppConfiguration(
             backendURL: URL(string: "https://\(backendHost.isEmpty ? "backend-not-configured.invalid" : backendHost)")!,
             googleClientID: clientIDPrefix.isEmpty ? "" : "\(clientIDPrefix).apps.googleusercontent.com",
-            allowedDomain: "psd401.net",
+            allowedDomain: allowedDomain,
             minRecordingDuration: 5 * 60,  // 5 minutes
             maxRecordingDuration: 50 * 60, // 50 minutes
             whisperModel: "openai_whisper-large-v3",
