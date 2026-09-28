@@ -127,7 +127,8 @@ final class TranscriptionService: ObservableObject {
                 createdAt: transcript.createdAt,
                 modelUsed: loadedModelName,
                 processingTime: processingTime,
-                segments: transcript.segments
+                segments: transcript.segments,
+                pauses: transcript.pauses
             )
 
         } catch is CancellationError {
@@ -224,7 +225,7 @@ final class TranscriptionService: ObservableObject {
     }
 
     /// Detects pauses (silence) between transcript segments
-    private func detectPauses(in segments: [TranscriptSegment], threshold: TimeInterval) -> [TranscriptPause] {
+    func detectPauses(in segments: [TranscriptSegment], threshold: TimeInterval) -> [TranscriptPause] {
         guard segments.count > 1 else { return [] }
 
         var pauses: [TranscriptPause] = []
