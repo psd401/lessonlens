@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import WhisperKit
 
 /// Service for transcribing audio using WhisperKit
@@ -250,6 +251,35 @@ final class TranscriptionService: ObservableObject {
             }
         }
         return pauses
+    }
+
+    /// Recomputes pauses for saved transcripts that have segments but no pauses.
+    /// Transcripts saved before pauses were persisted have empty pausesData; their
+    /// segments are intact, so pauses can be rebuilt without re-running Whisper.
+    /// Safe to run on every launch: transcripts that already have pauses are skipped,
+    /// and one with no qualifying gaps just stays empty.
+    /// - Returns: The number of transcripts that gained pauses.
+    @discardableResult
+    static func backfillMissingPauses(in context: ModelContext) -> Int {
+        guard let transcripts = try? context.fetch(FetchDescriptor<Transcript>()) else { return 0 }
+
+        var updated = 0
+        for transcript in transcripts where transcript.pauses.isEmpty {
+            let segments = transcript.segments
+            guard segments.count > 1 else { continue }
+
+            let pauses = detectPauses(in: segments, threshold: pauseThreshold)
+            guard !pauses.isEmpty else { continue }
+
+            transcript.pauses = pauses
+            updated += 1
+        }
+
+        if updated > 0 {
+            try? context.save()
+            print("Backfilled pauses for \(updated) transcript(s)")
+        }
+        return updated
     }
 
     /// Extracts the last N words from a string
