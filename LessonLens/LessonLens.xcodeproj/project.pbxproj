@@ -172,6 +172,8 @@
 		9252 /* PDFBlockMeasurer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFBlockMeasurer.swift; sourceTree = "<group>"; };
 		9300 /* BehaviorSupportTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorSupportTechniques.swift; sourceTree = "<group>"; };
 		9301 /* FrameworkExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameworkExplorerView.swift; sourceTree = "<group>"; };
+		C0F1 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		C0F2 /* Local.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.example.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -198,9 +200,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C0F0 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C0F1 /* Shared.xcconfig */,
+				C0F2 /* Local.example.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		5001 = {
 			isa = PBXGroup;
 			children = (
+				C0F0 /* Config */,
 				5002 /* LessonLens */,
 				A002 /* LessonLensTests */,
 				5003 /* Products */,
@@ -698,6 +710,7 @@
 /* Begin XCBuildConfiguration section */
 		8002 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0F1 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -761,6 +774,7 @@
 		};
 		8003 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0F1 /* Shared.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -826,7 +840,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = 87DL7L9GU6;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = "$(LL_DEVELOPMENT_TEAM)";
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LessonLens/Resources/Info.plist;
@@ -838,7 +852,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LL_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -857,7 +871,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = 87DL7L9GU6;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = "$(LL_DEVELOPMENT_TEAM)";
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LessonLens/Resources/Info.plist;
@@ -869,7 +883,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LL_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -886,7 +900,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LL_BUNDLE_ID).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LessonLens.app/Contents/MacOS/LessonLens";
@@ -903,7 +917,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.peninsula.lessonlens.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LL_BUNDLE_ID).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LessonLens.app/Contents/MacOS/LessonLens";

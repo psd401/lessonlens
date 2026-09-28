@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>com.peninsula.lessonlens</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
@@ -31,10 +31,14 @@
             <string>Google OAuth Callback</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.googleusercontent.apps.885969573209-spelnfqo14pamiqtdc6st6c35auoe5ub</string>
+                <string>com.googleusercontent.apps.$(LL_GOOGLE_CLIENT_ID_PREFIX)</string>
             </array>
         </dict>
     </array>
+    <key>LLBackendHost</key>
+    <string>$(LL_BACKEND_HOST)</string>
+    <key>LLGoogleClientIDPrefix</key>
+    <string>$(LL_GOOGLE_CLIENT_ID_PREFIX)</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.education</string>
 </dict>
