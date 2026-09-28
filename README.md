@@ -291,6 +291,8 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 
 #### Backend (Cloud Run)
 - `GEMINI_API_KEY` - Google AI API key
+- `GEMINI_BACKEND` - Text analysis and chat backend: `apikey` (default) or `vertex`
+- `VERTEX_LOCATION` - Vertex AI location when `GEMINI_BACKEND=vertex` (default: `global`)
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `JWT_SECRET` - Secret for signing session tokens (min 32 chars)
 - `ALLOWED_DOMAIN` - Email domain restriction (e.g., `psd401.net`)
