@@ -4,7 +4,7 @@
 // image: null renders a placeholder frame that still shows the hotspot areas.
 // UI labels below are quoted from the app; keep them in sync when the app changes.
 window.LESSONLENS_HELP = {
-  "updated": "2026-09-25",
+  "updated": "2026-09-28",
   "appVersion": "1.1.1",
   "sections": [
     {
@@ -221,26 +221,26 @@ window.LESSONLENS_HELP = {
       "alt": "A new coaching chat with three suggested questions",
       "tour": [
         {
-          "x": 24,
-          "y": 21.8,
-          "w": 52,
-          "h": 28.2,
+          "x": 25,
+          "y": 29.6,
+          "w": 50.1,
+          "h": 34.7,
           "title": "Suggested questions",
           "text": "Starters based on your feedback. Click one to ask it."
         },
         {
-          "x": 24,
-          "y": 91.7,
-          "w": 52.7,
-          "h": 5.8,
+          "x": 25,
+          "y": 79.8,
+          "w": 50.1,
+          "h": 6.4,
           "title": "Ask a question...",
           "text": "Type anything about your lesson."
         },
         {
-          "x": 23.3,
-          "y": 9.5,
-          "w": 3.4,
-          "h": 4.7,
+          "x": 25,
+          "y": 19.6,
+          "w": 6.7,
+          "h": 4,
           "title": "Back",
           "text": "Returns to the list of chats for this lesson."
         }
