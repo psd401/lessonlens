@@ -38,6 +38,7 @@ yarn-error.log*
 .dev.vars
 
 # Environment files
+LessonLens/Config/Local.xcconfig
 .env
 .env.local
 .env.*.local

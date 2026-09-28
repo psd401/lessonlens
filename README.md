@@ -113,7 +113,7 @@ lessonlens/
 │   └── prompts/
 ├── scripts/                      # Deployment automation scripts
 │   ├── setup.sh                  # Backend setup wizard (GCP + Cloud Run)
-│   └── configure-app.sh          # App configuration script (bundle ID, URLs)
+│   └── configure-app.sh          # Writes LessonLens/Config/Local.xcconfig
 ├── docs/                         # Documentation
 │   ├── DEPLOYMENT.md             # District deployment guide
 │   └── DEPLOYMENT_CHECKLIST.md   # Printable deployment checklist
@@ -257,7 +257,7 @@ When star ratings are enabled, each technique receives a 1-5 star rating:
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing
 3. Enable Google Sign-In API
-4. Create OAuth 2.0 credentials (iOS application type, bundle ID: `com.peninsula.lessonlens`)
+4. Create OAuth 2.0 credentials (iOS application type, using your app's bundle ID)
 5. Note the Client ID
 
 #### 2. Deploy Backend (Cloud Run)
@@ -275,16 +275,17 @@ gcloud run deploy lessonlens-api --source .
 #### 3. Build macOS App
 
 ```bash
-cd LessonLens
-open LessonLens.xcodeproj
-# Build and run (⌘R) — Google Client ID is configured in ServiceContainer.swift
+# Backend host, Google Client ID, domain, bundle ID, and team live in a git-ignored file
+cp LessonLens/Config/Local.example.xcconfig LessonLens/Config/Local.xcconfig
+# (edit Local.xcconfig, or run: bash scripts/configure-app.sh)
+open LessonLens/LessonLens.xcodeproj
+# Build and run (⌘R)
 ```
 
 ### Environment Variables
 
 #### macOS App (Xcode Scheme)
 ```
-DEV_BYPASS_AUTH=1        # Optional: bypass OAuth for local testing
 DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 ```
 

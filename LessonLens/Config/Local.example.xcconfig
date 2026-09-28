@@ -1,0 +1,16 @@
+// Copy to Local.xcconfig (git-ignored) and replace the placeholder values.
+
+// App bundle identifier; the test target uses $(LL_BUNDLE_ID).tests
+LL_BUNDLE_ID = com.example.lessonlens
+
+// Apple Developer Team ID used for signing
+LL_DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+// Cloud Run backend hostname only, without https:// (xcconfig treats // as a comment)
+LL_BACKEND_HOST = your-backend-url.run.app
+
+// Google OAuth client ID without the ".apps.googleusercontent.com" suffix
+LL_GOOGLE_CLIENT_ID_PREFIX = YOUR_GOOGLE_CLIENT_ID
+
+// Google Workspace domain allowed to sign in (must match the backend ALLOWED_DOMAIN)
+LL_ALLOWED_DOMAIN = example.org

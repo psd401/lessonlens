@@ -181,38 +181,33 @@ bash scripts/configure-app.sh
 ```
 
 The script will:
-- Prompt for your Cloud Run URL, Google Client ID, allowed domain, and bundle ID
-- Update all Swift source files and the Xcode project
-- Optionally update district branding (name and login text)
-- Validate that no old references remain
+- Prompt for your Cloud Run URL, Google Client ID, allowed domain, bundle ID, and Apple Developer Team ID
+- Write them to `LessonLens/Config/Local.xcconfig` (git-ignored, so your values never end up in the repository)
+- Optionally replace the district name on the login screen
+
+Keep a copy of `Local.xcconfig` somewhere safe. Every build, including release builds, reads it.
 
 #### Option B: Manual Configuration
 
-If you prefer to make changes yourself, update these files:
+Copy the template and fill in your values:
 
-**ServiceContainer.swift** — Core configuration:
-```swift
-static let backendURL = "https://YOUR-CLOUD-RUN-URL"
-static let googleClientID = "YOUR-GOOGLE-CLIENT-ID"
-static let allowedDomain = "yourdomain.org"
+```bash
+cp LessonLens/Config/Local.example.xcconfig LessonLens/Config/Local.xcconfig
 ```
 
-**Bundle ID** — Replace `com.peninsula.lessonlens` with your bundle ID in:
-- `LessonLens.xcodeproj/project.pbxproj` (2 occurrences: Debug and Release)
-- `AppState.swift` (keychain keys)
-- `KeychainService.swift` (service name)
-- `Recording.swift` (storage directory)
-- `RecordingService.swift` (storage directory)
-- `AudioImportService.swift` (storage directory)
-- `VideoImportService.swift` (storage directory)
-- `AudioExtractionService.swift` (storage directory)
-- `SettingsView.swift` (display path)
+```
+LL_BUNDLE_ID = com.yourdistrict.lessonlens
+LL_DEVELOPMENT_TEAM = YOUR_TEAM_ID
+LL_BACKEND_HOST = lessonlens-api-xxxxx.us-west1.run.app   // host only, no https://
+LL_GOOGLE_CLIENT_ID_PREFIX = 123456789-abc                 // client ID without .apps.googleusercontent.com
+LL_ALLOWED_DOMAIN = yourdomain.org
+```
 
-**LoginView.swift** — District branding:
+The login screen's "Sign in with your @domain account" text and the domain error message use `LL_ALLOWED_DOMAIN` automatically.
+
+**LoginView.swift** — District branding (optional):
 ```swift
-// Update district name and domain text
 "Peninsula School District" → "Your District Name"
-"@psd401.net" → "@yourdomain.org"
 ```
 
 ### Phase 4: Build, Sign & Distribute
@@ -222,9 +217,7 @@ static let allowedDomain = "yourdomain.org"
 1. Open `LessonLens/LessonLens.xcodeproj` in Xcode
 2. Select the **LessonLens** target
 3. Under **Signing & Capabilities**:
-   - Check **Automatically manage signing**
-   - Select your Apple Developer team
-   - Verify the bundle ID matches what you configured
+   - Verify the team and bundle ID match what you set in `Local.xcconfig`
 
 #### 4.2 Build & Archive
 
