@@ -109,6 +109,8 @@ final class AnalysisService: ObservableObject {
             throw AnalysisError.rateLimited
         case 401, 403:
             throw AnalysisError.apiError(httpResponse.statusCode, "Authentication failed")
+        case 500...599:
+            throw AnalysisError.serviceUnavailable
         default:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw AnalysisError.apiError(httpResponse.statusCode, errorMessage)

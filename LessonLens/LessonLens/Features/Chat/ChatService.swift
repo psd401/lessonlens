@@ -61,6 +61,8 @@ final class ChatService: ObservableObject {
             throw ChatError.rateLimited
         case 401, 403:
             throw ChatError.unauthorized
+        case 500...599:
+            throw ChatError.serviceUnavailable
         default:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw ChatError.apiError(httpResponse.statusCode, errorMessage)
@@ -159,6 +161,7 @@ enum ChatError: LocalizedError {
     case networkUnavailable
     case rateLimited
     case unauthorized
+    case serviceUnavailable
     case apiError(Int, String)
 
     var errorDescription: String? {
@@ -169,6 +172,8 @@ enum ChatError: LocalizedError {
             return "Chat rate limit exceeded. Please try again later."
         case .unauthorized:
             return "Authentication failed. Please sign in again."
+        case .serviceUnavailable:
+            return "Coaching chat isn't available right now. Please try again later."
         case .apiError(let code, let message):
             return "Chat error (\(code)): \(message)"
         }

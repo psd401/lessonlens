@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
+import { describeGeminiError } from '../gemini-error';
 import { env, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildChatPrompt, type ChatMessage, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -115,10 +116,9 @@ chatRoutes.post('/', async (c) => {
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status);
       return c.json({
         error: 'Chat service error',
-        status: response.status,
+        ...(await describeGeminiError(response)),
       }, 502);
     }
 

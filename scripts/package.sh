@@ -45,6 +45,9 @@ if [ ! -d "$APP_PATH" ]; then
   exit 1
 fi
 
+# Refuse to ship a LessonLens build that is missing Local.xcconfig values
+bash "$(dirname "${BASH_SOURCE[0]}")/check-app-config.sh" "$APP_PATH"
+
 # --- Build package ---
 echo -e "${BOLD}Packaging LessonLens.app → LessonLens.pkg${NC}"
 

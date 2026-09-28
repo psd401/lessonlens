@@ -9,6 +9,7 @@ struct ChatPanelView: View {
     @Environment(\.serviceContainer) private var services
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var appState: AppState
+    @Environment(\.dismiss) private var dismiss
 
     @State private var messageText = ""
     @State private var isSending = false
@@ -57,6 +58,10 @@ struct ChatPanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            backButton
+
+            Divider()
+
             if needsTranscriptExtraction {
                 transcriptExtractionView
             } else {
@@ -131,6 +136,26 @@ struct ChatPanelView: View {
             }
         }
         .navigationTitle(chatSession.title)
+        // The system back chevron renders too dim in dark mode; use an in-content Back button instead
+        .navigationBarBackButtonHidden(true)
+    }
+
+    // MARK: - Back Button
+
+    private var backButton: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Label("Back", systemImage: "chevron.left")
+                    .foregroundStyle(.primary)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Suggested Starters

@@ -37,7 +37,8 @@ struct ChatListView: View {
                 }
             }
         }
-        .frame(width: 500, height: 600)
+        .frame(minWidth: 460, idealWidth: 500, maxWidth: 700,
+               minHeight: 380, idealHeight: 500, maxHeight: .infinity)
     }
 
     // MARK: - Session List

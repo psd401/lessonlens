@@ -19,6 +19,6 @@ id = "" # Set via: wrangler kv:namespace create "RATE_LIMIT"
 [vars]
 ALLOWED_DOMAIN = "psd401.net"
 RATE_LIMIT_PER_HOUR = "20"
-GEMINI_TEXT_MODEL = "gemini-3-pro-preview"
-GEMINI_VIDEO_MODEL = "gemini-3-flash-preview"
+GEMINI_TEXT_MODEL = "gemini-3.8-flash"
+GEMINI_VIDEO_MODEL = "gemini-3.8-flash"
 VIDEO_RATE_LIMIT_PER_HOUR = "5"

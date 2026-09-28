@@ -27,7 +27,7 @@ struct LoginView: View {
                 Text("Peninsula School District")
                     .font(PSDFonts.headline)
 
-                Text("Sign in with your @psd401.net account")
+                Text("Sign in with your @\(services.config.allowedDomain) account")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -90,7 +90,7 @@ struct LoginView: View {
         .padding(48)
         .background(
             LinearGradient(
-                colors: [Color.psdSkylight, Color.psdSeaFoam],
+                colors: [PSDTheme.pageBackground, PSDTheme.pageBackgroundGradientEnd],
                 startPoint: .top,
                 endPoint: .bottom
             )

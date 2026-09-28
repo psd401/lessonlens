@@ -3,6 +3,8 @@ import SwiftData
 
 struct RecordingDetailView: View {
     @Bindable var recording: Recording
+    /// Called with the new copy when a session is re-analyzed, so the parent can select it
+    var onReanalyze: ((Recording) -> Void)? = nil
 
     @Environment(\.serviceContainer) private var services
     @Environment(\.modelContext) private var modelContext
@@ -12,6 +14,7 @@ struct RecordingDetailView: View {
     @State private var showingAnalysisConfig = false
     @State private var showingExportConfig = false
     @State private var showingVideoAnalysisConfig = false
+    @State private var showingReanalyzeConfig = false
     @State private var isProcessing = false
     @State private var processingMessage = ""
 
@@ -130,8 +133,13 @@ struct RecordingDetailView: View {
 
                 if recording.status == .transcribed || recording.status == .complete {
                     Button {
-                        // Re-analyze
-                        startAnalysis()
+                        // Re-analyze: a completed session gets a new copy so the
+                        // original feedback, reflection, and chats are kept
+                        if recording.status == .complete {
+                            showingReanalyzeConfig = true
+                        } else {
+                            showingAnalysisConfig = true
+                        }
                     } label: {
                         Label("Re-analyze", systemImage: "arrow.clockwise")
                     }
@@ -156,6 +164,11 @@ struct RecordingDetailView: View {
         .sheet(isPresented: $showingAnalysisConfig) {
             AnalysisConfigurationSheet { framework, techniqueIds, includeRatings in
                 startAnalysis(framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
+            }
+        }
+        .sheet(isPresented: $showingReanalyzeConfig) {
+            AnalysisConfigurationSheet { framework, techniqueIds, includeRatings in
+                reanalyzeAsNewSession(framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
             }
         }
         .sheet(isPresented: $showingExportConfig) {
@@ -202,6 +215,10 @@ struct RecordingDetailView: View {
     }
 
     private func startAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
+        startAnalysis(of: recording, framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
+    }
+
+    private func startAnalysis(of recording: Recording, framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool) {
         guard let transcript = recording.transcript else { return }
 
         isProcessing = true
@@ -237,6 +254,9 @@ struct RecordingDetailView: View {
 
             } catch AuthError.cancelled {
                 recording.status = .transcribed
+            } catch let error as AnalysisError {
+                recording.status = .transcribed
+                appState.handleError(.analysis(error))
             } catch {
                 recording.status = .transcribed
                 appState.handleError(.analysis(.apiError(500, error.localizedDescription)))
@@ -246,28 +266,55 @@ struct RecordingDetailView: View {
         }
     }
 
-    /// Legacy method for re-analysis from toolbar
-    private func startAnalysis() {
-        // Load the saved framework and technique preferences
-        guard let email = appState.currentUser?.email else { return }
+    /// Re-analyzes a completed session as a new copy, keeping the original's
+    /// feedback, reflection, and coaching chats. The copy shares the original's media file.
+    private func reanalyzeAsNewSession(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool) {
+        guard let original = recording.transcript else { return }
 
-        let descriptor = FetchDescriptor<UserSettings>(
-            predicate: #Predicate { $0.userEmail == email }
+        let baseTitle = recording.title.replacingOccurrences(
+            of: #" \(Re-analysis [^)]*\)$"#,
+            with: "",
+            options: .regularExpression
         )
+        let dateText = Date().formatted(date: .abbreviated, time: .omitted)
 
-        if let settings = try? modelContext.fetch(descriptor).first {
-            let framework = settings.selectedFramework
-            let techniqueIds = settings.enabledTechniqueIds(for: framework)
-            let includeRatings = settings.includeRatingsInAnalysis
-            startAnalysis(framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
-        } else {
-            // Default to TLAC with all techniques and ratings enabled
-            startAnalysis(framework: .tlac, techniqueIds: FrameworkRegistry.defaultEnabledIds(for: .tlac), includeRatings: true)
-        }
+        let copy = Recording(
+            title: "\(baseTitle) (Re-analysis \(dateText))",
+            createdAt: recording.createdAt,
+            duration: recording.duration,
+            audioFilePath: recording.audioFilePath,
+            videoFilePath: recording.videoFilePath,
+            mediaType: recording.mediaType,
+            status: .transcribed,
+            isImported: recording.isImported
+        )
+        let transcript = Transcript(
+            fullText: original.fullText,
+            createdAt: original.createdAt,
+            modelUsed: original.modelUsed,
+            processingTime: original.processingTime
+        )
+        transcript.segmentsData = original.segmentsData
+        transcript.pausesData = original.pausesData
+
+        modelContext.insert(copy)
+        copy.transcript = transcript
+        try? modelContext.save()
+
+        onReanalyze?(copy)
+        startAnalysis(of: copy, framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
     }
 
     private func deleteRecording() {
-        services.recordingService.deleteAudioFile(for: recording)
+        // Re-analysis copies share the original's audio file; only remove it when no other recording uses it
+        let path = recording.audioFilePath
+        let id = recording.id
+        let sharingCount = (try? modelContext.fetchCount(FetchDescriptor<Recording>(
+            predicate: #Predicate { $0.audioFilePath == path && $0.id != id }
+        ))) ?? 1  // If the check fails, keep the file rather than risk breaking another recording
+        if sharingCount == 0 {
+            services.recordingService.deleteAudioFile(for: recording)
+        }
         modelContext.delete(recording)
         try? modelContext.save()
     }
@@ -317,6 +364,9 @@ struct RecordingDetailView: View {
 
             } catch AuthError.cancelled {
                 recording.status = .recorded
+            } catch let error as VideoAnalysisError {
+                recording.status = .recorded
+                appState.handleError(.videoAnalysisError(error))
             } catch {
                 recording.status = .recorded
                 appState.handleError(.videoAnalysisError(.apiError(500, error.localizedDescription)))
@@ -609,6 +659,15 @@ struct TranscriptSection: View {
     @State private var isExpanded = true
     @State private var showPauses = true
 
+    @EnvironmentObject private var appState: AppState
+    @Query private var allSettings: [UserSettings]
+
+    /// Reads the user's "Show timestamps in transcript" preference; defaults to on
+    private var showTimestamps: Bool {
+        guard let email = appState.currentUser?.email else { return true }
+        return allSettings.first { $0.userEmail == email }?.showTimestamps ?? true
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button {
@@ -639,7 +698,7 @@ struct TranscriptSection: View {
                 }
 
                 // Transcript content with inline pause markers
-                TranscriptContentView(transcript: transcript, showPauses: showPauses)
+                TranscriptContentView(transcript: transcript, showPauses: showPauses, showTimestamps: showTimestamps)
             }
         }
         .padding()
@@ -656,6 +715,7 @@ struct TranscriptSection: View {
 struct TranscriptContentView: View {
     let transcript: Transcript
     let showPauses: Bool
+    var showTimestamps: Bool = true
 
     var body: some View {
         Group {
@@ -684,11 +744,13 @@ struct TranscriptContentView: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(segments) { segment in
                     HStack(alignment: .top, spacing: 8) {
-                        Text(formatStartTime(segment.startTime))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                            .frame(width: 32, alignment: .trailing)
+                        if showTimestamps {
+                            Text(formatStartTime(segment.startTime))
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .monospacedDigit()
+                                .frame(width: 32, alignment: .trailing)
+                        }
                         Text(segment.text)
                             .font(.body)
                     }
@@ -706,11 +768,13 @@ struct TranscriptContentView: View {
                 switch item.type {
                 case .segment(let text):
                     HStack(alignment: .top, spacing: 8) {
-                        Text(item.timestamp)
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                            .frame(width: 32, alignment: .trailing)
+                        if showTimestamps {
+                            Text(item.timestamp)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .monospacedDigit()
+                                .frame(width: 32, alignment: .trailing)
+                        }
                         Text(text)
                             .font(.body)
                         if let pause = item.followingPause {

@@ -36,6 +36,17 @@ extension Color {
     /// Driftwood #D7CDBE - Warm tan
     static let psdDriftwood = Color(hex: 0xD7CDBE)
 
+    // MARK: Appearance-Adaptive Initializer
+
+    /// Resolves to `light` or `dark` based on the current macOS appearance
+    init(light: Color, dark: Color) {
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(dark)
+                : NSColor(light)
+        })
+    }
+
     // MARK: Hex Initializer
 
     init(hex: UInt, alpha: Double = 1.0) {

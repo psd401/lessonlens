@@ -1,0 +1,13 @@
+// Shared build settings for all LessonLens targets.
+//
+// District-specific values (bundle ID, Apple team, backend host, Google OAuth
+// client) are NOT committed. Copy Local.example.xcconfig to Local.xcconfig
+// (git-ignored) and fill in your values; they override the defaults below.
+
+LL_BUNDLE_ID = com.example.lessonlens
+LL_DEVELOPMENT_TEAM =
+LL_BACKEND_HOST =
+LL_GOOGLE_CLIENT_ID_PREFIX =
+LL_ALLOWED_DOMAIN =
+
+#include? "Local.xcconfig"

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
+import { describeGeminiError } from '../gemini-error';
 import { env, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildAnalysisPrompt, type TechniqueDefinition, type PauseData, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -102,10 +103,9 @@ analyzeRoutes.post('/', async (c) => {
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status);
       return c.json({
         error: 'Analysis service error',
-        status: response.status,
+        ...(await describeGeminiError(response)),
       }, 502);
     }
 

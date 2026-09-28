@@ -45,6 +45,10 @@ struct LessonLensApp: App {
         }
     }()
 
+    init() {
+        TranscriptionService.backfillMissingPauses(in: sharedModelContainer.mainContext)
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

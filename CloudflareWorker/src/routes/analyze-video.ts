@@ -103,7 +103,7 @@ analyzeVideoRoutes.post('/', async (c) => {
       processedFile.uri,
       processedFile.mimeType,
       prompt,
-      c.env.GEMINI_VIDEO_MODEL || 'gemini-3-flash-preview',
+      c.env.GEMINI_VIDEO_MODEL || 'gemini-3.8-flash',
       c.env.GEMINI_API_KEY
     );
 
@@ -153,7 +153,7 @@ analyzeVideoRoutes.post('/', async (c) => {
         feedback: te.feedback,
         suggestions: te.suggestions || [],
       })),
-      model_used: c.env.GEMINI_VIDEO_MODEL || 'gemini-3-flash-preview',
+      model_used: c.env.GEMINI_VIDEO_MODEL || 'gemini-3.8-flash',
       usage: {
         input_tokens: geminiResponse.usageMetadata?.promptTokenCount,
         output_tokens: geminiResponse.usageMetadata?.candidatesTokenCount,

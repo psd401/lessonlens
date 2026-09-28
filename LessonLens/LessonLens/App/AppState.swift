@@ -82,7 +82,7 @@ struct SessionToken: Codable {
 }
 
 enum AuthError: Error, LocalizedError {
-    case invalidDomain
+    case invalidDomain(allowedDomain: String)
     case missingClientID
     case networkError(Error)
     case tokenExpired
@@ -91,10 +91,10 @@ enum AuthError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidDomain:
-            return "Only @psd401.net accounts are allowed"
+        case .invalidDomain(let allowedDomain):
+            return "Only @\(allowedDomain) accounts are allowed"
         case .missingClientID:
-            return "Google Client ID not configured. Set GOOGLE_CLIENT_ID environment variable in Xcode scheme."
+            return "Google Client ID not configured. Set LL_GOOGLE_CLIENT_ID_PREFIX in LessonLens/Config/Local.xcconfig."
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
         case .tokenExpired:
@@ -208,12 +208,15 @@ enum AnalysisError: Error, LocalizedError {
     case rateLimited
     case invalidResponse
     case networkUnavailable
+    case serviceUnavailable
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .apiError(let code, let message):
             return "API error (\(code)): \(message)"
+        case .serviceUnavailable:
+            return "Analysis isn't available right now. Your recording and transcript are saved. Please try again later."
         case .rateLimited:
             return "Rate limit reached. Please wait before analyzing another session."
         case .invalidResponse:
