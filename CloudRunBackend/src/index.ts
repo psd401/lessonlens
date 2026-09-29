@@ -51,6 +51,12 @@ if (!env.JWT_SECRET || env.JWT_SECRET.length < MIN_JWT_SECRET_LENGTH) {
   throw new Error(`JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters for secure token signing`);
 }
 
+// Without a client ID, jose skips the audience check and /auth/validate
+// accepts Google ID tokens issued to any OAuth client
+if (!env.GOOGLE_CLIENT_ID) {
+  throw new Error('GOOGLE_CLIENT_ID must be set so sign-in only accepts tokens issued to LessonLens');
+}
+
 // SECURITY DESIGN DECISION: In-memory rate limiting
 // - Resets on container restart and doesn't scale horizontally across instances
 // - Acceptable for this low-traffic internal tool (@psd401.net domain-restricted)
