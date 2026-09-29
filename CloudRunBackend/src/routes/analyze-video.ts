@@ -14,6 +14,21 @@ interface AnalyzeVideoRequest {
   geminiFileName?: string;  // older apps: Gemini Files API, e.g. "files/abc123"
   techniques: TechniqueDefinition[];
   includeRatings?: boolean;
+  durationSeconds?: number; // video length from the app, used to lower the frame rate for long lessons
+}
+
+// Past this length, sample 0.5 frames per second instead of Vertex's default
+// 1: about a third fewer input tokens for a mostly static classroom video,
+// and faster. Google suggests under 1 fps for long, mostly static videos
+// such as lectures.
+export const LONG_VIDEO_SECONDS = 45 * 60;
+export const LONG_VIDEO_FPS = 0.5;
+
+/** videoMetadata for the Vertex fileData part, or undefined for the default */
+export function videoMetadataFor(durationSeconds: unknown): { fps: number } | undefined {
+  return typeof durationSeconds === 'number' && Number.isFinite(durationSeconds) && durationSeconds > LONG_VIDEO_SECONDS
+    ? { fps: LONG_VIDEO_FPS }
+    : undefined;
 }
 
 interface GeminiFileStatusResponse {
@@ -72,7 +87,7 @@ analyzeVideoRoutes.post('/', async (c) => {
     return c.json({ error: 'Invalid JSON body' }, 400);
   }
 
-  const { gcsObject, geminiFileName, techniques, includeRatings = true } = body;
+  const { gcsObject, geminiFileName, techniques, includeRatings = true, durationSeconds } = body;
 
   if ((!gcsObject && !geminiFileName) || !techniques || techniques.length === 0) {
     return c.json({ error: 'Missing gcsObject (or geminiFileName) or techniques' }, 400);
@@ -106,7 +121,7 @@ analyzeVideoRoutes.post('/', async (c) => {
   }
 
   if (gcsObject) {
-    return analyzeFromCloudStorage(c, gcsObject, techniques, includeRatings);
+    return analyzeFromCloudStorage(c, gcsObject, techniques, includeRatings, durationSeconds);
   }
 
   if (!geminiFileName) {
@@ -172,7 +187,8 @@ async function analyzeFromCloudStorage(
   c: Context,
   gcsObject: string,
   techniques: TechniqueDefinition[],
-  includeRatings: boolean
+  includeRatings: boolean,
+  durationSeconds?: number
 ) {
   const storage = videoStorage!;
   try {
@@ -190,7 +206,10 @@ async function analyzeFromCloudStorage(
         {
           role: 'user',
           parts: [
-            { fileData: { mimeType: object.contentType, fileUri: storage.gsUri(gcsObject) } },
+            {
+              fileData: { mimeType: object.contentType, fileUri: storage.gsUri(gcsObject) },
+              ...(videoMetadataFor(durationSeconds) && { videoMetadata: videoMetadataFor(durationSeconds) }),
+            },
             { text: prompt },
           ],
         },
