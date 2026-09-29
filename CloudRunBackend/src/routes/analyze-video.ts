@@ -74,7 +74,7 @@ analyzeVideoRoutes.post('/', async (c) => {
   const { gcsObject, geminiFileName, techniques, includeRatings = true } = body;
 
   if ((!gcsObject && !geminiFileName) || !techniques || techniques.length === 0) {
-    return c.json({ error: 'Missing gcsObject or techniques' }, 400);
+    return c.json({ error: 'Missing gcsObject (or geminiFileName) or techniques' }, 400);
   }
 
   if (gcsObject && geminiFileName) {

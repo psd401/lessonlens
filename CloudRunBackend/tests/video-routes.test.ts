@@ -20,6 +20,10 @@ interface Call {
 }
 
 let calls: Call[];
+
+const hostOf = (call: Call) => new URL(call.url).hostname;
+const isStorage = (call: Call) => hostOf(call) === 'storage.googleapis.com';
+const isVertex = (call: Call) => hostOf(call) === 'aiplatform.googleapis.com' || hostOf(call).endsWith('.rep.googleapis.com');
 let vertexStatus: number;
 let objectExists: boolean;
 
@@ -38,24 +42,26 @@ beforeEach(() => {
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = init?.method ?? 'GET';
-    calls.push({ url, method, body: typeof init?.body === 'string' ? init.body : undefined });
+    const call = { url, method, body: typeof init?.body === 'string' ? init.body : undefined };
+    calls.push(call);
+    const { pathname, searchParams } = new URL(url);
 
     if (url.endsWith('/project/project-id')) return new Response('test-project');
     if (url.endsWith('/service-accounts/default/token')) {
       return Response.json({ access_token: 'test-token', expires_in: 3600 });
     }
-    if (url.includes('uploadType=resumable')) {
+    if (isStorage(call) && searchParams.get('uploadType') === 'resumable') {
       return new Response(null, { headers: { Location: 'https://storage.example/session/1' } });
     }
-    if (url.includes('storage.googleapis.com/storage/v1/') && method === 'GET') {
+    if (isStorage(call) && pathname.startsWith('/storage/v1/') && method === 'GET') {
       return objectExists
         ? Response.json({ name: 'x', size: '1000', contentType: 'video/mp4' })
         : new Response(null, { status: 404 });
     }
-    if (url.includes('storage.googleapis.com/storage/v1/') && method === 'DELETE') {
+    if (isStorage(call) && pathname.startsWith('/storage/v1/') && method === 'DELETE') {
       return new Response(null, { status: 204 });
     }
-    if (url.includes('aiplatform')) {
+    if (isVertex(call)) {
       if (vertexStatus !== 200) {
         return Response.json({ error: { status: 'INVALID_ARGUMENT' } }, { status: vertexStatus });
       }
@@ -114,7 +120,7 @@ describe('POST /upload/initiate/gcs', () => {
     expect(
       (await post('/upload/initiate/gcs', 'user-123', { contentType: 'video/mp4', fileSize: 3 * 1024 ** 3 })).status
     ).toBe(400);
-    expect(calls.some((c) => c.url.includes('storage.googleapis.com'))).toBe(false);
+    expect(calls.some(isStorage)).toBe(false);
   });
 });
 
@@ -129,7 +135,7 @@ describe('POST /analyze/video with gcsObject', () => {
     expect(body.overall_summary).toBe('Summary');
     expect(body.technique_evaluations).toHaveLength(1);
 
-    const vertex = calls.find((c) => c.url.includes('aiplatform'))!;
+    const vertex = calls.find(isVertex)!;
     const request = JSON.parse(vertex.body!);
     expect(request.contents[0].role).toBe('user');
     expect(request.contents[0].parts[0].fileData).toEqual({
@@ -145,7 +151,7 @@ describe('POST /analyze/video with gcsObject', () => {
     const res = await post('/analyze/video', 'user-123', { gcsObject: objectName, techniques });
 
     expect(res.status).toBe(404);
-    expect(calls.some((c) => c.url.includes('storage.googleapis.com') || c.url.includes('aiplatform'))).toBe(false);
+    expect(calls.some((c) => isStorage(c) || isVertex(c))).toBe(false);
   });
 
   test('a Vertex rejection is reported with its status and the object is still deleted', async () => {
@@ -166,7 +172,7 @@ describe('POST /analyze/video with gcsObject', () => {
     const res = await post('/analyze/video', 'user-123', { gcsObject: objectName, techniques });
 
     expect(res.status).toBe(404);
-    expect(calls.some((c) => c.url.includes('aiplatform'))).toBe(false);
+    expect(calls.some(isVertex)).toBe(false);
   });
 
   test('sending both gcsObject and geminiFileName is rejected', async () => {
