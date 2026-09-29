@@ -145,7 +145,18 @@ describe('POST /analyze/video with gcsObject', () => {
     expect(calls.some((c) => c.method === 'DELETE' && c.url.includes(encodeURIComponent(objectName)))).toBe(true);
   });
 
-  test('another user\'s object is not found and never reaches Cloud Storage or Vertex', async () => {
+  test('long videos are sampled at 0.5 fps; short or unknown lengths use the default', async () => {
+    const cases: [unknown, unknown][] = [[3600, { fps: 0.5 }], [1800, undefined], [undefined, undefined], ['3600', undefined]];
+    for (const [durationSeconds, expected] of cases) {
+      const objectName = await initiate('user-123');
+      const res = await post('/analyze/video', 'user-123', { gcsObject: objectName, techniques, durationSeconds });
+      expect(res.status).toBe(200);
+      const vertex = calls.find(isVertex)!;
+      expect(JSON.parse(vertex.body!).contents[0].parts[0].videoMetadata).toEqual(expected);
+    }
+  });
+
+    test('another user\'s object is not found and never reaches Cloud Storage or Vertex', async () => {
     const objectName = await initiate('user-456');
 
     const res = await post('/analyze/video', 'user-123', { gcsObject: objectName, techniques });
