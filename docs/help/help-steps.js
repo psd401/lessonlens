@@ -4,7 +4,7 @@
 // image: null renders a placeholder frame that still shows the hotspot areas.
 // UI labels below are quoted from the app; keep them in sync when the app changes.
 window.LESSONLENS_HELP = {
-  "updated": "2026-09-28",
+  "updated": "2026-09-29",
   "appVersion": "1.2.0",
   "sections": [
     {
@@ -256,30 +256,30 @@ window.LESSONLENS_HELP = {
         "Read <b>Overall Trend</b>, <b>Technique Breakdown</b>, and <b>Patterns &amp; Insights</b>."
       ],
       "note": "Needs at least two analyzed lessons with star ratings on, using the same framework.",
-      "image": null,
-      "alt": "The Growth Dashboard",
+      "image": "img/growth.png",
+      "alt": "The Growth Dashboard for three sample lessons rated with the Danielson framework",
       "tour": [
         {
-          "x": 4,
-          "y": 14,
-          "w": 92,
-          "h": 26,
+          "x": 31.3,
+          "y": 12,
+          "w": 64.1,
+          "h": 15.6,
           "title": "Overall Trend",
           "text": "Your average rating over time."
         },
         {
-          "x": 4,
-          "y": 44,
-          "w": 92,
-          "h": 28,
+          "x": 31.3,
+          "y": 31.3,
+          "w": 64.1,
+          "h": 32.4,
           "title": "Technique Breakdown",
           "text": "Ratings for each technique."
         },
         {
-          "x": 4,
-          "y": 76,
-          "w": 92,
-          "h": 18,
+          "x": 31.3,
+          "y": 67.3,
+          "w": 64.1,
+          "h": 32.4,
           "title": "Patterns & Insights",
           "text": "Where you're strong and what's worth revisiting."
         }

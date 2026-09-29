@@ -33,4 +33,3 @@ Privacy-first AI coaching tool for PSD teachers (native macOS, Apple Silicon). R
   - History: add a stop for notable releases/milestones; update `currentVersions` and `updated`; keep claims tied to git log or GitHub Releases.
   - Help: re-check quoted UI labels against the app source; update `appVersion` and `updated`; recapture any screenshot whose screen changed and re-position its hotspots.
 - Screenshots: sample data only (fictional lessons and student names). Blur the sidebar session list below the sample sessions so real session titles are never published. Never reuse captures of real lessons.
-- Known gaps (Sep 2026): Growth step and Capture step still need sample-data screenshots.
