@@ -2,6 +2,9 @@
 
 A privacy-first AI coaching tool for Peninsula SD teachers. Record or import a lesson, get AI-powered feedback on specific teaching techniques, and reflect on your practice — all without administrators, evaluators, or anyone else seeing your data.
 
+- **Teacher help:** [How to use LessonLens](https://psd401.github.io/lessonlens/help/), a step-by-step guide with screenshot tours
+- **Project history:** [The LessonLens road so far](https://psd401.github.io/lessonlens/history/), from the first prototype to today
+
 ## Screenshots
 
 <table>
@@ -21,7 +24,7 @@ LessonLens is **voluntary** and is **not an evaluation tool**. It is not used fo
 
 - **Only you can see your data.** No administrator, evaluator, or colleague has access to your recordings, transcripts, analysis, reflections, or chat conversations.
 - **Audio never leaves your device.** Transcription happens entirely on your Mac using an on-device AI model — no audio is uploaded anywhere.
-- **Video is deleted immediately after analysis.** When you submit a video for analysis, it is automatically deleted from Google as soon as the analysis completes.
+- **Video is deleted immediately after analysis.** When you choose Video Analysis, a compressed copy of the video is uploaded to private, temporary storage in the district's Google Cloud project, analyzed in the United States, and deleted as soon as the analysis finishes. The original stays on your Mac.
 - **The district cannot see what you do.** The backend server stores nothing — no transcripts, no results, no session history. The tech team can see aggregate usage counts but not who made the requests or what was in them.
 - **Google cannot use your data.** Processing is governed by the district's Data Processing Agreement with Google. Your data is not used to train AI models.
 
