@@ -12,6 +12,10 @@ import { describe, expect, test } from 'bun:test';
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   process.env.JWT_SECRET = 'ci-test-secret-0123456789abcdef-0123456789abcdef';
 }
+// src/index.ts also requires GOOGLE_CLIENT_ID at import time.
+if (!process.env.GOOGLE_CLIENT_ID) {
+  process.env.GOOGLE_CLIENT_ID = 'ci-test-client.apps.googleusercontent.com';
+}
 
 const { default: server, checkRateLimit, getRateLimitStatus } = await import('../src/index');
 
@@ -81,5 +85,16 @@ describe('rate limiter', () => {
     const status = getRateLimitStatus(`never-used-${Date.now()}`, 7);
     expect(status.used).toBe(0);
     expect(status.remaining).toBe(7);
+  });
+});
+
+describe('startup validation', () => {
+  test('refuses to start without GOOGLE_CLIENT_ID', () => {
+    const result = Bun.spawnSync(['bun', '-e', "await import('./src/index.ts')"], {
+      cwd: `${import.meta.dir}/..`,
+      env: { ...process.env, GOOGLE_CLIENT_ID: '' },
+    });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain('GOOGLE_CLIENT_ID must be set');
   });
 });
