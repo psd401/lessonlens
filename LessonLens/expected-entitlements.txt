@@ -1,0 +1,3 @@
+# Entitlements the signed Release app must carry (checked by the psd-sign skill).
+# Release is deliberately not sandboxed; see RELEASING.md.
+com.apple.security.device.audio-input
