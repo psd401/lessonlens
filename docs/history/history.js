@@ -103,9 +103,9 @@ window.LESSONLENS_HISTORY = {
         },
         {
           date: "2026-09-28",
-          title: "AI feedback moves into the district's own cloud",
-          body: "Feedback, coaching chat, and video analysis now run in the district's own Google Cloud account, processed in the United States, instead of through a separate access key. Videos wait in private, temporary district storage only while they are being analyzed.",
-          tags: ["privacy", "Google Cloud"]
+          title: "Tighter controls on AI processing",
+          body: "Feedback, coaching chat, and video analysis are now processed in the United States only, and Google's optional short-term caching is turned off. The app now connects to Google's Gemini through the district's own Google Cloud project instead of a separate access key, which also ends the brief outages that key caused. Videos wait in private, temporary district storage only while they are being analyzed.",
+          tags: ["privacy", "reliability"]
         },
         {
           date: "2026-09-28",
