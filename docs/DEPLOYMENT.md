@@ -343,7 +343,8 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | `JWT_SECRET` | Yes | — | Secret for signing auth tokens (min 32 chars) |
 | `GEMINI_API_KEY` | Yes | — | Google Gemini API key (video always uses it; text and chat only when `GEMINI_BACKEND=apikey`) |
 | `GEMINI_BACKEND` | No | `apikey` | Text analysis and chat backend: `apikey` or `vertex` (Vertex AI in the Cloud Run project, as the runtime service account) |
-| `VERTEX_LOCATION` | No | `global` | Vertex AI location when `GEMINI_BACKEND=vertex` |
+| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region); used for text and chat when `GEMINI_BACKEND=vertex`, and always for Cloud Storage video |
+| `VIDEO_BUCKET` | No | — | Temporary Cloud Storage bucket for video uploads (uniform access, public access prevention, 1-day delete lifecycle rule, `roles/storage.objectAdmin` for the runtime service account only) |
 | `GOOGLE_CLIENT_ID` | Yes | — | OAuth client ID for Google Sign-In |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Google Workspace domain to restrict login |
 | `RATE_LIMIT_PER_HOUR` | No | `20` | Text analysis rate limit per user |

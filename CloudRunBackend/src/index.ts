@@ -6,6 +6,8 @@ import { analyzeVideoRoutes } from './routes/analyze-video';
 import { uploadRoutes } from './routes/upload';
 import { chatRoutes } from './routes/chat';
 import { createGeminiClient, parseGeminiBackend, type GeminiBackend } from './gemini-client';
+import { createMetadataAuth } from './gcp-auth';
+import { createVideoStorage } from './video-storage';
 
 // Environment configuration
 export interface Env {
@@ -20,6 +22,7 @@ export interface Env {
   GEMINI_VIDEO_MODEL: string;
   VIDEO_RATE_LIMIT_PER_HOUR: number;
   CHAT_RATE_LIMIT_PER_HOUR: number;
+  VIDEO_BUCKET: string;
 }
 
 // Load environment variables
@@ -35,15 +38,35 @@ export const env: Env = {
   GEMINI_VIDEO_MODEL: process.env.GEMINI_VIDEO_MODEL || 'gemini-3.8-flash',
   VIDEO_RATE_LIMIT_PER_HOUR: parseInt(process.env.VIDEO_RATE_LIMIT_PER_HOUR || '5', 10),
   CHAT_RATE_LIMIT_PER_HOUR: parseInt(process.env.CHAT_RATE_LIMIT_PER_HOUR || '50', 10),
+  VIDEO_BUCKET: process.env.VIDEO_BUCKET || '',
 };
 
+// Runtime service account credentials, shared by Vertex AI and Cloud Storage
+const gcpAuth = createMetadataAuth();
+
 // Text analysis and chat go through this client; GEMINI_BACKEND picks the
-// API key or Vertex AI. Video still uses the API key directly.
+// API key or Vertex AI.
 export const gemini = createGeminiClient({
   backend: env.GEMINI_BACKEND,
   apiKey: env.GEMINI_API_KEY,
   vertexLocation: env.VERTEX_LOCATION,
+  auth: gcpAuth,
 });
+
+// Videos uploaded to Cloud Storage can only be read by Vertex AI, so the
+// Cloud Storage video path always uses Vertex regardless of GEMINI_BACKEND.
+// The older Gemini Files API video path still uses the API key directly.
+export const vertexGemini = createGeminiClient({
+  backend: 'vertex',
+  apiKey: '',
+  vertexLocation: env.VERTEX_LOCATION,
+  auth: gcpAuth,
+});
+
+// null until VIDEO_BUCKET is set; the Cloud Storage video routes return 503
+export const videoStorage = env.VIDEO_BUCKET
+  ? createVideoStorage({ bucket: env.VIDEO_BUCKET, auth: gcpAuth })
+  : null;
 
 // Startup validation for critical security configuration
 const MIN_JWT_SECRET_LENGTH = 32;
