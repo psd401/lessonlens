@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { describeGeminiError } from '../gemini-error';
 import { VIDEO_EXTENSIONS } from '../video-storage';
+import { getOwnedGeminiFile } from '../gemini-files';
 import { env, vertexGemini, videoStorage, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildVideoAnalysisPrompt, type TechniqueDefinition, type GeminiGenerateResponse } from '../../../shared/prompts';
 import type { Context } from 'hono';
@@ -110,6 +111,18 @@ analyzeVideoRoutes.post('/', async (c) => {
 
   if (!geminiFileName) {
     return c.json({ error: 'Missing geminiFileName' }, 400);
+  }
+
+  // Only the uploader's own file. Checked before the try below, because its
+  // error handling deletes the file, and another user's file must not be
+  // touched.
+  try {
+    if (!(await getOwnedGeminiFile(geminiFileName, userId, env.GEMINI_API_KEY))) {
+      return c.json({ error: 'Upload not found' }, 404);
+    }
+  } catch (err) {
+    console.error('Video analysis failed:', err);
+    return c.json({ error: 'Video analysis failed' }, 500);
   }
 
   try {

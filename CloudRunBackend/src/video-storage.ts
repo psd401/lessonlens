@@ -41,9 +41,13 @@ export interface VideoStorage {
   gsUri(objectName: string): string;
 }
 
+/** First 32 hex characters of sha256(user ID): identifies an uploader without user details */
+export function userHash(userId: string): string {
+  return createHash('sha256').update(userId).digest('hex').slice(0, 32);
+}
+
 function userFolder(userId: string): string {
-  const hash = createHash('sha256').update(userId).digest('hex').slice(0, 32);
-  return `uploads/${hash}/`;
+  return `uploads/${userHash(userId)}/`;
 }
 
 const OBJECT_FILE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(mp4|mov|m4v|webm)$/;

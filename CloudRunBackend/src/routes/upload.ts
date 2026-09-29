@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { env, videoStorage } from '../index';
+import { geminiDisplayNameFor, getOwnedGeminiFile } from '../gemini-files';
 
 export const uploadRoutes = new Hono();
 
@@ -74,10 +75,11 @@ uploadRoutes.post('/initiate', async (c) => {
   }
 
   try {
-    // Generate a unique display name
+    // Unique display name that starts with the uploader's hash, so later
+    // requests can check the caller owns the file
     const timestamp = Date.now();
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fileDisplayName = `${timestamp}-${sanitizedFileName}`;
+    const fileDisplayName = geminiDisplayNameFor(authResult.userId!, timestamp, sanitizedFileName);
 
     // Initiate resumable upload with Gemini
     const startResponse = await fetch(
@@ -204,20 +206,11 @@ uploadRoutes.post('/status', async (c) => {
   }
 
   try {
-    const response = await fetch(
-      `${GEMINI_API_BASE}/v1beta/${fileName}?key=${env.GEMINI_API_KEY}`
-    );
-
-    if (!response.ok) {
-      console.error('Failed to get file status:', response.status);
-      return c.json({
-        error: 'Failed to get file status'
-      }, response.status);
+    const file = await getOwnedGeminiFile(fileName, authResult.userId!, env.GEMINI_API_KEY);
+    if (!file) {
+      return c.json({ error: 'File not found' }, 404);
     }
-
-    const fileStatus = await response.json();
-    return c.json(fileStatus);
-
+    return c.json(file);
   } catch (err) {
     console.error('Failed to get file status:', err);
     return c.json({
@@ -251,6 +244,12 @@ uploadRoutes.delete('/:fileName{.+}', async (c) => {
   }
 
   try {
+    // Only the uploader may delete a file
+    const file = await getOwnedGeminiFile(fileName, authResult.userId!, env.GEMINI_API_KEY);
+    if (!file) {
+      return c.json({ error: 'File not found' }, 404);
+    }
+
     const response = await fetch(
       `${GEMINI_API_BASE}/v1beta/${fileName}?key=${env.GEMINI_API_KEY}`,
       { method: 'DELETE' }
