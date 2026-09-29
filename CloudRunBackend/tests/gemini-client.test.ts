@@ -114,8 +114,10 @@ describe('config helpers', () => {
     expect(() => parseGeminiBackend('Vertex')).toThrow();
   });
 
-  test('regional locations use the regional Vertex host', () => {
+  test('regional and multi-region locations use their Vertex hosts', () => {
     expect(vertexHost('global')).toBe('aiplatform.googleapis.com');
     expect(vertexHost('us-west1')).toBe('us-west1-aiplatform.googleapis.com');
+    expect(vertexHost('us')).toBe('aiplatform.us.rep.googleapis.com');
+    expect(vertexHost('eu')).toBe('aiplatform.eu.rep.googleapis.com');
   });
 });

@@ -4,12 +4,13 @@
  * - "apikey": the Gemini Developer API (generativelanguage.googleapis.com)
  *   with GEMINI_API_KEY. Kept as a manual fallback during the Vertex move.
  * - "vertex": Vertex AI in the Cloud Run project, authenticated as the
- *   service's runtime service account. The access token and project ID come
- *   from the Cloud Run metadata server, so no identifier lives in source.
+ *   service's runtime service account (see gcp-auth.ts).
  *
  * Both backends take the same request body and return the same response and
  * error shapes, so callers handle either one identically.
  */
+
+import { createMetadataAuth, type GcpAuth } from './gcp-auth';
 
 export type GeminiBackend = 'apikey' | 'vertex';
 
@@ -17,6 +18,7 @@ export interface GeminiClientConfig {
   backend: GeminiBackend;
   apiKey: string;
   vertexLocation: string;
+  auth?: GcpAuth;
   fetch?: typeof fetch;
 }
 
@@ -25,9 +27,10 @@ export interface GeminiClient {
 }
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com';
-const METADATA_BASE = 'http://metadata.google.internal/computeMetadata/v1';
-// Refresh the token this long before it expires
-const TOKEN_REFRESH_MARGIN_MS = 60_000;
+
+// Multi-region locations use their own hostnames; they keep ML processing
+// inside that jurisdiction (the global endpoint does not)
+const MULTI_REGION_LOCATIONS = new Set(['us', 'eu']);
 
 export function parseGeminiBackend(value: string | undefined): GeminiBackend {
   const backend = value || 'apikey';
@@ -38,44 +41,18 @@ export function parseGeminiBackend(value: string | undefined): GeminiBackend {
 }
 
 export function vertexHost(location: string): string {
-  return location === 'global'
-    ? 'aiplatform.googleapis.com'
-    : `${location}-aiplatform.googleapis.com`;
+  if (location === 'global') {
+    return 'aiplatform.googleapis.com';
+  }
+  if (MULTI_REGION_LOCATIONS.has(location)) {
+    return `aiplatform.${location}.rep.googleapis.com`;
+  }
+  return `${location}-aiplatform.googleapis.com`;
 }
 
 export function createGeminiClient(config: GeminiClientConfig): GeminiClient {
-  const fetchFn = config.fetch ?? fetch;
-
-  let projectId: string | undefined;
-  let token: { value: string; expiresAt: number } | undefined;
-
-  async function metadata(path: string): Promise<Response> {
-    const response = await fetchFn(`${METADATA_BASE}/${path}`, {
-      headers: { 'Metadata-Flavor': 'Google' },
-    });
-    if (!response.ok) {
-      throw new Error(`Metadata server returned ${response.status} for ${path}`);
-    }
-    return response;
-  }
-
-  async function getProjectId(): Promise<string> {
-    if (!projectId) {
-      projectId = (await (await metadata('project/project-id')).text()).trim();
-    }
-    return projectId;
-  }
-
-  async function getAccessToken(): Promise<string> {
-    if (!token || Date.now() >= token.expiresAt - TOKEN_REFRESH_MARGIN_MS) {
-      const body = await (await metadata('instance/service-accounts/default/token')).json() as {
-        access_token: string;
-        expires_in: number;
-      };
-      token = { value: body.access_token, expiresAt: Date.now() + body.expires_in * 1000 };
-    }
-    return token.value;
-  }
+  const fetchFn = (input: string, init: RequestInit) => (config.fetch ?? globalThis.fetch)(input, init);
+  const auth = config.auth ?? createMetadataAuth(config.fetch);
 
   return {
     async generateContent(model: string, body: unknown): Promise<Response> {
@@ -90,7 +67,7 @@ export function createGeminiClient(config: GeminiClientConfig): GeminiClient {
         );
       }
 
-      const [project, accessToken] = await Promise.all([getProjectId(), getAccessToken()]);
+      const [project, accessToken] = await Promise.all([auth.getProjectId(), auth.getAccessToken()]);
       const location = config.vertexLocation;
       return fetchFn(
         `https://${vertexHost(location)}/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent`,

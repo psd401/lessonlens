@@ -18,9 +18,10 @@ Backend API for LessonLens macOS app. Handles authentication, text analysis, and
 | POST | `/auth/refresh` | Refresh expired session |
 | POST | `/analyze` | Analyze transcript (Gemini) |
 | GET | `/analyze/rate-limit` | Get text analysis rate limit status |
-| POST | `/analyze/video` | Analyze video (Gemini) |
+| POST | `/analyze/video` | Analyze an uploaded video (`gcsObject` on Vertex AI, or `geminiFileName` for older apps) |
 | GET | `/analyze/video/rate-limit` | Get video analysis rate limit status |
-| POST | `/upload/initiate` | Initiate Gemini file upload |
+| POST | `/upload/initiate/gcs` | Start a Cloud Storage upload to the temporary video bucket |
+| POST | `/upload/initiate` | Initiate Gemini file upload (older apps; API key) |
 | POST | `/chat` | Coaching chat message with session context |
 | GET | `/chat/rate-limit` | Get chat rate limit status |
 
@@ -30,7 +31,8 @@ Backend API for LessonLens macOS app. Handles authentication, text analysis, and
 |----------|----------|---------|-------------|
 | `GEMINI_API_KEY` | Yes | - | Google AI API key (video always uses it; text and chat only when `GEMINI_BACKEND=apikey`) |
 | `GEMINI_BACKEND` | No | `apikey` | Text analysis and chat backend: `apikey` or `vertex` (Vertex AI in the Cloud Run project, as the runtime service account) |
-| `VERTEX_LOCATION` | No | `global` | Vertex AI location when `GEMINI_BACKEND=vertex` |
+| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region); used for text and chat when `GEMINI_BACKEND=vertex`, and always for Cloud Storage video |
+| `VIDEO_BUCKET` | No | - | Temporary Cloud Storage bucket for video uploads; the Cloud Storage video routes return 503 until it is set |
 | `GOOGLE_CLIENT_ID` | Yes | - | Google OAuth client ID |
 | `JWT_SECRET` | Yes | - | Secret for signing tokens |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Email domain restriction |
@@ -114,9 +116,11 @@ src/
 5. Returns structured feedback
 
 ### Video Analysis
-1. Client calls `/upload/initiate` to get Gemini upload URL
-2. Client uploads video directly to Gemini
-3. Client calls `/analyze/video` with file URI
-4. Backend polls Gemini until file is processed (up to 10 min)
-5. Backend calls Gemini with analysis prompt
+1. Client calls `/upload/initiate/gcs` and gets a Cloud Storage upload URL plus an object name under a hashed per-user folder in `VIDEO_BUCKET`
+2. Client uploads the video to that URL with a plain `PUT`
+3. Client calls `/analyze/video` with `gcsObject`; the backend checks the caller owns the object
+4. Backend sends the `gs://` URI to Vertex AI with the analysis prompt
+5. Backend deletes the object whether analysis succeeded or failed (the bucket's 1-day lifecycle rule is the backstop)
 6. Returns structured feedback
+
+Older apps still use `/upload/initiate` (Gemini Files API) and send `geminiFileName`; that path needs `GEMINI_API_KEY` and polls Gemini until the file is processed (up to 10 min).

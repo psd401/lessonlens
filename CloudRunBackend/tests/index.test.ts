@@ -7,15 +7,7 @@
  * OAuth + Gemini credentials, which do not belong in CI).
  */
 import { describe, expect, test } from 'bun:test';
-
-// src/index.ts validates JWT_SECRET at import time (min 32 chars).
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  process.env.JWT_SECRET = 'ci-test-secret-0123456789abcdef-0123456789abcdef';
-}
-// src/index.ts also requires GOOGLE_CLIENT_ID at import time.
-if (!process.env.GOOGLE_CLIENT_ID) {
-  process.env.GOOGLE_CLIENT_ID = 'ci-test-client.apps.googleusercontent.com';
-}
+import './test-env';
 
 const { default: server, checkRateLimit, getRateLimitStatus } = await import('../src/index');
 

@@ -292,7 +292,8 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 #### Backend (Cloud Run)
 - `GEMINI_API_KEY` - Google AI API key
 - `GEMINI_BACKEND` - Text analysis and chat backend: `apikey` (default) or `vertex`
-- `VERTEX_LOCATION` - Vertex AI location when `GEMINI_BACKEND=vertex` (default: `global`)
+- `VERTEX_LOCATION` - Vertex AI location (default: `global`; `us` keeps ML processing in the US)
+- `VIDEO_BUCKET` - Temporary Cloud Storage bucket for video uploads
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `JWT_SECRET` - Secret for signing session tokens (min 32 chars)
 - `ALLOWED_DOMAIN` - Email domain restriction (e.g., `psd401.net`)
@@ -314,7 +315,7 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 | Endpoint | Description |
 |----------|-------------|
 | `POST /analyze` | Analyze transcript for teaching techniques (Gemini) |
-| `POST /analyze/video` | Analyze uploaded video (Gemini) |
+| `POST /analyze/video` | Analyze uploaded video (Vertex AI via Cloud Storage; Gemini Files API for older apps) |
 | `GET /analyze/rate-limit` | Get current text analysis rate limit status |
 | `GET /analyze/video/rate-limit` | Get current video analysis rate limit status |
 
@@ -327,7 +328,8 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 ### Video Upload
 | Endpoint | Description |
 |----------|-------------|
-| `POST /upload/initiate` | Initiate Gemini video upload, get upload URL |
+| `POST /upload/initiate/gcs` | Start a Cloud Storage video upload, get upload URL and object name |
+| `POST /upload/initiate` | Initiate Gemini video upload, get upload URL (older apps) |
 
 ## Privacy & Security
 
