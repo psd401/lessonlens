@@ -47,6 +47,7 @@
 		0039 /* NationalBoardTechniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1038 /* NationalBoardTechniques.swift */; };
 		0040 /* VideoImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1040 /* VideoImportService.swift */; };
 		0041 /* VideoAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1041 /* VideoAnalysisService.swift */; };
+		0098 /* VideoCompressionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1098 /* VideoCompressionService.swift */; };
 		0042 /* AudioExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1042 /* AudioExtractionService.swift */; };
 		0043 /* VideoImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1043 /* VideoImportView.swift */; };
 		0044 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1044 /* VideoPlayerView.swift */; };
@@ -135,6 +136,7 @@
 		1038 /* NationalBoardTechniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NationalBoardTechniques.swift; sourceTree = "<group>"; };
 		1040 /* VideoImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoImportService.swift; sourceTree = "<group>"; };
 		1041 /* VideoAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAnalysisService.swift; sourceTree = "<group>"; };
+		1098 /* VideoCompressionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCompressionService.swift; sourceTree = "<group>"; };
 		1042 /* AudioExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractionService.swift; sourceTree = "<group>"; };
 		1043 /* VideoImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoImportView.swift; sourceTree = "<group>"; };
 		1044 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
@@ -330,6 +332,7 @@
 			children = (
 				1018 /* AnalysisService.swift */,
 				1041 /* VideoAnalysisService.swift */,
+				1098 /* VideoCompressionService.swift */,
 				1019 /* AnalysisFeedbackView.swift */,
 				1031 /* AnalysisConfigurationSheet.swift */,
 			);
@@ -667,6 +670,7 @@
 				8630 /* PDFPageView.swift in Sources */,
 				0040 /* VideoImportService.swift in Sources */,
 				0041 /* VideoAnalysisService.swift in Sources */,
+				0098 /* VideoCompressionService.swift in Sources */,
 				0042 /* AudioExtractionService.swift in Sources */,
 				0043 /* VideoImportView.swift in Sources */,
 				0044 /* VideoPlayerView.swift in Sources */,

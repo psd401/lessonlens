@@ -194,7 +194,7 @@ struct VideoImportView: View {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
             fileSize = attributes[.size] as? Int64 ?? 0
             if fileSize > VideoImportService.maxFileSize {
-                validationError = "Video exceeds 2GB maximum size"
+                validationError = "Video exceeds 10GB maximum size"
                 isValidating = false
                 if didStart { url.stopAccessingSecurityScopedResource() }
                 return
@@ -223,8 +223,8 @@ struct VideoImportView: View {
                     // Validate duration
                     if seconds < 300 { // 5 minutes
                         validationError = "Video must be at least 5 minutes"
-                    } else if seconds > 3000 { // 50 minutes
-                        validationError = "Video cannot exceed 50 minutes"
+                    } else if seconds > 5400 { // 90 minutes
+                        validationError = "Video cannot exceed 90 minutes"
                     } else {
                         validationError = nil
                         selectedURL = url

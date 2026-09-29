@@ -66,7 +66,7 @@ struct AppConfiguration: Codable {
             googleClientID: clientIDPrefix.isEmpty ? "" : "\(clientIDPrefix).apps.googleusercontent.com",
             allowedDomain: allowedDomain,
             minRecordingDuration: 5 * 60,  // 5 minutes
-            maxRecordingDuration: 50 * 60, // 50 minutes
+            maxRecordingDuration: 90 * 60, // 90 minutes
             whisperModel: "openai_whisper-large-v3",
             rateLimitPerHour: 20,
             devUseBundledModel: ProcessInfo.processInfo.environment["DEV_USE_BUNDLED_MODEL"] == "1"

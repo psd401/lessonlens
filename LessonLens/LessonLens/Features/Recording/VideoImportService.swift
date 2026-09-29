@@ -15,8 +15,9 @@ final class VideoImportService: ObservableObject {
         UTType(mimeType: "video/webm") ?? .movie     // .webm
     ]
 
-    /// Maximum file size in bytes (2GB - Gemini File API limit)
-    static let maxFileSize: Int64 = 2 * 1024 * 1024 * 1024
+    /// Maximum imported file size in bytes. Videos are compressed to 720p before
+    /// upload, so this only bounds local storage; the upload itself must be under 2GB.
+    static let maxFileSize: Int64 = 10 * 1024 * 1024 * 1024
 
     // Recording directory (same as RecordingService)
     private lazy var recordingsDirectory: URL = {
@@ -176,11 +177,11 @@ enum VideoImportError: Error, LocalizedError {
         case .invalidVideoFormat:
             return "Invalid video format. Supported formats: mp4, mov, m4v, webm"
         case .fileTooLarge:
-            return "Video file exceeds 2GB maximum size"
+            return "Video file exceeds 10GB maximum size"
         case .durationTooShort:
             return "Video must be at least 5 minutes"
         case .durationTooLong:
-            return "Video cannot exceed 50 minutes"
+            return "Video cannot exceed 90 minutes"
         case .durationUnavailable:
             return "Unable to determine video duration"
         case .copyFailed(let error):

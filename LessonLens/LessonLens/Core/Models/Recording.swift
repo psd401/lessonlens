@@ -138,3 +138,37 @@ enum RecordingStatus: String, Codable {
         self == .uploading || self == .transcribing || self == .analyzing
     }
 }
+
+// MARK: - Interrupted Processing
+
+extension Recording {
+    /// Where a recording should land if the app quit while it was uploading,
+    /// transcribing or analyzing: back to the last step that finished, so the
+    /// teacher can start the next one again. nil when it isn't mid-process.
+    var statusAfterInterruptedProcessing: RecordingStatus? {
+        guard status.isProcessing else { return nil }
+        if analysis != nil { return .complete }
+        if transcript != nil { return .transcribed }
+        return .recorded
+    }
+
+    /// Resets recordings left mid-process by a quit or crash. Nothing is still
+    /// processing at launch, so any such status is stale. Returns the count reset.
+    @discardableResult
+    static func resetInterruptedProcessing(in context: ModelContext) -> Int {
+        guard let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return 0 }
+
+        var reset = 0
+        for recording in recordings {
+            if let status = recording.statusAfterInterruptedProcessing {
+                recording.status = status
+                reset += 1
+            }
+        }
+
+        if reset > 0 {
+            try? context.save()
+        }
+        return reset
+    }
+}

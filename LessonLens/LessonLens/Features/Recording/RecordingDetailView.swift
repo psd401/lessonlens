@@ -17,6 +17,10 @@ struct RecordingDetailView: View {
     @State private var showingReanalyzeConfig = false
     @State private var isProcessing = false
     @State private var processingMessage = ""
+    /// Set when video analysis can't work for this recording; offers Audio Only instead
+    @State private var videoFallbackMessage: String?
+    /// True while a video's transcript is still being made after its analysis was saved
+    @State private var isTranscribingVideo = false
 
     var body: some View {
         ScrollView {
@@ -37,6 +41,16 @@ struct RecordingDetailView: View {
                 switch recording.status {
                 case .recorded:
                     if recording.isVideo {
+                        if let videoFallbackMessage {
+                            VideoFallbackNotice(
+                                message: videoFallbackMessage,
+                                isProcessing: isProcessing,
+                                onAnalyzeTranscript: {
+                                    self.videoFallbackMessage = nil
+                                    startAudioExtractionAndTranscription()
+                                }
+                            )
+                        }
                         VideoAnalysisOptionsView(
                             isProcessing: isProcessing,
                             onVideoAnalysis: { showingVideoAnalysisConfig = true },
@@ -54,7 +68,7 @@ struct RecordingDetailView: View {
 
                 case .uploading:
                     ProcessingView(
-                        title: "Uploading Video...",
+                        title: services.videoAnalysisService.isCompressing ? "Preparing Video..." : "Uploading Video...",
                         progress: services.videoAnalysisService.uploadProgress
                     )
 
@@ -109,6 +123,15 @@ struct RecordingDetailView: View {
 
                     if let transcript = recording.transcript {
                         TranscriptSection(transcript: transcript, collapsed: true)
+                    } else if isTranscribingVideo {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text("Transcribing audio... The transcript will appear here when it's ready.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
                     }
 
                 case .recording, .failed:
@@ -323,6 +346,7 @@ struct RecordingDetailView: View {
         guard let videoURL = recording.absoluteVideoPath else { return }
 
         isProcessing = true
+        videoFallbackMessage = nil
         recording.status = .uploading
 
         Task {
@@ -336,34 +360,62 @@ struct RecordingDetailView: View {
                     enabledIds: techniqueIds
                 )
 
-                recording.status = .analyzing
-                try modelContext.save()
-
-                // Run video analysis and transcript extraction in parallel
+                // Run video analysis and transcript extraction in parallel. Status
+                // stays .uploading (with progress) until the upload finishes.
+                let duration = recording.duration
+                let markAnalyzing: @MainActor () -> Void = { [recording, modelContext] in
+                    recording.status = .analyzing
+                    try? modelContext.save()
+                }
                 async let analysisResult = services.videoAnalysisService.analyzeVideo(
                     videoURL: videoURL,
                     techniques: techniques,
                     sessionToken: session.accessToken,
-                    includeRatings: includeRatings
+                    includeRatings: includeRatings,
+                    durationSeconds: duration,
+                    onUploadComplete: markAnalyzing
                 )
-                async let transcriptResult = extractAndTranscribe(videoURL: videoURL)
+                // On-device transcription of a long video can take much longer
+                // than the analysis, so it runs on its own and never holds up
+                // saving the analysis
+                let transcriptTask = Task { () -> Bool in
+                    guard let transcript = try? await extractAndTranscribe(videoURL: videoURL) else {
+                        return false  // best-effort; Audio Only can make one later
+                    }
+                    recording.transcript = transcript
+                    try? modelContext.save()
+                    return true
+                }
 
-                let analysis = try await analysisResult
-                let transcript = try? await transcriptResult  // Don't fail if transcription fails
+                let analysis: Analysis
+                do {
+                    analysis = try await analysisResult
+                } catch {
+                    transcriptTask.cancel()
+                    throw error
+                }
 
                 // Clear stale reflection and chat session on re-analysis
                 recording.reflection = nil
                 recording.chatSessions = []
 
-                // Save analysis (required) and transcript (best-effort)
+                // Save the analysis now; the transcript is attached when ready
                 analysis.frameworkId = framework.rawValue
                 recording.analysis = analysis
-                recording.transcript = transcript
                 recording.status = .complete
                 try modelContext.save()
+                isProcessing = false
+
+                isTranscribingVideo = true
+                _ = await transcriptTask.value
+                isTranscribingVideo = false
 
             } catch AuthError.cancelled {
                 recording.status = .recorded
+            } catch let error as VideoAnalysisError where error.offersTranscriptFallback {
+                // Shown inline with an Analyze from Transcript button instead of an alert
+                recording.status = .recorded
+                videoFallbackMessage = error.localizedDescription
             } catch let error as VideoAnalysisError {
                 recording.status = .recorded
                 appState.handleError(.videoAnalysisError(error))
@@ -1035,6 +1087,35 @@ struct FailedRecordingView: View {
 
 // MARK: - Video Analysis Options View
 
+/// Shown when Video Analysis can't work for a recording, with the Audio Only
+/// path (transcribe, then analyze the transcript) as the remedy
+struct VideoFallbackNotice: View {
+    let message: String
+    let isProcessing: Bool
+    let onAnalyzeTranscript: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(message)
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button("Analyze from Transcript", action: onAnalyzeTranscript)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isProcessing)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color.orange.opacity(0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
 struct VideoAnalysisOptionsView: View {
     let isProcessing: Bool
     let onVideoAnalysis: () -> Void
@@ -1051,7 +1132,7 @@ struct VideoAnalysisOptionsView: View {
 
             // Video Analysis Option
             AnalysisMethodCard(
-                title: "Video Analysis (Gemini)",
+                title: "Video Analysis",
                 description: "Analyzes visual + audio content. Observes teacher movements, student engagement, and classroom dynamics.",
                 cost: "~$0.15-0.27 per analysis",
                 icon: "video",
@@ -1062,7 +1143,7 @@ struct VideoAnalysisOptionsView: View {
 
             // Audio Analysis Option
             AnalysisMethodCard(
-                title: "Audio Only (Gemini)",
+                title: "Audio Only",
                 description: "Extracts audio track and transcribes. Focuses on verbal communication and questioning techniques.",
                 cost: "~$0.01-0.03 per analysis",
                 icon: "waveform",

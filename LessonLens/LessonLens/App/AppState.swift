@@ -148,7 +148,7 @@ enum ImportError: Error, LocalizedError {
         case .durationTooShort:
             return "Audio must be at least 5 minutes"
         case .durationTooLong:
-            return "Audio cannot exceed 50 minutes"
+            return "Audio cannot exceed 90 minutes"
         case .durationUnavailable:
             return "Unable to determine audio duration"
         case .copyFailed(let error):
@@ -178,7 +178,7 @@ enum RecordingError: Error, LocalizedError {
         case .durationTooShort:
             return "Recording must be at least 5 minutes"
         case .durationTooLong:
-            return "Recording cannot exceed 50 minutes"
+            return "Recording cannot exceed 90 minutes"
         }
     }
 }

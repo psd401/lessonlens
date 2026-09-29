@@ -27,13 +27,23 @@ enum VideoAnalysisMethod: String, CaseIterable {
     }
 }
 
-/// Service for uploading videos directly to Gemini and requesting analysis
+/// Service for uploading videos and requesting Gemini analysis.
+///
+/// Flow: compress to a 720p copy, upload it to the district's temporary
+/// Cloud Storage bucket through a backend-issued upload URL, then ask the
+/// backend to analyze it on Vertex AI. The backend deletes the upload after
+/// analysis; this service deletes the local copy.
 @MainActor
 final class VideoAnalysisService: ObservableObject {
+    /// The backend and Cloud Storage path accept uploads up to 2GB
+    static let maxUploadSize: Int64 = 2 * 1024 * 1024 * 1024
+
     private let config: AppConfiguration
+    private let compressor = VideoCompressionService()
     private var analysisTask: Task<Analysis, Error>?
 
     @Published var uploadProgress: Double = 0
+    @Published var isCompressing = false
     @Published var isUploading = false
     @Published var isAnalyzing = false
     @Published var progress: Double = 0
@@ -45,48 +55,79 @@ final class VideoAnalysisService: ObservableObject {
 
     // MARK: - Public Methods
 
-    /// Analyzes a video using Gemini via direct upload
+    /// Compresses, uploads and analyzes a video.
+    /// - Parameters:
+    ///   - durationSeconds: The recording's length; lets the backend sample long videos at a lower frame rate
+    ///   - onUploadComplete: Called once the upload finishes and analysis starts
     func analyzeVideo(
         videoURL: URL,
         techniques: [Technique],
         sessionToken: String,
-        includeRatings: Bool = true
+        includeRatings: Bool = true,
+        durationSeconds: TimeInterval? = nil,
+        onUploadComplete: @escaping @MainActor () -> Void = {}
     ) async throws -> Analysis {
         isUploading = true
         uploadProgress = 0
         progress = 0
         error = nil
 
+        var compressedURL: URL?
+        defer {
+            if let compressedURL {
+                compressor.removeCompressedCopy(compressedURL)
+            }
+        }
+
         do {
-            // 1. Initiate upload - get Gemini upload URL from backend
+            // 1. Compress to a 720p copy (first 30% of the upload bar)
+            isCompressing = true
+            let uploadURL: URL
+            do {
+                uploadURL = try await compressor.compressForUpload(videoURL) { [weak self] fraction in
+                    self?.uploadProgress = 0.3 * fraction
+                }
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw VideoAnalysisError.compressionFailed
+            }
+            compressedURL = uploadURL
+            isCompressing = false
+
+            let size = fileSize(at: uploadURL)
+            guard size > 0 else {
+                throw VideoAnalysisError.compressionFailed
+            }
+            guard size <= Self.maxUploadSize else {
+                throw VideoAnalysisError.compressedTooLarge
+            }
+
+            // 2. Get a Cloud Storage upload URL from the backend
             let initiateResponse = try await initiateUpload(
-                fileName: videoURL.lastPathComponent,
-                contentType: mimeType(for: videoURL),
-                fileSize: fileSize(at: videoURL),
+                contentType: "video/mp4",
+                fileSize: size,
                 sessionToken: sessionToken
             )
+            uploadProgress = 0.3
 
-            uploadProgress = 0.05
-
-            // 2. Upload video directly to Gemini
-            let geminiFileName = try await uploadToGemini(
-                fileURL: videoURL,
-                uploadURL: initiateResponse.uploadUrl,
-                contentType: mimeType(for: videoURL)
-            )
+            // 3. Upload the copy, streaming from disk
+            try await upload(fileURL: uploadURL, to: initiateResponse.uploadUrl, contentType: "video/mp4")
 
             isUploading = false
             uploadProgress = 1.0
+            onUploadComplete()
             isAnalyzing = true
             progress = 0.2
 
-            // 3. Request video analysis from backend
+            // 4. Request video analysis from backend
             analysisTask = Task {
                 try await performVideoAnalysis(
-                    geminiFileName: geminiFileName,
+                    gcsObject: initiateResponse.objectName,
                     techniques: techniques,
                     sessionToken: sessionToken,
-                    includeRatings: includeRatings
+                    includeRatings: includeRatings,
+                    durationSeconds: durationSeconds
                 )
             }
 
@@ -96,17 +137,14 @@ final class VideoAnalysisService: ObservableObject {
             return analysis
 
         } catch is CancellationError {
-            isUploading = false
-            isAnalyzing = false
+            resetState()
             throw VideoAnalysisError.cancelled
         } catch let error as VideoAnalysisError {
-            isUploading = false
-            isAnalyzing = false
+            resetState()
             self.error = error
             throw error
         } catch {
-            isUploading = false
-            isAnalyzing = false
+            resetState()
             let videoError = VideoAnalysisError.apiError(500, error.localizedDescription)
             self.error = videoError
             throw videoError
@@ -115,35 +153,36 @@ final class VideoAnalysisService: ObservableObject {
 
     /// Cancels the current analysis
     func cancelAnalysis() {
+        compressor.cancel()
         analysisTask?.cancel()
         analysisTask = nil
-        isUploading = false
-        isAnalyzing = false
+        resetState()
         uploadProgress = 0
         progress = 0
     }
 
     // MARK: - Private Methods
 
+    private func resetState() {
+        isCompressing = false
+        isUploading = false
+        isAnalyzing = false
+    }
+
     private func initiateUpload(
-        fileName: String,
         contentType: String,
         fileSize: Int64,
         sessionToken: String
     ) async throws -> InitiateUploadResponse {
-        let url = config.backendURL.appendingPathComponent("upload/initiate")
+        let url = config.backendURL.appendingPathComponent("upload/initiate/gcs")
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
-
-        let requestBody = InitiateUploadRequest(
-            fileName: fileName,
-            contentType: contentType,
-            fileSize: fileSize
+        request.httpBody = try JSONEncoder().encode(
+            InitiateUploadRequest(contentType: contentType, fileSize: fileSize)
         )
-        request.httpBody = try JSONEncoder().encode(requestBody)
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -156,83 +195,46 @@ final class VideoAnalysisService: ObservableObject {
             return try JSONDecoder().decode(InitiateUploadResponse.self, from: data)
         case 401, 403:
             throw VideoAnalysisError.apiError(httpResponse.statusCode, "Authentication failed")
+        case 500...599:
+            throw VideoAnalysisError.serviceUnavailable
         default:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
             throw VideoAnalysisError.apiError(httpResponse.statusCode, errorMessage)
         }
     }
 
-    private func uploadToGemini(
-        fileURL: URL,
-        uploadURL: String,
-        contentType: String
-    ) async throws -> String {
+    /// PUTs the file to the Cloud Storage upload URL, reading from disk rather
+    /// than loading the whole video into memory
+    private func upload(fileURL: URL, to uploadURL: String, contentType: String) async throws {
         guard let url = URL(string: uploadURL) else {
             throw VideoAnalysisError.invalidResponse
         }
 
-        // Read file data
-        let fileData = try Data(contentsOf: fileURL)
-
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
-        request.setValue(String(fileData.count), forHTTPHeaderField: "Content-Length")
-        request.setValue("0", forHTTPHeaderField: "X-Goog-Upload-Offset")
-        request.setValue("upload, finalize", forHTTPHeaderField: "X-Goog-Upload-Command")
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
 
-        // Upload with progress tracking
-        let (data, response) = try await uploadWithProgress(request: request, data: fileData)
+        let delegate = UploadProgressDelegate { [weak self] fraction in
+            Task { @MainActor in
+                // Upload fills 30%-100% of the upload bar
+                self?.uploadProgress = 0.3 + 0.7 * fraction
+            }
+        }
+
+        let (_, response) = try await URLSession.shared.upload(for: request, fromFile: fileURL, delegate: delegate)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
             throw VideoAnalysisError.uploadFailed
         }
-
-        // Parse the response to get the file name
-        let uploadResponse = try JSONDecoder().decode(GeminiUploadResponse.self, from: data)
-        return uploadResponse.file.name
-    }
-
-    private func uploadWithProgress(request: URLRequest, data: Data) async throws -> (Data, URLResponse) {
-        try await withCheckedThrowingContinuation { continuation in
-            var request = request
-            request.httpBody = data
-
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                guard let data = data, let response = response else {
-                    continuation.resume(throwing: VideoAnalysisError.uploadFailed)
-                    return
-                }
-                continuation.resume(returning: (data, response))
-            }
-
-            // Track upload progress via observation
-            let observation = task.progress.observe(\.fractionCompleted) { progress, _ in
-                Task { @MainActor in
-                    // Scale progress from 0.05 to 1.0 (0.05 was initiating upload)
-                    self.uploadProgress = 0.05 + (progress.fractionCompleted * 0.95)
-                }
-            }
-
-            task.resume()
-
-            // Clean up observation when done
-            Task {
-                try? await Task.sleep(nanoseconds: 100_000_000)
-                observation.invalidate()
-            }
-        }
     }
 
     private func performVideoAnalysis(
-        geminiFileName: String,
+        gcsObject: String,
         techniques: [Technique],
         sessionToken: String,
-        includeRatings: Bool
+        includeRatings: Bool,
+        durationSeconds: TimeInterval?
     ) async throws -> Analysis {
         let url = config.backendURL.appendingPathComponent("analyze/video")
 
@@ -242,12 +244,12 @@ final class VideoAnalysisService: ObservableObject {
         request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 600  // 10 minutes for video processing
 
-        let requestBody = VideoAnalysisRequest(
-            geminiFileName: geminiFileName,
-            techniques: techniques.map { TechniqueDefinition(from: $0) },
-            includeRatings: includeRatings
+        request.httpBody = try Self.analysisRequestBody(
+            gcsObject: gcsObject,
+            techniques: techniques,
+            includeRatings: includeRatings,
+            durationSeconds: durationSeconds
         )
-        request.httpBody = try JSONEncoder().encode(requestBody)
 
         progress = 0.3
 
@@ -259,23 +261,61 @@ final class VideoAnalysisService: ObservableObject {
             throw VideoAnalysisError.networkUnavailable
         }
 
-        switch httpResponse.statusCode {
+        progress = 0.9
+        return try Self.handleAnalysisResponse(
+            statusCode: httpResponse.statusCode,
+            data: data,
+            techniques: techniques,
+            ratingsIncluded: includeRatings
+        )
+    }
+
+    /// JSON body for /analyze/video
+    static func analysisRequestBody(
+        gcsObject: String,
+        techniques: [Technique],
+        includeRatings: Bool,
+        durationSeconds: TimeInterval?
+    ) throws -> Data {
+        try JSONEncoder().encode(VideoAnalysisRequest(
+            gcsObject: gcsObject,
+            techniques: techniques.map { TechniqueDefinition(from: $0) },
+            includeRatings: includeRatings,
+            durationSeconds: durationSeconds.map { Int($0.rounded()) }
+        ))
+    }
+
+    /// Maps the backend's /analyze/video reply to an Analysis or an error
+    static func handleAnalysisResponse(
+        statusCode: Int,
+        data: Data,
+        techniques: [Technique],
+        ratingsIncluded: Bool
+    ) throws -> Analysis {
+        switch statusCode {
         case 200:
-            progress = 0.9
-            return try parseAnalysisResponse(data: data, techniques: techniques, ratingsIncluded: includeRatings)
+            return try parseAnalysisResponse(data: data, techniques: techniques, ratingsIncluded: ratingsIncluded)
         case 429:
             throw VideoAnalysisError.rateLimited
         case 401, 403:
-            throw VideoAnalysisError.apiError(httpResponse.statusCode, "Authentication failed")
+            throw VideoAnalysisError.apiError(statusCode, "Authentication failed")
+        case 502:
+            // The backend passes on Vertex AI's status; 400 means Vertex rejected
+            // the video itself (for example, too long for the model)
+            let upstream = try? JSONDecoder().decode(UpstreamErrorResponse.self, from: data)
+            if upstream?.status == 400 {
+                throw VideoAnalysisError.videoRejected
+            }
+            throw VideoAnalysisError.serviceUnavailable
         case 500...599:
             throw VideoAnalysisError.serviceUnavailable
         default:
             let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw VideoAnalysisError.apiError(httpResponse.statusCode, errorMessage)
+            throw VideoAnalysisError.apiError(statusCode, errorMessage)
         }
     }
 
-    private func parseAnalysisResponse(data: Data, techniques: [Technique], ratingsIncluded: Bool) throws -> Analysis {
+    private static func parseAnalysisResponse(data: Data, techniques: [Technique], ratingsIncluded: Bool) throws -> Analysis {
         let response = try JSONDecoder().decode(VideoAnalysisResponse.self, from: data)
 
         let analysis = Analysis(
@@ -309,16 +349,6 @@ final class VideoAnalysisService: ObservableObject {
 
     // MARK: - Helpers
 
-    private func mimeType(for url: URL) -> String {
-        switch url.pathExtension.lowercased() {
-        case "mp4": return "video/mp4"
-        case "mov": return "video/quicktime"
-        case "m4v": return "video/x-m4v"
-        case "webm": return "video/webm"
-        default: return "video/mp4"
-        }
-    }
-
     private func fileSize(at url: URL) -> Int64 {
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
@@ -329,40 +359,43 @@ final class VideoAnalysisService: ObservableObject {
     }
 }
 
+/// Reports upload progress for one URLSession task
+private final class UploadProgressDelegate: NSObject, URLSessionTaskDelegate {
+    private let onProgress: @Sendable (Double) -> Void
+
+    init(onProgress: @escaping @Sendable (Double) -> Void) {
+        self.onProgress = onProgress
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didSendBodyData bytesSent: Int64,
+        totalBytesSent: Int64,
+        totalBytesExpectedToSend: Int64
+    ) {
+        guard totalBytesExpectedToSend > 0 else { return }
+        onProgress(Double(totalBytesSent) / Double(totalBytesExpectedToSend))
+    }
+}
+
 // MARK: - Request/Response Models
 
 private struct InitiateUploadRequest: Codable {
-    let fileName: String
     let contentType: String
     let fileSize: Int64
 }
 
 private struct InitiateUploadResponse: Codable {
     let uploadUrl: String
-    let fileDisplayName: String
-}
-
-private struct GeminiUploadResponse: Codable {
-    let file: GeminiFile
-
-    struct GeminiFile: Codable {
-        let name: String
-        let displayName: String
-        let mimeType: String
-        let sizeBytes: String
-        let createTime: String
-        let updateTime: String
-        let expirationTime: String
-        let sha256Hash: String
-        let uri: String
-        let state: String
-    }
+    let objectName: String
 }
 
 private struct VideoAnalysisRequest: Codable {
-    let geminiFileName: String
+    let gcsObject: String
     let techniques: [TechniqueDefinition]
     let includeRatings: Bool
+    let durationSeconds: Int?
 }
 
 private struct TechniqueDefinition: Codable {
@@ -379,6 +412,10 @@ private struct TechniqueDefinition: Codable {
         self.lookFors = technique.lookFors
         self.exemplarPhrases = technique.exemplarPhrases
     }
+}
+
+private struct UpstreamErrorResponse: Codable {
+    let status: Int?
 }
 
 private struct VideoAnalysisResponse: Codable {
@@ -427,6 +464,20 @@ enum VideoAnalysisError: Error, LocalizedError {
     case uploadFailed
     case serviceUnavailable
     case cancelled
+    case compressionFailed
+    case compressedTooLarge
+    case videoRejected
+
+    /// Errors where video analysis won't work for this recording, but analyzing
+    /// its transcript (Audio Only) still can
+    var offersTranscriptFallback: Bool {
+        switch self {
+        case .compressionFailed, .compressedTooLarge, .videoRejected:
+            return true
+        default:
+            return false
+        }
+    }
 
     var errorDescription: String? {
         switch self {
@@ -444,6 +495,12 @@ enum VideoAnalysisError: Error, LocalizedError {
             return "Failed to upload video for analysis"
         case .cancelled:
             return "Analysis was cancelled"
+        case .compressionFailed:
+            return "LessonLens couldn't prepare this video for upload. You can still get feedback by analyzing its transcript instead."
+        case .compressedTooLarge:
+            return "This video is too large to upload, even after compressing it. You can still get feedback by analyzing its transcript instead."
+        case .videoRejected:
+            return "Video Analysis couldn't process this video. It may be too long for the model. You can still get feedback by analyzing its transcript instead."
         }
     }
 }

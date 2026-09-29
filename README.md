@@ -207,7 +207,7 @@ Each technique includes:
 - Rate limit: 20 analyses/hour
 
 ### Video Analysis (Gemini)
-- Imports video recordings (5-50 minutes, max 2GB)
+- Imports video recordings (5-90 minutes, max 10GB; compressed to 720p before upload, which must be under 2GB)
 - Uploads directly to Google Gemini
 - Analyzes visual + audio content (Gemini 3.8 Flash)
 - Observes teacher positioning, student engagement, non-verbal cues
@@ -339,7 +339,7 @@ See [Your Data Is Private](#your-data-is-private) above and the full [Terms of U
 - **Domain-restricted** — Only @psd401.net accounts can sign in (enforced on both client and server)
 - **Stateless backend** — The Cloud Run proxy stores no transcripts, analysis results, or session data
 - **On-device transcription** — WhisperKit runs locally on Apple Silicon; no audio uploaded
-- **Video auto-deletion** — Videos are deleted from Google's Gemini API immediately after analysis
+- **Video auto-deletion** — The compressed video copy is deleted from the temporary district Cloud Storage bucket as soon as analysis finishes (a 1-day lifecycle rule is the backstop), and the local copy is deleted after upload
 - **Secure storage** — Session tokens stored in macOS Keychain (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`)
 - **Rate limiting** — Per-user hourly limits (20 text, 5 video, 50 chat)
 
