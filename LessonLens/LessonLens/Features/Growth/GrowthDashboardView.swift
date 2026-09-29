@@ -263,7 +263,7 @@ struct PatternsInsightsSection: View {
                                 .font(.subheadline)
                                 .fontWeight(.medium)
 
-                            Text(pattern.insight)
+                            Text(MarkdownParser.inline(pattern.insight))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
