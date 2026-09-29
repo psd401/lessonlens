@@ -5,12 +5,12 @@
 // UI labels below are quoted from the app; keep them in sync when the app changes.
 window.LESSONLENS_HELP = {
   "updated": "2026-09-28",
-  "appVersion": "1.1.1",
+  "appVersion": "1.2.0",
   "sections": [
     {
       "id": "capture",
       "title": "Capture a lesson",
-      "summary": "Record live, or bring in audio or video you already have (5 to 50 minutes). Then turn the audio into text on your Mac.",
+      "summary": "Record live, or bring in audio or video you already have (5 to 90 minutes). Then turn the audio into text on your Mac.",
       "steps": [
         "From <b>Home</b>, choose <b>New Recording</b>, <b>Import Audio</b>, or <b>Import Video</b>. The <b>+</b> button at the top right does the same from anywhere.",
         "<b>New Recording:</b> add an optional title, click the big record button, and click <b>Done</b> when you finish. <b>Import:</b> pick an audio file (such as a Voice Memo) or a video file.",
@@ -61,7 +61,7 @@ window.LESSONLENS_HELP = {
           "text": "Every lesson appears here, newest first. Right-click one to rename it."
         }
       ],
-      "note": "For video, choose <b>Video Analysis</b> (recommended) or <b>Audio Only</b>. Video Analysis sends the video to Google Gemini for feedback."
+      "note": "For video, choose <b>Video Analysis</b> (recommended) or <b>Audio Only</b>. Video Analysis sends a smaller copy of the video to Google Gemini for feedback and deletes it as soon as the feedback is ready. If a video can't be analyzed, click <b>Analyze from Transcript</b>."
     },
     {
       "id": "analyze",
@@ -297,7 +297,7 @@ window.LESSONLENS_HELP = {
     },
     {
       "q": "How long can a lesson be?",
-      "a": "5 to 50 minutes, for recordings and imports."
+      "a": "5 to 90 minutes, for recordings and imports."
     },
     {
       "q": "Who can see my lessons?",
@@ -305,7 +305,7 @@ window.LESSONLENS_HELP = {
     },
     {
       "q": "Where do my recordings go?",
-      "a": "Audio is turned into text on your Mac. Only the text is sent for AI feedback, and it is never permanently stored. If you choose Video Analysis, the video is sent to Google Gemini for feedback."
+      "a": "Audio is turned into text on your Mac. Only the text is sent for AI feedback, and it is never permanently stored. If you choose Video Analysis, a smaller copy of the video is sent to Google Gemini for feedback and deleted as soon as the feedback is ready. The original stays on your Mac."
     },
     {
       "q": "How do I rename or delete a session?",

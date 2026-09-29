@@ -3,12 +3,12 @@
 // Sources: git log and GitHub Releases. Keep claims tied to that record.
 // Audience is non-developers: avoid dev jargon such as "commits".
 window.LESSONLENS_HISTORY = {
-  updated: "2026-09-25",
-  currentVersions: "App v1.1.1 · Server v1.2.0",
+  updated: "2026-09-28",
+  currentVersions: "App v1.2.0 · Server v1.4.2",
   stats: [
     { value: "Jan 2026", label: "project start" },
     { value: "7", label: "teaching frameworks" },
-    { value: "2", label: "app releases" }
+    { value: "3", label: "app releases" }
   ],
   legs: [
     {
@@ -99,7 +99,20 @@ window.LESSONLENS_HISTORY = {
           date: "2026-09-15",
           title: "A newer AI model",
           body: "Feedback, coaching chat, and video analysis move to Google's newer Gemini 3.8 Flash model. The change happens on the server, so teachers get it without updating the app.",
-          tags: ["Gemini 3.8 Flash"],
+          tags: ["Gemini 3.8 Flash"]
+        },
+        {
+          date: "2026-09-28",
+          title: "AI feedback moves into the district's own cloud",
+          body: "Feedback, coaching chat, and video analysis now run in the district's own Google Cloud account, processed in the United States, instead of through a separate access key. Videos wait in private, temporary district storage only while they are being analyzed.",
+          tags: ["privacy", "Google Cloud"]
+        },
+        {
+          date: "2026-09-28",
+          title: "v1.2.0: full-length lessons",
+          body: "Lessons can run up to 90 minutes. Videos are made smaller on the Mac before they are sent, feedback appears without waiting for the transcript, and a lesson that can't be analyzed as video can be analyzed from its transcript instead. Coaching chat no longer freezes after a follow-up, and the app is easier to read in dark mode.",
+          tags: ["v1.2.0", "video", "coaching chat"],
+          milestone: true,
           current: true
         }
       ]

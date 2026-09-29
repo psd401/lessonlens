@@ -40,6 +40,17 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
 
 ## Released
 
+- **v1.2.0** — 2026-09-28, built from `3938e81` (main). Video analysis on
+  Vertex AI through a temporary Cloud Storage bucket with 720p compression and
+  a transcript fallback; analysis saved before the transcript finishes;
+  90-minute recordings and 10 GB video imports; coaching chat freeze fix,
+  Markdown replies, dark-mode fixes; copy-based re-analysis; stale-status
+  reset at launch. First release signed with entitlements intact:
+  hardened runtime with only `com.apple.security.device.audio-input`
+  (matches `expected-entitlements.txt`), unsandboxed on purpose. Config check
+  passed; app and pkg notarized (Accepted) and stapled; `releases/latest`
+  resolves to v1.2.0. Not yet confirmed on the fleet: live microphone
+  recording.
 - **v1.1.1** — last release before this file. Shipped with no entitlements
   (see above); the microphone entitlement was also missing, so live
   recording under the hardened runtime may not have worked.
