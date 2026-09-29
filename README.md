@@ -2,6 +2,9 @@
 
 A privacy-first AI coaching tool for Peninsula SD teachers. Record or import a lesson, get AI-powered feedback on specific teaching techniques, and reflect on your practice — all without administrators, evaluators, or anyone else seeing your data.
 
+- **Teacher help:** [How to use LessonLens](https://psd401.github.io/lessonlens/help/), a step-by-step guide with screenshot tours
+- **Project history:** [The LessonLens road so far](https://psd401.github.io/lessonlens/history/), from the first prototype to today
+
 ## Screenshots
 
 <table>
