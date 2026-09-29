@@ -68,7 +68,7 @@ struct ChatPanelView: View {
                 // Messages
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        VStack(spacing: 12) {
                             // Suggested starters (only when no messages yet)
                             if sortedMessages.isEmpty {
                                 suggestedStartersView
