@@ -27,7 +27,7 @@ struct TermsAndPrivacyView: View {
                     Text("Peninsula School District")
                         .font(PSDFonts.title3)
                         .foregroundStyle(.secondary)
-                    Text("Last Updated: March 12, 2026")
+                    Text("Last Updated: September 28, 2026")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
@@ -50,7 +50,7 @@ struct TermsAndPrivacyView: View {
                         Text("When you sign in, LessonLens receives your name, email address, and profile photo from your district Google account. This information is used solely to authenticate your identity and personalize your experience. No additional personal information is collected.")
                     }
                     PolicySubsection(number: "4.2", title: "Recordings") {
-                        Text("Audio and video recordings of lessons are stored locally on your device. Audio files are never uploaded to any server. Video files are uploaded to Google's Gemini API for analysis only (see Section 5.2).")
+                        Text("Audio and video recordings of lessons are stored locally on your device. Audio files are never uploaded to any server. When you choose Video Analysis, a compressed copy of the video is uploaded for analysis only (see Section 5.2); the original stays on your device.")
                     }
                     PolicySubsection(number: "4.3", title: "Transcripts") {
                         Text("Audio transcription is performed entirely on your device using an on-device AI model (WhisperKit). Transcripts are stored locally and are only sent to Google's Gemini API when you request an analysis.")
@@ -79,11 +79,11 @@ struct TermsAndPrivacyView: View {
                     PolicySubsection(number: "5.2", title: "Cloud Processing") {
                         Text("The following operations require sending data to Google's Gemini API via a PSD-operated backend server:")
                         Text("Text-based analysis: Your transcript text and selected teaching framework techniques are sent to Google's Gemini API, which returns coaching feedback. The transcript and response are not permanently stored by Google or by the PSD backend server.").bold()
-                        Text("Video analysis: Your video file is uploaded directly to Google's Gemini Files API for analysis. The video is automatically deleted from Google immediately after analysis completes. Even in the event of a deletion failure, Google automatically purges uploaded files within 48 hours.").bold()
+                        Text("Video analysis: A compressed copy of your video (720p) is uploaded to a private, temporary storage bucket in the district's Google Cloud project and analyzed by Gemini on Vertex AI. The copy is deleted immediately after analysis finishes, whether or not the analysis succeeds. If a deletion ever fails, the storage bucket automatically deletes any upload within about two days.").bold()
                         Text("Coaching chat: When you use the coaching chat feature, your transcript summary, analysis summary, and chat message history are sent to Google's Gemini API. No chat history is stored on the PSD backend server.").bold()
                     }
                     PolicySubsection(number: "5.3", title: "PSD Backend Server") {
-                        Text("The PSD backend server acts as a stateless proxy between LessonLens and Google's Gemini API. It validates your authentication token, forwards requests, and enforces rate limits. The backend server does not store transcripts, analysis results, chat conversations, recordings, or any personally identifiable session data. Each request is processed independently with no server-side record of prior interactions.")
+                        Text("The PSD backend server acts as a stateless proxy between LessonLens and Google's Gemini API. It validates your authentication token, forwards requests, and enforces rate limits. The backend server does not store transcripts, analysis results, chat conversations, or any personally identifiable session data. The only data held in the district's Google Cloud project is a compressed video copy while it is being analyzed (see Section 5.2). Each request is processed independently with no server-side record of prior interactions.")
                     }
                 }
 
@@ -102,7 +102,7 @@ struct TermsAndPrivacyView: View {
                         Text("All teaching session data (recordings, transcripts, analyses, reflections, chat conversations) is stored locally on your device. You may delete any session at any time from within the application. Deleting a session permanently removes the recording file and all associated data (transcript, analysis, reflections, and chat history).")
                     }
                     PolicySubsection(number: "7.2", title: "Cloud Data") {
-                        Text("No session data is retained on the PSD backend server. Google's Gemini API processes data in-memory with a maximum 24-hour cache for performance purposes. This cache is stored in RAM only (not on disk), is isolated at the project level, and is automatically purged. Google does not use your data to train AI models.")
+                        Text("No session data is retained on the PSD backend server. Gemini on Vertex AI processes your data in the United States. The district has turned off Vertex AI's optional data caching for this project. Google does not use your data to train AI models.")
                     }
                     PolicySubsection(number: "7.3", title: "Transitory Records") {
                         Text("Under Washington State Office of the Secretary of State guidelines, recordings processed through LessonLens are classified as transitory records. They are created for temporary reference and are not retained as permanent district records.")
@@ -116,7 +116,8 @@ struct TermsAndPrivacyView: View {
                     Text("LessonLens uses the following third-party services:")
                     VStack(alignment: .leading, spacing: 8) {
                         ServiceRow(service: "Google OAuth 2.0", purpose: "Authentication", dataSent: "Standard OAuth flow (no LessonLens data)")
-                        ServiceRow(service: "Gemini API (Vertex AI)", purpose: "AI analysis and coaching chat", dataSent: "Transcripts, technique definitions, chat messages")
+                        ServiceRow(service: "Gemini API (Vertex AI)", purpose: "AI analysis and coaching chat", dataSent: "Transcripts, technique definitions, chat messages, compressed video (Video Analysis only)")
+                        ServiceRow(service: "Google Cloud Storage (district project)", purpose: "Temporary video storage during Video Analysis", dataSent: "Compressed video copy, deleted after analysis")
                         ServiceRow(service: "WhisperKit", purpose: "On-device audio transcription", dataSent: "None (runs locally)")
                     }
                     Text("Google's handling of data sent to the Gemini API via Vertex AI is governed by the Peninsula School District's existing Data Processing Agreement (DPA) with Google, which covers both Google Workspace and Google Cloud/Vertex AI services. This agreement is FERPA and COPPA compliant.")

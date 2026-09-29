@@ -19,7 +19,7 @@ struct NewRecordingView: View {
     @State private var hasPermission = false
 
     private let minDuration: TimeInterval = 5 * 60  // 5 minutes
-    private let maxDuration: TimeInterval = 50 * 60 // 50 minutes
+    private let maxDuration: TimeInterval = 90 * 60 // 90 minutes
 
     var body: some View {
         VStack(spacing: 24) {
@@ -100,7 +100,7 @@ struct NewRecordingView: View {
 
             // Duration info
             if hasPermission {
-                Text("Recording must be 5-50 minutes")
+                Text("Recording must be 5-90 minutes")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
