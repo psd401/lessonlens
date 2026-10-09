@@ -1,0 +1,4 @@
+# CI test JWT_SECRET fixture (not a real secret; only used in tests)
+7d267a07ff49dcc2623f8b0d265c15d72a9ec2ad:CloudRunBackend/tests/index.test.ts:generic-api-key:13
+552a4186326cb5fb91920187afe48ea44e481fb1:CloudRunBackend/tests/test-env.ts:generic-api-key:7
+7d267a07ff49dcc2623f8b0d265c15d72a9ec2ad:CloudflareWorker/tests/index.test.ts:generic-api-key:15
