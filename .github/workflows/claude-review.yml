@@ -16,4 +16,5 @@ jobs:
     # reusable workflow's own Dependabot guard can evaluate. Skip the call.
     if: github.actor != 'dependabot[bot]'
     uses: PSD401/.github/.github/workflows/reusable-claude-review.yml@main
-    secrets: inherit
+    secrets:
+      BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY }}
