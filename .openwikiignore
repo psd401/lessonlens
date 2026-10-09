@@ -1,0 +1,24 @@
+# OpenWiki: paths it must not read (gitignore syntax). See psd-dev-standards
+# standards/06-cicd-enforcement.md.
+
+# Local comms/press drafts (untracked today; kept out in case they get committed)
+*-draft.md
+!docs/TERMS_AND_PRIVACY_DRAFT.md
+press-kit-draft/
+review/
+explainer-video/
+
+# Secret and local config (none tracked today)
+.env*
+*.pem
+*.key
+*.p12
+LessonLens/Config/Local.xcconfig
+
+# Bundled Whisper CoreML model weights/tokenizer (binary vendor data)
+LessonLens/LessonLens/Resources/Models/
+
+# Binary fonts and lockfiles
+*.ttf
+**/bun.lock
+LessonLens/LessonLens.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
