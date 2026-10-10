@@ -70,7 +70,7 @@ Tests: `PauseDetectionTests` (gap at/above threshold detected, below ignored, un
 
 ## Text analysis
 
-`AnalysisService.analyze` POSTs `{transcript, techniques[{id,name,description,lookFors,exemplarPhrases}], includeRatings, pauseData}` to `/analyze` (300 s timeout; `pauseData` is nil when there are no pauses). It decodes the snake_case reply into `Analysis` + `TechniqueEvaluation`s (matching technique names by id). Status mapping: 200 ok; 429 `rateLimited`; 401/403 auth failure; 5xx `serviceUnavailable`. The backend limits (100k-char transcript, 20 techniques, 100 pauses) are in [Cloud Run API](../backend/cloud-run-api.md). After success the caller stores `analysis.frameworkId = framework.rawValue`, which the Growth dashboard filters on.
+`AnalysisService.analyze` POSTs `{transcript, techniques[{id,name,description,lookFors,exemplarPhrases}], includeRatings, pauseData}` to `/analyze` (300 s timeout; `pauseData` is nil when there are no pauses). It decodes the snake_case reply into `Analysis` + `TechniqueEvaluation`s (matching technique names by id). Status mapping: 200 ok; 429 `rateLimited`; 401/403 auth failure; 5xx `serviceUnavailable`. The backend limits (100k-char transcript, 20 techniques, 100 pauses) are in [Cloud Run API](../backend/cloud-run-api.md). After success the caller stores `analysis.frameworkId = framework.rawValue`, which the [Growth dashboard](growth-dashboard.md) filters on.
 
 ## Video analysis
 
