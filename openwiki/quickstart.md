@@ -9,13 +9,14 @@ openwiki:
   source_paths:
     - README.md
     - CLAUDE.md
+    - AGENTS.md
 ---
 
 # LessonLens wiki quickstart
 
 **What it is.** LessonLens is a voluntary, privacy-first AI coaching tool for Peninsula School District teachers: a native macOS app (SwiftUI + SwiftData, on-device WhisperKit transcription) that sends transcripts (or a temporary compressed video) through a stateless Bun/Hono proxy on Cloud Run to Gemini, then guides the teacher through reflection, a self-vs-AI comparison, and a coaching chat. It is **not** an evaluation tool; nobody but the teacher sees the data. Product rules and the data-flow diagram are in [architecture overview](architecture/overview.md).
 
-**Repository map.** `LessonLens/` macOS app and its tests - `CloudRunBackend/` primary backend - `CloudflareWorker/` alternative backend - `shared/prompts/` prompt builders imported by both backends via `../../../shared` - `scripts/` setup, config, sign and package helpers - `docs/` deployment guide, terms/privacy text and the GitHub Pages help/history sites - root `Dockerfile`, `cloudbuild.yaml`, `RELEASING.md`. Source of truth for conventions is `CLAUDE.md`; this wiki is derived from source and tests (git history was not available when it was generated).
+**Repository map.** `LessonLens/` macOS app and its tests - `CloudRunBackend/` primary backend - `CloudflareWorker/` alternative backend - `shared/prompts/` prompt builders imported by both backends via `../../../shared` - `scripts/` setup, config, sign and package helpers - `docs/` deployment guide, terms/privacy text and the GitHub Pages help/history sites - root `Dockerfile`, `cloudbuild.yaml`, `RELEASING.md`. Source of truth for conventions is `CLAUDE.md` (`AGENTS.md` is a short pointer to it that also explains how to use this wiki); this wiki is derived from source and tests (git history was not available when it was generated).
 
 ## Wiki map
 
@@ -56,7 +57,10 @@ Run commands from the repository root. Backend tests are quiet-by-default with b
 Areas identified but not given dedicated coverage (source anchor - reason):
 
 - Theme and shared UI (`LessonLens/LessonLens/Core/Theme/`, `Core/Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
-- `HowItWorksView`, `TermsAndPrivacyView`, `SettingsView`, `GrowthDashboardView` (`LessonLens/LessonLens/Features/`) - covered only by mention; read the source if editing copy or charts.
+- `HowItWorksView`, `TermsAndPrivacyView`, `SettingsView` (`LessonLens/LessonLens/Features/HowItWorks/`, `Legal/`, `Settings/`) - covered only by mention in [app overview](app/overview.md); `SettingsView` persists per-user `UserSettings` (timestamps, framework, enabled techniques) and is the place to read before changing preferences. The Growth dashboard is now documented in [growth dashboard](app/growth-dashboard.md).
 - `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
+- `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
+- Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
+ path).
 - `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).

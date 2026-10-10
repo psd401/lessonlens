@@ -39,7 +39,8 @@ A native macOS 14+ app (Apple Silicon, for WhisperKit) written in SwiftUI with S
 | `Features/Recording`, `Transcription`, `Analysis` | capture/import, WhisperKit, backend analysis | [lesson workflow](lesson-workflow.md) |
 | `Features/Techniques` | frameworks and technique definitions | [frameworks and techniques](frameworks-and-techniques.md) |
 | `Features/Reflection`, `Chat`, `Export` | self-reflection wizard, coaching chat, PDF/Markdown export | [reflection, chat and export](reflection-chat-export.md) |
-| `Features/Growth`, `HowItWorks`, `Legal`, `Settings` | growth dashboard (completed recordings filtered by `analysis.frameworkId`), explainer, terms/privacy view, preferences | brief mention only |
+| `Features/Growth` | growth dashboard (completed recordings filtered by `analysis.frameworkId`) | [growth dashboard](growth-dashboard.md) |
+| `Features/HowItWorks`, `Legal`, `Settings` | explainer, terms/privacy view, preferences | brief mention only |
 
 `LessonLens/Package.swift` is a legacy manifest unused by the Xcode build; dependencies (WhisperKit) are declared in the `.xcodeproj` (see [build, test and CI](../operations/build-test-ci.md)).
 
