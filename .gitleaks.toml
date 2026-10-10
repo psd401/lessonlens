@@ -1,0 +1,42 @@
+# Gitleaks config for this repo. The org Security Scan and the pre-commit
+# hook (.githooks/pre-commit) both pick this file up from the repo root.
+#
+# The default rules catch credentials; they do not catch student PII. A
+# PowerSchool student number is a 7-digit number, so the rules below fail any
+# commit or push that adds one (org request: on in repos that handle student
+# data). Use a synthetic id from 1000000-1000999 or a placeholder like
+# <test-student>; fingerprint genuine non-student numbers in .gitleaksignore.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "psd-student-number"
+description = "A 7-digit number: the shape of a PowerSchool student number. Use a synthetic id (1000xxx) or <test-student> instead."
+regex = '''\b([0-9]{7})\b'''
+secretGroup = 1
+tags = ["student-pii"]
+
+  [[rules.allowlists]]
+  description = "Synthetic ids (mock.ts range), obvious placeholders, and non-student ids"
+  regexTarget = "secret"
+  regexes = [
+    '''^1000[0-9]{3}$''',
+    '''^9999999$''',
+    '''^0123456$''',
+  ]
+
+  [[rules.allowlists]]
+  description = "Binary, vendored and generated files"
+  paths = [
+    '''(^|/)bun\.lock$''',
+    '''\.(pdf|png|jpe?g|gif|svg|mp4|wav|woff2?|ttf|ico)$''',
+    '''^video/.*/vendor/''',
+  ]
+
+[[rules]]
+id = "psd-student-numeric-email"
+description = "A student Google account (digit-only local part @edtools.psd401.net); the local part is the student number."
+regex = '''\b([0-9]{4,10})@edtools\.psd401\.net\b'''
+secretGroup = 1
+tags = ["student-pii"]
