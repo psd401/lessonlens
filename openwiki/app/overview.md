@@ -40,7 +40,7 @@ A native macOS 14+ app (Apple Silicon, for WhisperKit) written in SwiftUI with S
 | `Features/Techniques` | frameworks and technique definitions | [frameworks and techniques](frameworks-and-techniques.md) |
 | `Features/Reflection`, `Chat`, `Export` | self-reflection wizard, coaching chat, PDF/Markdown export | [reflection, chat and export](reflection-chat-export.md) |
 | `Features/Growth` | growth dashboard (completed recordings filtered by `analysis.frameworkId`) | [growth dashboard](growth-dashboard.md) |
-| `Features/HowItWorks`, `Legal`, `Settings` | explainer, terms/privacy view, preferences | brief mention only |
+| `Features/HowItWorks`, `Legal`, `Settings` | explainer, terms/privacy view, Settings window and `UserSettings` preferences | [settings, explainer and legal](settings-and-legal.md) |
 
 `LessonLens/Package.swift` is a legacy manifest unused by the Xcode build; dependencies (WhisperKit) are declared in the `.xcodeproj` (see [build, test and CI](../operations/build-test-ci.md)).
 
