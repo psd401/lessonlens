@@ -44,6 +44,7 @@ Most of this page is operator-facing; consult it when changing Dockerfiles, scri
 
 - `scripts/setup.sh`: interactive (supports dry run) wizard that checks `gcloud`/auth, sets the project, enables APIs, stores secrets in Secret Manager, runs `gcloud run deploy`, and optionally creates monitoring (log-based error metric, alert policy, uptime check).
 - `scripts/configure-app.sh`: writes the git-ignored `LessonLens/Config/Local.xcconfig` (and can rebrand the login-screen district name); `--dry-run` previews. Config keys and their effect on the app: [auth and config](../app/auth-and-config.md).
+- `docs/DEPLOYMENT_CHECKLIST.md` is the printable, fill-in-the-blanks companion to `docs/DEPLOYMENT.md` (district configuration fields, then phased GCP, deploy and app steps); the README links to both. It is operator paperwork, not a source of truth for code behavior.
 
 ## macOS release
 
@@ -65,3 +66,4 @@ The repo scripts are the generic path: `sign-and-package.sh` (sign -> notarize -
 ## Guardrails
 
 Public repo: never commit infrastructure identifiers (backend URL/project number, OAuth client ID, Apple Team ID) to source, `Info.plist`, or `project.pbxproj`; keep them in `Local.xcconfig`. Never reintroduce dev auth bypasses. `.gitleaksignore` and the `security-scan.yml` workflow exist for secret scanning.
+x` range or `<test-student>` placeholders are allowlisted; genuine non-student numbers belong in `.gitleaksignore`. The opt-in pre-commit hook `.githooks/pre-commit` runs `gitleaks git --pre-commit --staged` when gitleaks is installed (it skips with a notice otherwise, so the org Security Scan remains the enforcement point). Enable it per clone with `git config core.hooksPath .githooks`. When adding fixtures, use the allowlisted synthetic forms rather than weakening the rules.

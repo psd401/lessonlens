@@ -46,6 +46,7 @@ Run commands from the repository root. Backend tests are quiet-by-default with b
 | Reflection wizard, coaching chat, PDF/Markdown export | [Reflection, chat, export](app/reflection-chat-export.md) | `Features/Reflection/*`, `Features/Chat/ChatService.swift`, `ChatPanelView.swift`, `Features/Export/ExportService.swift` | `ReflectionFlowView`, `ChatService.formatTimestampedTranscript`, `PDFPagePacker.packIntoPages` | `MarkdownParserTests` | `xcodebuild ... test -only-testing:LessonLensTests/MarkdownParserTests` |
 | Docker/Cloud Run deploy, signing, release, help/history sites | [Deployment and release](operations/deployment-and-release.md) | `CloudRunBackend/Dockerfile`, `cloudbuild.yaml`, `scripts/*.sh`, `RELEASING.md`, `docs/help/help-steps.js`, `docs/history/history.js` | n/a | n/a | `bash scripts/check-app-config.sh <app>`; deploys are conditional/manual |
 | CI, dependency pins, test commands | [Build, test, CI](operations/build-test-ci.md) | `.github/workflows/psd-ci.yml`, `package.json` files | n/a | all suites | see page |
+| Secret scanning, student-PII commit rules, pre-commit hook | [Deployment and release](operations/deployment-and-release.md) | `.gitleaks.toml`, `.githooks/pre-commit`, `.gitleaksignore` | `psd-student-number`, `psd-student-numeric-email` | n/a | `gitleaks git --pre-commit --staged --no-banner` (only if gitleaks is installed) |
 
 ### Cross-boundary reminders
 
