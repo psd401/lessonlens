@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks commits that add credentials or student PII (PowerSchool student
+# numbers, digit-only student emails). Rules live in .gitleaks.toml; the org
+# Security Scan enforces the same rules on push and PRs.
+# Enable once per clone: git config core.hooksPath .githooks
+# (repos with a root package.json do this in the "prepare" script).
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks not installed; skipping local scan (brew install gitleaks)." >&2
+  echo "pre-commit: the org Security Scan will still check this push." >&2
+  exit 0
+fi
+exec gitleaks git --pre-commit --staged --redact --no-banner --verbose
