@@ -23,7 +23,7 @@ openwiki:
 | Section | Pages |
 |---|---|
 | Architecture | [System architecture and invariants](architecture/overview.md) |
-| macOS app | [App overview, startup, data model](app/overview.md) - [Lesson workflow and status lifecycle](app/lesson-workflow.md) - [Auth and district config](app/auth-and-config.md) - [Frameworks and techniques](app/frameworks-and-techniques.md) - [Reflection, chat, export](app/reflection-chat-export.md) |
+| macOS app | [App overview, startup, data model](app/overview.md) - [Lesson workflow and status lifecycle](app/lesson-workflow.md) - [Auth and district config](app/auth-and-config.md) - [Frameworks and techniques](app/frameworks-and-techniques.md) - [Reflection, chat, export](app/reflection-chat-export.md) - [Growth dashboard](app/growth-dashboard.md) - [Settings, explainer and legal](app/settings-and-legal.md) |
 | Backend | [Cloud Run API](backend/cloud-run-api.md) - [Video analysis pipeline](backend/video-analysis-pipeline.md) - [Shared prompts](backend/shared-prompts.md) - [Cloudflare Worker](backend/cloudflare-worker.md) |
 | Operations | [Build, test, CI](operations/build-test-ci.md) - [Deployment, release, public docs](operations/deployment-and-release.md) |
 
@@ -42,6 +42,7 @@ Run commands from the repository root. Backend tests are quiet-by-default with b
 | SwiftData models, schema change, app startup, services wiring | [App overview](app/overview.md) | `App/LessonLensApp.swift`, `App/ServiceContainer.swift`, `Core/Models/*.swift` | `ModelContainer` schema list, `ServiceContainer`, `AppConfiguration.load` | `PauseBackfillTests`, `InterruptedProcessingTests` | build, then launch Debug app (schema errors reset the store) |
 | Sign-in, tokens, Keychain, district config (`Local.xcconfig`) | [Auth and config](app/auth-and-config.md) | `Features/Authentication/AuthService.swift`, `Core/Services/KeychainService.swift`, `Config/*.xcconfig`, `Resources/Info.plist` | `AuthService.getValidSession`, `AppConfiguration.load`, `LL*` plist keys | none (manual sign-in) | `bash scripts/check-app-config.sh <built .app>` |
 | Add/edit a teaching framework or technique | [Frameworks and techniques](app/frameworks-and-techniques.md) | `Core/Models/TeachingFramework.swift`, `Features/Techniques/FrameworkRegistry.swift`, `Frameworks/*.swift` | `TeachingFramework`, `FrameworkRegistry.techniques`, `Technique` | none | app build |
+| Settings window, `UserSettings` preferences, How It Works or Terms/Privacy copy | [Settings, explainer and legal](app/settings-and-legal.md) | `Features/Settings/SettingsView.swift`, `Core/Models/UserSettings.swift`, `Features/HowItWorks/HowItWorksView.swift`, `Features/Legal/TermsAndPrivacyView.swift`, `Core/Views/ContentView.swift` (`MainView`) | `SettingsView`, `UserSettings.enabledTechniqueIds(for:)`, `UserSettings.setEnabledTechniqueIds`, `TermsAndPrivacyView` | none (manual check) | app build (`xcodebuild ... build`) |
 | Reflection wizard, coaching chat, PDF/Markdown export | [Reflection, chat, export](app/reflection-chat-export.md) | `Features/Reflection/*`, `Features/Chat/ChatService.swift`, `ChatPanelView.swift`, `Features/Export/ExportService.swift` | `ReflectionFlowView`, `ChatService.formatTimestampedTranscript`, `PDFPagePacker.packIntoPages` | `MarkdownParserTests` | `xcodebuild ... test -only-testing:LessonLensTests/MarkdownParserTests` |
 | Docker/Cloud Run deploy, signing, release, help/history sites | [Deployment and release](operations/deployment-and-release.md) | `CloudRunBackend/Dockerfile`, `cloudbuild.yaml`, `scripts/*.sh`, `RELEASING.md`, `docs/help/help-steps.js`, `docs/history/history.js` | n/a | n/a | `bash scripts/check-app-config.sh <app>`; deploys are conditional/manual |
 | CI, dependency pins, test commands | [Build, test, CI](operations/build-test-ci.md) | `.github/workflows/psd-ci.yml`, `package.json` files | n/a | all suites | see page |
@@ -57,10 +58,6 @@ Run commands from the repository root. Backend tests are quiet-by-default with b
 Areas identified but not given dedicated coverage (source anchor - reason):
 
 - Theme and shared UI (`LessonLens/LessonLens/Core/Theme/`, `Core/Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
-- `HowItWorksView`, `TermsAndPrivacyView`, `SettingsView` (`LessonLens/LessonLens/Features/HowItWorks/`, `Legal/`, `Settings/`) - covered only by mention in [app overview](app/overview.md); `SettingsView` persists per-user `UserSettings` (timestamps, framework, enabled techniques) and is the place to read before changing preferences. The Growth dashboard is now documented in [growth dashboard](app/growth-dashboard.md).
 - `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
-- `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
-- Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
- path).
 - `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
