@@ -41,6 +41,12 @@ The pipeline is orchestrated by `RecordingDetailView` (private methods `startTra
 | Audio import | `AudioImportService.importAudioFile` | m4a/mp3/wav/aiff/caf; same 5-90 minute bounds (`ImportError`) |
 | Video import | `VideoImportService.importVideoFile` | mp4/mov/m4v/webm, `maxFileSize` 10 GB, duration validated; creates `Recording(mediaType: .video, status: .recorded)` reusing the file name for both audio and video paths |
 
+### Capture, import and result views
+
+The entry points live in `ContentView`'s toolbar **Add** menu: New Recording, Import Audio (`fileImporter` filtered by `AudioImportService.supportedTypes`) and Import Video (a sheet hosting `VideoImportView`). New Recording shows `NewRecordingView` in the detail pane. It drives `services.recordingService` for permission, start, stop and cancel, and reads its published `currentDuration` and `audioLevel`. Its own `minDuration`/`maxDuration` constants (5 and 90 minutes) mirror the service bounds; cancelling mid-recording asks for confirmation first. `VideoImportView` previews the chosen file with `NativeVideoPlayer` and shows a 5-20 minute recommendation, which is advisory; the hard checks run in `VideoImportService.importVideoFile`, which it calls before handing the new `Recording` back to `ContentView`.
+
+Inside `RecordingDetailView`, `VideoPlayerView` plays the recording's video when there is one. Once an `Analysis` exists the detail view renders `AnalysisFeedbackView`: summary, strengths and growth areas, technique evaluations (ratings shown only when `Analysis.ratingsIncluded`), next steps, and a **Coaching Chats** card. That card opens `ChatListView` as a sheet; the chat flow itself is documented in [reflection, chat and export](reflection-chat-export.md).
+
 ## Status lifecycle
 
 ```mermaid
