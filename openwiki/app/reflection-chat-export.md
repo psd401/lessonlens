@@ -55,6 +55,7 @@ sequenceDiagram
 ```
 
 - Context assembly is client-side in `ChatPanelView.sendMessage`: `ChatService.formatTimestampedTranscript` emits `[M:SS-M:SS] text` per segment plus `[N.Ns pause]` markers where a stored pause starts within 0.5 s of a segment end (this is how pauses reach the model); `buildTechniqueEvaluationsSummary` lists each technique with rating, "[not observed]", feedback and evidence; `buildReflectionSummary` returns nil unless the reflection `isComplete` and not `wasSkipped`, and yields a `### Teacher's Self-Reflection` block.
+- UI: `AnalysisFeedbackView`'s Coaching Chats card opens `ChatListView` as a sheet. It lists the recording's `ChatSession`s newest first, creates new ones, and pushes `ChatPanelView` for the chosen session; each message bubble is rendered by `ChatMessageView`.
 - Video-only recordings without a transcript auto-extract audio and transcribe on demand (`startTranscriptExtraction`, using `AudioExtractionService` and `TranscriptionService`).
 - Errors: `ChatError` maps 429 -> rate limited, 401/403 -> unauthorized, 5xx -> service unavailable. Request timeout is 120 s.
 - Persistence: `ChatSession` (title defaults to "New Chat", set from the first 40 chars of the first message) with cascade-deleted `ChatMessage`s (`role` is the string `user`/`assistant`). The backend maps `assistant` to Gemini's `model` role ([shared prompts](../backend/shared-prompts.md)); the route is documented in [Cloud Run API](../backend/cloud-run-api.md). The [Cloudflare Worker](../backend/cloudflare-worker.md) has no `/chat`.
