@@ -1,0 +1,50 @@
+# Called only by psd-ci.yml. Runs the org CI gate for each service, then a
+# combined `psd-ci` job that passes only if every service passed. Because
+# the caller job is named `psd-ci`, that combined job reports as
+# `psd-ci / psd-ci`, the single context the org rulesets require
+# (psd-dev-standards standards/06 §2). The per-service checks report as
+# `psd-ci / psd-ci-cloudrun-backend / psd-ci` and so on.
+name: CI jobs
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# TODO: The Swift app (LessonLens/) is not covered by this gate — the org
+# reusable workflow runs on ubuntu-latest and the app needs a macOS runner
+# with Xcode. Add a macOS build/test job when runner budget allows.
+jobs:
+  psd-ci-cloudrun-backend:
+    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
+    secrets: inherit
+    with:
+      working-directory: CloudRunBackend
+
+  psd-ci-cloudflare-worker:
+    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
+    secrets: inherit
+    with:
+      working-directory: CloudflareWorker
+
+  psd-ci:
+    name: psd-ci
+    if: always()
+    needs:
+      - psd-ci-cloudrun-backend
+      - psd-ci-cloudflare-worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every CI job to succeed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "CI job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A CI job did not succeed ($result)."
+              exit 1
+            fi
+          done

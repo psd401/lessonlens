@@ -5,18 +5,15 @@ on:
   push:
     branches: [main]
 
-# TODO: The Swift app (LessonLens/) is not covered by this gate — the org
-# reusable workflow runs on ubuntu-latest and the app needs a macOS runner
-# with Xcode. Add a macOS build/test job when runner budget allows.
-jobs:
-  psd-ci-cloudrun-backend:
-    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
-    secrets: inherit
-    with:
-      working-directory: CloudRunBackend
+permissions:
+  contents: read
 
-  psd-ci-cloudflare-worker:
-    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
+# The caller job is named `psd-ci` so the combined gate in psd-ci-jobs.yml
+# reports as `psd-ci / psd-ci`, the context the org rulesets require
+# (psd-dev-standards standards/06 §2).
+jobs:
+  psd-ci:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/psd-ci-jobs.yml
     secrets: inherit
-    with:
-      working-directory: CloudflareWorker
