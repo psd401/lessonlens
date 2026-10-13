@@ -51,7 +51,7 @@ Test harness facts that trip people up: Cloud Run tests must `import './test-env
 
 ## CI
 
-`.github/workflows/psd-ci.yml` runs the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml@main` twice, with `working-directory: CloudRunBackend` and `CloudflareWorker`, on pull requests and pushes to `main`. A TODO in the file notes the Swift app is not covered (needs a macOS runner). Other workflows: `security-scan.yml`, `license-check.yml`, `claude-review.yml`, `openwiki-update.yml` (weekly/push-to-main wiki refresh via an org reusable workflow), plus `dependabot.yml`. Never weaken CI.
+`.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds the two jobs, `psd-ci-cloudrun-backend` and `psd-ci-cloudflare-worker`, each calling the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml@main` with `working-directory` set to `CloudRunBackend` or `CloudflareWorker`. A combined job named `psd-ci` (`if: always()`, `needs` both) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner). Other workflows: `security-scan.yml`, `license-check.yml`, `claude-review.yml`, `openwiki-update.yml` (weekly/push-to-main wiki refresh via an org reusable workflow), plus `dependabot.yml`. Never weaken CI.
 
 ## Conditional / expensive checks
 
