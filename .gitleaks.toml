@@ -40,3 +40,8 @@ description = "A student Google account (digit-only local part @edtools.psd401.n
 regex = '''\b([0-9]{4,10})@edtools\.psd401\.net\b'''
 secretGroup = 1
 tags = ["student-pii"]
+
+  [[rules.allowlists]]
+  description = "Synthetic student ids (1000xxx), the documented replacement"
+  regexTarget = "match"
+  regexes = ['''\b1000[0-9]{3}@edtools\.psd401\.net\b''']
