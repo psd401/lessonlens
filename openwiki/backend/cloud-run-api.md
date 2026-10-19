@@ -74,6 +74,8 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 `rateLimitStore` is an in-process `Map` keyed `rate:text|video|chat:<userId>`, hourly window, defaults 20 / 5 / 50 via `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR`. This is an explicit, commented design decision: resets on restart, not shared across instances, "courtesy throttling" - real protection is auth, Gemini quotas and Cloud Run limits. Read the comment block before changing it; the migration path noted there is Memorystore (Redis). Tests share this store, which is why `tests/test-env.ts` sets `VIDEO_RATE_LIMIT_PER_HOUR=1000`.
 
+**Stale README claim:** `CloudRunBackend/README.md` says rate-limited responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. No file under `CloudRunBackend/src` sets these headers, so do not rely on them or add clients that parse them. Clients read quota state from the `GET .../rate-limit` endpoints (`getRateLimitStatus`). The README's project-structure list is also incomplete (it omits `gcp-auth.ts`, `gemini-client.ts`, `gemini-files.ts` and `video-storage.ts`); this page's file references are the current ones.
+
 ## Gemini backend selection (`gemini-client.ts`, `gcp-auth.ts`)
 
 `createGeminiClient({backend, apiKey, vertexLocation, auth})` returns `generateContent(model, body)`:
