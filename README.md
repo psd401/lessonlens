@@ -117,11 +117,9 @@ lessonlens/
 ├── scripts/                      # Deployment automation scripts
 │   ├── setup.sh                  # Backend setup wizard (GCP + Cloud Run)
 │   └── configure-app.sh          # Writes LessonLens/Config/Local.xcconfig
-├── docs/                         # Documentation
-│   ├── DEPLOYMENT.md             # District deployment guide
-│   └── DEPLOYMENT_CHECKLIST.md   # Printable deployment checklist
-└── CloudflareWorker/             # Alternative backend (Cloudflare Workers)
-    └── src/routes/               # API routes
+└── docs/                         # Documentation
+    ├── DEPLOYMENT.md             # District deployment guide
+    └── DEPLOYMENT_CHECKLIST.md   # Printable deployment checklist
 ```
 
 ## User Flow

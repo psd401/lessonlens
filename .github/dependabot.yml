@@ -5,19 +5,9 @@ updates:
     schedule:
       interval: weekly
 
-  # Both API components use bun; Dependabot's npm ecosystem reads bun.lock.
+  # The backend uses bun; Dependabot's npm ecosystem reads bun.lock.
   - package-ecosystem: npm
     directory: /CloudRunBackend
-    schedule:
-      interval: weekly
-    groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /CloudflareWorker
     schedule:
       interval: weekly
     groups:
