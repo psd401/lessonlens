@@ -15,7 +15,7 @@ export const RESPONSE_SCHEMA_WITH_RATINGS = `
 ## Response Format
 Provide your analysis as a JSON object with the following structure:
 {
-    "overallSummary": "2-3 sentence summary of the teaching session's effectiveness",
+    "overallSummary": "2-3 sentence summary of what happened in the teaching session",
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "growthAreas": ["growth area 1", "growth area 2"],
     "actionableNextSteps": ["specific action 1", "specific action 2", "specific action 3"],
@@ -36,7 +36,7 @@ export const RESPONSE_SCHEMA_WITHOUT_RATINGS = `
 ## Response Format
 Provide your analysis as a JSON object with the following structure:
 {
-    "overallSummary": "2-3 sentence summary of the teaching session's effectiveness",
+    "overallSummary": "2-3 sentence summary of what happened in the teaching session",
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "growthAreas": ["growth area 1", "growth area 2"],
     "actionableNextSteps": ["specific action 1", "specific action 2", "specific action 3"],

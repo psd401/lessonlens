@@ -21,7 +21,7 @@ Guidelines:
 - If asked about something not visible in the transcript/video, say so honestly
 - Connect observations to research-based teaching practices when relevant
 
-The techniques evaluated in this session were: {{techniqueNames}}.`;
+The techniques analyzed in this session were: {{techniqueNames}}.`;
 
 export const CHAT_CONTEXT_SECTION = `
 ## Teaching Session Context
