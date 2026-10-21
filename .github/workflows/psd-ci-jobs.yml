@@ -22,18 +22,11 @@ jobs:
     with:
       working-directory: CloudRunBackend
 
-  psd-ci-cloudflare-worker:
-    uses: PSD401/.github/.github/workflows/reusable-psd-ci.yml@main
-    secrets: inherit
-    with:
-      working-directory: CloudflareWorker
-
   psd-ci:
     name: psd-ci
     if: always()
     needs:
       - psd-ci-cloudrun-backend
-      - psd-ci-cloudflare-worker
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
