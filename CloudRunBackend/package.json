@@ -9,7 +9,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "hono": "^4.4.0",
+    "hono": "^4.13.13",
     "jose": "^5.2.0"
   },
   "devDependencies": {
