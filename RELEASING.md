@@ -30,13 +30,30 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
   the signed app must carry; `psd-sign` checks it.
 - **Release is not sandboxed, on purpose.** Every release through v1.1.1 was
   shipped with no entitlements at all (an older signing step removed them), so
-  teachers' data lives outside the sandbox container:
-  `~/Library/Application Support/default.store` and
-  `~/Library/Application Support/com.peninsula.lessonlens/Recordings`.
+  teachers' data lives outside the sandbox container, in
+  `~/Library/Application Support/com.peninsula.lessonlens/`: the
+  `LessonLens.store` database and the `Recordings` folder.
   A sandboxed release would look in `~/Library/Containers/…` instead and the
   existing sessions would appear to vanish. Adopting the sandbox needs a
   container-migration plan and testing on a copy of real data first.
-- Debug builds keep the sandboxed `LessonLens.entitlements`.
+- **Store location.** Through v1.2.0 the database was SwiftData's generic
+  `~/Library/Application Support/default.store`. Later releases move it into
+  `com.peninsula.lessonlens/LessonLens.store` on first launch (see
+  `PersistentStore` in `LessonLensApp.swift`), but only if the store's
+  metadata lists LessonLens entities; a `default.store` that is another
+  app's, or can't be read, is never touched. If the move fails, the app opens
+  `default.store` in place and tries the move again next launch. If the store
+  in the app folder can't be opened, the app renames it to
+  `LessonLens-backup-<timestamp>.store`, starts empty, and tells the teacher.
+  While a LessonLens `default.store` is still present but unused, the teacher
+  is told on every launch. A `default.store` that can't be read gets a
+  notice on every launch, but only if the Recordings folder shows LessonLens
+  was used, since it may be another app's. If even the backup rename fails, the
+  app stops instead of running on a temporary store. Nothing is ever deleted. Reinstalling v1.2.0 after that move shows an empty
+  library, but the data is still in the new location.
+- Debug builds keep the sandboxed `LessonLens.entitlements`, but an unsigned
+  build (`CODE_SIGNING_ALLOWED=NO`) runs unsandboxed and uses the real
+  Application Support folder. Unit test runs use an in-memory store.
 
 ## Released
 
