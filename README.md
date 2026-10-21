@@ -300,6 +300,7 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `JWT_SECRET` - Secret for signing session tokens (min 32 chars)
 - `ALLOWED_DOMAIN` - Email domain restriction (e.g., `psd401.net`)
+- `MAX_SESSION_DAYS` - Days after a Google sign-in before the app must sign in again (default: 30)
 - `GEMINI_TEXT_MODEL` - Text analysis model (default: `gemini-3.8-flash`)
 - `GEMINI_VIDEO_MODEL` - Video analysis model (default: `gemini-3.8-flash`)
 - `RATE_LIMIT_PER_HOUR` - Text analysis rate limit (default: 20)

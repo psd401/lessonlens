@@ -347,6 +347,7 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | `VIDEO_BUCKET` | No | — | Temporary Cloud Storage bucket for video uploads (uniform access, public access prevention, 1-day delete lifecycle rule, `roles/storage.objectAdmin` for the runtime service account only) |
 | `GOOGLE_CLIENT_ID` | Yes | — | OAuth client ID for Google Sign-In |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Google Workspace domain to restrict login |
+| `MAX_SESSION_DAYS` | No | `30` | Days after a Google sign-in that token refresh keeps working; after that the teacher signs in with Google again, which re-checks the domain |
 | `RATE_LIMIT_PER_HOUR` | No | `20` | Text analysis rate limit per user |
 | `VIDEO_RATE_LIMIT_PER_HOUR` | No | `5` | Video analysis rate limit per user |
 | `CHAT_RATE_LIMIT_PER_HOUR` | No | `50` | Chat rate limit per user |
