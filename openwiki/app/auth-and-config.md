@@ -71,5 +71,6 @@ Without a `Local.xcconfig` the app builds but cannot sign in, and release packag
 
 - Never reintroduce dev auth bypasses or hardcode client id/host/team (public repo; see conventions in `CLAUDE.md`).
 - Adding a configuration value: add the `LL_*` key to `Shared.xcconfig` and `Local.example.xcconfig`, an Info.plist key, a read in `AppConfiguration.load()`, a check in `scripts/check-app-config.sh`, and a prompt in `scripts/configure-app.sh`.
-- Changing token shape/lifetime: update `routes/auth.ts` and `AuthService` (`AuthResponse`, `SessionToken`) together; `verifySession` on the backend only needs the HS256 signature and `sub`.
-- No automated tests cover `AuthService`; the backend side is exercised only for unauthenticated rejection in `CloudRunBackend/tests/index.test.ts`.
+- Changing token shape/lifetime: update `routes/auth.ts` and `AuthService` (`AuthResponse`, `SessionToken`) together. On the backend, `verifySession` requires the `token_type: 'access'` claim and a `sub` (not only the HS256 signature), and `/auth/refresh` requires a refresh token with `auth_time`; `CloudRunBackend/tests/auth.test.ts` pins these rules.
+- No automated tests cover `AuthService` in Swift; backend token and refresh rules are covered by `CloudRunBackend/tests/auth.test.ts`, and unauthenticated rejection by `CloudRunBackend/tests/index.test.ts`.
+ts cover `AuthService`; the backend side is exercised only for unauthenticated rejection in `CloudRunBackend/tests/index.test.ts`.

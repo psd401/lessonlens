@@ -1,7 +1,7 @@
 ---
 type: Service
 title: Cloud Run API (CloudRunBackend)
-description: The primary Bun + Hono backend for LessonLens - routes, session JWT auth, in-memory rate limiting, Gemini API-key/Vertex client, environment variables, startup invariants and focused tests.
+description: The primary Bun + Hono backend for LessonLens - routes, session JWT auth with access/refresh token types and a refresh session cap, in-memory rate limiting, Gemini API-key/Vertex client, environment variables, startup invariants and focused tests.
 tags: [backend, hono, bun, cloud-run, gemini, auth, rate-limiting]
 openwiki:
   roles: [architecture, integration]
@@ -14,8 +14,9 @@ openwiki:
     - CloudRunBackend/src/gemini-client.ts
     - CloudRunBackend/src/gcp-auth.ts
     - CloudRunBackend/src/gemini-error.ts
-  symbols: [env, checkRateLimit, getRateLimitStatus, verifySession, createGeminiClient, createMetadataAuth, describeGeminiError]
+  symbols: [env, checkRateLimit, getRateLimitStatus, verifySession, issueTokens, tokenTypeOf, createGeminiClient, createMetadataAuth, describeGeminiError]
   test_paths:
+    - CloudRunBackend/tests/auth.test.ts
     - CloudRunBackend/tests/index.test.ts
     - CloudRunBackend/tests/gemini-client.test.ts
   validation_commands:
@@ -55,8 +56,8 @@ Every protected route repeats the same sequence: `verifySession(Authorization)` 
 | Route | File | Notes |
 |---|---|---|
 | `GET /` | `src/index.ts` | health payload (`name`, `version`, `status`, `runtime: "Cloud Run"`) |
-| `POST /auth/validate` | `routes/auth.ts` | Google ID token -> session JWT (7d) + refresh JWT (30d) |
-| `POST /auth/refresh` | `routes/auth.ts` | refresh JWT -> new pair (rotation) |
+| `POST /auth/validate` | `routes/auth.ts` | Google ID token -> access JWT (7d) + refresh JWT (30d) |
+| `POST /auth/refresh` | `routes/auth.ts` | refresh JWT -> new access JWT + refresh JWT with the same `auth_time`; refused (401) once `auth_time` is older than `MAX_SESSION_DAYS` |
 | `POST /analyze`, `GET /analyze/rate-limit` | `routes/analyze.ts` | transcript analysis; limits: transcript 100,000 chars, 20 techniques, 100 pauses; temperature 0.4, 8192 output tokens, JSON mime type |
 | `POST /analyze/video`, `GET /analyze/video/rate-limit` | `routes/analyze-video.ts` | see [video pipeline](video-analysis-pipeline.md) |
 | `POST /upload/initiate/gcs`, `POST /upload/initiate`, `POST /upload/status`, `DELETE /upload/:fileName` | `routes/upload.ts` | see [video pipeline](video-analysis-pipeline.md) |
@@ -67,8 +68,10 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 ## Authentication (`routes/auth.ts`)
 
 - `/auth/validate` verifies the Google ID token with `jose` against Google's JWKS, issuer `accounts.google.com`, **audience = `GOOGLE_CLIENT_ID`**. It then requires `hd === ALLOWED_DOMAIN`, an email whose domain equals `ALLOWED_DOMAIN`, and `email_verified` (defense in depth; failures are 403 and log only the domain, not the email).
-- Session JWT: HS256 signed with `JWT_SECRET`, `sub` = Google `sub`, claim `user`. Refresh JWT: claim `userId`, 30 days. `verifySession` only checks signature/expiry and returns `payload.sub`.
-- `/auth/refresh` does not re-check the domain or hit a database; it re-issues for the `userId` in the refresh token. The response has no `user` field (the Swift `AuthResponse` in `AuthService.swift` declares `user` as required - see [auth and config](../app/auth-and-config.md)).
+- Tokens are HS256 JWTs signed with `JWT_SECRET` (`issueTokens`). Both carry `sub` = Google `sub` and a `token_type` claim: the access token (7d) has `token_type: 'access'` and the `user` object; the refresh token (30d) has `token_type: 'refresh'` and `auth_time` (the time of the last Google sign-in).
+- `verifySession` accepts only `token_type: 'access'` with a non-empty `sub`, so a refresh token is rejected on every protected route. It returns `{valid, userId}` from `payload.sub`.
+- Legacy tokens: `tokenTypeOf` treats an untyped token as an access token only when its lifetime (`exp - iat`) is 7 days or less, which keeps pre-`token_type` access tokens working until they expire. Untyped refresh tokens (30-day lifetime) are rejected. Remove this fallback once those tokens have expired.
+- `/auth/refresh` does not re-check the domain or hit a database. It requires a `token_type: 'refresh'` token with `sub` and a numeric `auth_time`, then refuses (401 "Session expired, sign in again") when `now - auth_time > MAX_SESSION_DAYS`. Because `auth_time` is carried forward unchanged, refreshes cannot extend a session past the cap without a new Google sign-in, which re-checks the domain. The service is stateless, so the old refresh token stays valid until its own expiry; there is no denylist. The response has no `user` field (the Swift `AuthResponse` in `AuthService.swift` declares `user` as required - see [auth and config](../app/auth-and-config.md)).
 
 ## Rate limiting (`src/index.ts`)
 
@@ -92,6 +95,7 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 |---|---|---|
 | `JWT_SECRET` | required, >= 32 chars | startup throws otherwise |
 | `GOOGLE_CLIENT_ID` | required | startup throws otherwise (without it `jose` would skip the audience check) |
+| `MAX_SESSION_DAYS` | `30` | days after the last Google sign-in that `/auth/refresh` keeps issuing tokens; startup throws unless it is a whole number >= 1 (a non-numeric value would disable the cap). README and `docs/DEPLOYMENT.md` describe the same setting |
 | `ALLOWED_DOMAIN` | `psd401.net` | server-side domain lock |
 | `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR` | `20`, `5`, `50` | per-user hourly limits for text analysis, video and chat (see Rate limiting above) |
 | `GEMINI_BACKEND` | `apikey` | `apikey` or `vertex`; `parseGeminiBackend` throws on anything else |
@@ -107,12 +111,12 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 - **Add a protected endpoint:** create `routes/<name>.ts` exporting a `Hono` router, call `verifySession` first, pick or add a rate-limit key prefix, validate input sizes, build prompts via `shared/prompts`, mount with `app.route(...)` in `src/index.ts`, and add a client call in the Swift service. Add tests next to `tests/video-routes.test.ts` style (fake `globalThis.fetch` standing in for metadata server, Storage and Vertex).
 - **Change a request/response field:** update the route, the prompt/JSON schema in [shared prompts](shared-prompts.md) if the model output changes, and the Swift `Codable` models. No second backend needs mirroring; the former worker is no longer maintained ([Cloudflare Worker (removed)](cloudflare-worker.md)).
+- **Change token shape, lifetime or session rules:** change `issueTokens`/`tokenTypeOf` and `verifySession` together, keep the access/refresh type separation, and update `tests/auth.test.ts` (it pins these rules). The Swift `AuthResponse`/`SessionToken` must match the response shape ([auth and config](../app/auth-and-config.md)).
 - **Add an env var:** extend `Env` and the `env` object in `src/index.ts`; if tests import `src/index.ts`, set it in `tests/test-env.ts` (module is evaluated once per `bun test` run).
 
 ## Validation
 
-- Narrow: `cd CloudRunBackend && bun test` (tests: `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess, `gemini-client.test.ts` backend URL/auth, `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Auth-only focused check: `cd CloudRunBackend && bun test tests/auth.test.ts`. Its behavior matrix: `describe('verifySession')` covers access acceptance, refresh and untyped rejection, unknown `token_type`, and the 7-day untyped fallback; `describe('POST /auth/refresh')` covers the pair issuance with unchanged `auth_time`, the session-cap 401, and rejection of access, untyped, subject-less and foreign-secret tokens; `describe('MAX_SESSION_DAYS startup validation')` spawns a subprocess to check the non-numeric refusal.
 - Conditional: `bun run build` (`bun build src/index.ts --outdir=dist --target=bun`) when imports of `../../../shared` or packaging change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
-- Do not hand-edit `dist/`; there is no committed build output.
-ng change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
 - Do not hand-edit `dist/`; there is no committed build output.

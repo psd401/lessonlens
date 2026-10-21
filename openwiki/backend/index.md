@@ -1,6 +1,6 @@
 # Files
 
-- [Cloud Run API (CloudRunBackend)](cloud-run-api.md) - The primary Bun + Hono backend for LessonLens - routes, session JWT auth, in-memory rate limiting, Gemini API-key/Vertex client, environment variables, startup invariants and focused tests.
+- [Cloud Run API (CloudRunBackend)](cloud-run-api.md) - The primary Bun + Hono backend for LessonLens - routes, session JWT auth with access/refresh token types and a refresh session cap, in-memory rate limiting, Gemini API-key/Vertex client, environment variables, startup invariants and focused tests.
 - [Cloudflare Worker (removed alternative proxy)](cloudflare-worker.md) - Record of the former Cloudflare Workers variant of the LessonLens API that is no longer in the repository - what it was, why the Cloud Run backend is now the only backend, and what to check before reintroducing any Cloudflare path.
 - [Shared prompt module (shared/prompts)](shared-prompts.md) - Prompt builders for text analysis, video analysis and coaching chat that the Cloud Run backend imports by relative path; covers template layout, the JSON response contract with the Swift app, the wait-time pause rule, the coaching-wording test, and why the import paths must not move.
 - [Video analysis pipeline (Cloud Storage + Vertex AI, legacy Files API)](video-analysis-pipeline.md) - How lesson videos travel from the Mac to Gemini - 720p compression, backend-issued Cloud Storage resumable upload, ownership-checked /analyze/video on Vertex AI, immediate deletion, and the legacy Gemini Files API path kept for older apps.
