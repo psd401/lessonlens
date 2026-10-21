@@ -36,12 +36,15 @@ type TokenType = 'access' | 'refresh';
  * Which kind of token this is. Tokens carry a token_type claim so a refresh
  * token can't be used as an access token or the reverse.
  *
- * Tokens issued before token_type existed (October 2026) have none. The app
- * only re-authenticates when its own clock says a token expired, so rejecting
- * them outright would leave teachers seeing "Authentication failed" for up to
- * 7 days. Instead they are told apart by lifetime: access tokens lived 7 days,
- * refresh tokens 30. Every untyped token expires within 30 days of the deploy
- * that added token_type, after which this fallback can be removed.
+ * Access tokens issued before token_type existed (October 2026) have none.
+ * The app only re-authenticates when its own clock says a token expired, so
+ * rejecting them outright would leave teachers seeing "Authentication failed"
+ * for up to 7 days. An untyped token that lived 7 days or less is therefore
+ * still accepted as an access token; every one expires within 7 days of the
+ * deploy that added token_type, after which this fallback can be removed.
+ * Untyped refresh tokens (30-day lifetime) are not accepted at all: the app
+ * has never refreshed successfully (its AuthResponse requires a `user` the
+ * refresh response doesn't send), so only a direct API caller could use one.
  */
 export function tokenTypeOf(payload: jose.JWTPayload): TokenType | undefined {
   if (payload.token_type === 'access' || payload.token_type === 'refresh') {
@@ -49,7 +52,7 @@ export function tokenTypeOf(payload: jose.JWTPayload): TokenType | undefined {
   }
   if (payload.token_type !== undefined) return undefined;
   if (typeof payload.iat !== 'number' || typeof payload.exp !== 'number') return undefined;
-  return payload.exp - payload.iat <= ACCESS_TOKEN_TTL_SECONDS ? 'access' : 'refresh';
+  return payload.exp - payload.iat <= ACCESS_TOKEN_TTL_SECONDS ? 'access' : undefined;
 }
 
 /**
@@ -180,14 +183,8 @@ authRoutes.post('/refresh', async (c) => {
       return c.json({ error: 'Invalid or expired refresh token' }, 401);
     }
 
-    if (tokenTypeOf(payload) !== 'refresh' || !payload.sub) {
-      return c.json({ error: 'Invalid or expired refresh token' }, 401);
-    }
-
-    // Untyped (pre-October 2026) refresh tokens have no auth_time; their
-    // issue time is the closest bound available.
-    const authTime = payload.token_type === 'refresh' ? payload.auth_time : payload.iat;
-    if (typeof authTime !== 'number') {
+    const authTime = payload.auth_time;
+    if (tokenTypeOf(payload) !== 'refresh' || !payload.sub || typeof authTime !== 'number') {
       return c.json({ error: 'Invalid or expired refresh token' }, 401);
     }
 

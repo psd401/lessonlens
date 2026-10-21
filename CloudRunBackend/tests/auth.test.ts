@@ -118,14 +118,9 @@ describe('POST /auth/refresh', () => {
     expect((await refresh(token)).status).toBe(401);
   });
 
-  test('accepts an untyped 30-day refresh token and uses its issue time as auth_time', async () => {
-    const iat = nowSeconds() - 2 * DAY;
-    const token = await sign({ userId: 'teacher-1' }, { iat, lifetime: 30 * DAY });
-
-    const res = await refresh(token);
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { refresh_token: string };
-    expect(jose.decodeJwt(body.refresh_token).auth_time).toBe(iat);
+  test('rejects an untyped 30-day refresh token from before token types', async () => {
+    const token = await sign({ userId: 'teacher-1' }, { lifetime: 30 * DAY });
+    expect((await refresh(token)).status).toBe(401);
   });
 
   test('rejects an untyped 7-day access token', async () => {
