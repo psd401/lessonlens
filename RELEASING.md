@@ -39,9 +39,12 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
 - **Store location.** Through v1.2.0 the database was SwiftData's generic
   `~/Library/Application Support/default.store`. Later releases move it into
   `com.peninsula.lessonlens/LessonLens.store` on first launch (see
-  `PersistentStore` in `LessonLensApp.swift`). If it can't be opened, the app
-  renames it to `LessonLens-backup-<timestamp>.store` and tells the teacher.
-  It never deletes it. Reinstalling v1.2.0 after that move shows an empty
+  `PersistentStore` in `LessonLensApp.swift`), but only if the store's
+  metadata lists LessonLens entities; another app's `default.store` is left
+  alone. If the move fails, the app opens `default.store` in place and tries
+  the move again next launch. If a store can't be opened, the app renames it
+  to `LessonLens-backup-<timestamp>.store` (or leaves `default.store` where it
+  is) and tells the teacher. It never deletes it. Reinstalling v1.2.0 after that move shows an empty
   library, but the data is still in the new location.
 - Debug builds keep the sandboxed `LessonLens.entitlements`, but an unsigned
   build (`CODE_SIGNING_ALLOWED=NO`) runs unsandboxed and uses the real

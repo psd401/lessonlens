@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreData
 
 @main
 struct LessonLensApp: App {
@@ -25,45 +26,12 @@ struct LessonLensApp: App {
         }
 
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let storeURL = PersistentStore.storeURL(in: appSupport)
-
-        var movedLegacyStore = false
         do {
-            movedLegacyStore = try PersistentStore.moveLegacyStoreIfNeeded(appSupport: appSupport)
+            let (container, issue) = try PersistentStore.openContainer(schema: schema, appSupport: appSupport)
+            PersistentStore.launchIssue = issue
+            return container
         } catch {
-            print("Could not move legacy store: \(error)")
-        }
-
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            url: storeURL,
-            allowsSave: true
-        )
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            // Never delete teacher data: it exists only on this Mac. Put the
-            // store aside, start an empty one, and tell the teacher where it went.
-            print("ModelContainer failed: \(error). Setting store aside and retrying...")
-
-            if movedLegacyStore, (try? PersistentStore.restoreLegacyStore(appSupport: appSupport)) != nil {
-                // The generic default.store may belong to another app; leave it where it was.
-                PersistentStore.launchIssue = .legacyStoreUnreadable
-            } else {
-                do {
-                    let backupURL = try PersistentStore.setAside(storeURL: storeURL)
-                    PersistentStore.launchIssue = .storeSetAside(backupName: backupURL.lastPathComponent)
-                } catch {
-                    fatalError("Could not open or set aside the LessonLens store: \(error)")
-                }
-            }
-
-            do {
-                return try ModelContainer(for: schema, configurations: [modelConfiguration])
-            } catch {
-                fatalError("Could not create ModelContainer after setting the store aside: \(error)")
-            }
+            fatalError("Could not open or set aside the LessonLens store: \(error)")
         }
     }()
 
@@ -125,13 +93,79 @@ enum PersistentStore {
         appSupport.appendingPathComponent(folderName).appendingPathComponent(storeName)
     }
 
+    static func legacyStoreURL(in appSupport: URL) -> URL {
+        appSupport.appendingPathComponent(legacyStoreName)
+    }
+
+    /// Opens the store, moving or setting it aside as needed. Returns the
+    /// container plus an issue to show the teacher, if any. Throws only when
+    /// no store can be opened at all.
+    static func openContainer(
+        schema: Schema,
+        appSupport: URL,
+        fileManager: FileManager = .default
+    ) throws -> (container: ModelContainer, issue: StorageError?) {
+        let storeURL = storeURL(in: appSupport)
+        let legacyURL = legacyStoreURL(in: appSupport)
+
+        var openURL = storeURL
+        var movedLegacyStore = false
+        do {
+            movedLegacyStore = try moveLegacyStoreIfNeeded(appSupport: appSupport, fileManager: fileManager)
+        } catch {
+            // Keep working from default.store this launch. Opening the new
+            // location would create an empty store there, and the move would
+            // never be retried.
+            print("Could not move legacy store: \(error). Opening it in place.")
+            openURL = legacyURL
+        }
+
+        func open(_ url: URL) throws -> ModelContainer {
+            try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, allowsSave: true)])
+        }
+
+        do {
+            return (try open(openURL), nil)
+        } catch {
+            // Never delete teacher data: it exists only on this Mac. Put the
+            // store aside, start an empty one, and tell the teacher.
+            print("ModelContainer failed: \(error). Setting store aside and retrying...")
+
+            let issue: StorageError
+            if openURL == legacyURL {
+                // Opened in place and failed: leave default.store untouched.
+                issue = .legacyStoreUnreadable
+            } else if movedLegacyStore, (try? restoreLegacyStore(appSupport: appSupport, fileManager: fileManager)) != nil {
+                issue = .legacyStoreUnreadable
+            } else {
+                let backupURL = try setAside(storeURL: storeURL, fileManager: fileManager)
+                issue = .storeSetAside(backupName: backupURL.lastPathComponent)
+            }
+            return (try open(storeURL), issue)
+        }
+    }
+
+    /// True if the store at `url` was created by LessonLens. Reads the store's
+    /// metadata (which lists its entity names) without opening it. Throws if
+    /// the file can't be read as a store.
+    static func isLessonLensStore(at url: URL) throws -> Bool {
+        let metadata = try NSPersistentStoreCoordinator.metadataForPersistentStore(
+            ofType: NSSQLiteStoreType, at: url, options: nil
+        )
+        let entities = metadata[NSStoreModelVersionHashesKey] as? [String: Any] ?? [:]
+        return entities["Recording"] != nil && entities["Transcript"] != nil
+    }
+
     /// Moves default.store from the Application Support root into the app's
-    /// folder when the app has no store there yet. Returns true if it moved.
+    /// folder when the app has no store there yet and default.store is a
+    /// LessonLens store. Another app's default.store is left alone. Returns
+    /// true if it moved.
     static func moveLegacyStoreIfNeeded(appSupport: URL, fileManager: FileManager = .default) throws -> Bool {
         let storeURL = storeURL(in: appSupport)
-        let legacyURL = appSupport.appendingPathComponent(legacyStoreName)
+        let legacyURL = legacyStoreURL(in: appSupport)
         guard !fileManager.fileExists(atPath: storeURL.path),
-              fileManager.fileExists(atPath: legacyURL.path) else { return false }
+              fileManager.fileExists(atPath: legacyURL.path),
+              try isLessonLensStore(at: legacyURL) else { return false }
 
         try fileManager.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try moveFiles(from: legacyURL, to: storeURL, fileManager: fileManager)
@@ -142,7 +176,7 @@ enum PersistentStore {
     static func restoreLegacyStore(appSupport: URL, fileManager: FileManager = .default) throws {
         try moveFiles(
             from: storeURL(in: appSupport),
-            to: appSupport.appendingPathComponent(legacyStoreName),
+            to: legacyStoreURL(in: appSupport),
             fileManager: fileManager
         )
     }
