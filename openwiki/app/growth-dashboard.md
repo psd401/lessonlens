@@ -62,16 +62,15 @@ Caption: the dashboard renders one of three empty states or the full set of sect
 
 `GrowthPatternAnalyzer.analyze(recordings:)` is a pure static function. It returns `[]` for fewer than two recordings. For each technique with at least two ratings it applies the first matching rule below, where `first` and `last` are the chronological first and last ratings and `avg` is their mean:
 
-<!-- openwiki: mermaid parse failed and this diagram was converted to a text fence so it does not break rendering. Fix the diagram source and restore the mermaid fence. Parser error: Heuristic: an unescaped angle bracket inside a label breaks rendering; rephrase the label. -->
-```text
+```mermaid
 flowchart TD
-    S[technique ratings, chronological] --> Q1{all ratings >= 4?}
+    S[technique ratings, chronological] --> Q1{all ratings 4 or higher?}
     Q1 -->|yes| P1[consistentStrength]
-    Q1 -->|no| Q2{last > first?}
+    Q1 -->|no| Q2{last rating above first?}
     Q2 -->|yes| P2[improving]
-    Q2 -->|no| Q3{avg <= 2.5?}
+    Q2 -->|no| Q3{average 2.5 or lower?}
     Q3 -->|yes| P3[needsAttention]
-    Q3 -->|no| Q4{last < first?}
+    Q3 -->|no| Q4{last rating below first?}
     Q4 -->|yes| P4[changed]
     Q4 -->|no| N[no insight]
 ```
