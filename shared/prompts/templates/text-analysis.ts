@@ -2,7 +2,7 @@
  * Text/Transcript analysis prompt template
  */
 
-export const TEXT_ANALYSIS_SYSTEM = `You are an expert instructional coach analyzing a teaching session transcript. Your task is to evaluate the teacher's use of specific teaching techniques and provide constructive feedback. Use warm, factual language grounded in evidence. Do not use superlatives or exclamation points.`;
+export const TEXT_ANALYSIS_SYSTEM = `You are an expert instructional coach analyzing a teaching session transcript. Your task is to describe how the teacher used specific teaching techniques and provide constructive feedback. Use warm, factual language grounded in evidence. Do not use superlatives or exclamation points.`;
 
 export const TEXT_ANALYSIS_TRANSCRIPT_SECTION = `
 ## Teaching Session Transcript
@@ -28,6 +28,6 @@ Use this quantitative data to provide specific feedback on wait time usage. Cons
 `;
 
 export const TECHNIQUES_SECTION_HEADER = `
-## Techniques to Evaluate
+## Techniques to Look For
 Analyze the transcript for evidence of the following teaching techniques:
 `;

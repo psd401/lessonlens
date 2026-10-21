@@ -69,11 +69,11 @@ struct LoginView: View {
             // Footer
             VStack(spacing: 8) {
                 VStack(spacing: 4) {
-                    Text("Your audio stays on your device")
+                    Text("Audio recordings are transcribed on your Mac")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Text("Only transcripts are sent for analysis")
+                    Text("Transcripts, and videos you choose to analyze, are sent to Gemini")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
