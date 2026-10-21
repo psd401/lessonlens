@@ -127,7 +127,7 @@ final class PersistentStoreTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: legacyURL, encoding: .utf8), "not a database")
     }
 
-    func testUnreadableLegacyFileIsFlaggedOnceWhenLessonLensWasUsed() throws {
+    func testUnreadableLegacyFileIsFlaggedEachLaunchWhenLessonLensWasUsed() throws {
         try Data("not a database".utf8).write(to: legacyURL)
         let recordings = appFolder.appendingPathComponent("Recordings")
         try fileManager.createDirectory(at: recordings, withIntermediateDirectories: true)
@@ -138,7 +138,7 @@ final class PersistentStoreTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: legacyURL, encoding: .utf8), "not a database")
 
         let (_, nextIssue) = try PersistentStore.openContainer(schema: schema, appSupport: appSupport)
-        XCTAssertNil(nextIssue, "flagged only on the first launch, since the file may be another app's")
+        guard case .legacyStoreUnverified = nextIssue else { return XCTFail("expected the notice again on the next launch") }
     }
 
     func testUnreadableStoreIsSetAsideNotDeleted() throws {

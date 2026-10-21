@@ -113,9 +113,6 @@ enum PersistentStore {
             try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, allowsSave: true)])
         }
 
-        // Checked before anything is created here, to spot a first launch below.
-        let isFirstLaunchInFolder = !fileManager.fileExists(atPath: storeURL.path)
-
         // Move default.store in if it's ours and there's nothing here yet. If
         // the move fails, work from default.store this launch rather than
         // create an empty store here, so the move is retried next launch.
@@ -153,9 +150,9 @@ enum PersistentStore {
             issue = .legacyStoreUnreadable
         }
         // A default.store whose metadata can't be read may be another app's,
-        // so it isn't flagged on every launch. Flag it once, on the first
-        // launch here, if the Recordings folder shows LessonLens was used.
-        if issue == nil, isFirstLaunchInFolder,
+        // so it's only flagged (every launch) when the Recordings folder shows
+        // LessonLens was used on this Mac.
+        if issue == nil,
            fileManager.fileExists(atPath: legacyURL.path),
            (try? isLessonLensStore(at: legacyURL)) == nil,
            let recordings = try? fileManager.contentsOfDirectory(atPath: storeURL.deletingLastPathComponent().appendingPathComponent("Recordings").path),
