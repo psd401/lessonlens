@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText } from '../gemini-error';
 import { VIDEO_EXTENSIONS } from '../video-storage';
 import { getOwnedGeminiFile } from '../gemini-files';
 import { env, vertexGemini, videoStorage, checkRateLimit, getRateLimitStatus } from '../index';
@@ -248,7 +248,7 @@ async function analyzeFromCloudStorage(
 function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse) {
   // Check if Gemini returned candidates (may be blocked by safety filters)
   if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', JSON.stringify(geminiResponse, null, 2));
+    logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);
     const blockReason = (geminiResponse as any).promptFeedback?.blockReason;
     return c.json({
       error: 'Video analysis blocked or failed',
@@ -259,7 +259,7 @@ function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse)
   const analysisText = geminiResponse.candidates[0]?.content?.parts[0]?.text;
 
   if (!analysisText) {
-    console.error('Gemini candidate has no text content');
+    logUnusableGeminiResponse('Gemini candidate has no text content', geminiResponse);
     return c.json({ error: 'Empty response from analysis service' }, 502);
   }
 
@@ -273,8 +273,7 @@ function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse)
     analysisResult = JSON.parse(jsonText);
   } catch (parseErr) {
     // Log error details server-side only (avoid logging video analysis content)
-    console.error('Failed to parse Gemini response:', parseErr);
-    console.error('Response length:', analysisText.length);
+    logUnparseableGeminiText(parseErr, analysisText.length);
     return c.json({
       error: 'Invalid response format from analysis service'
     }, 502);

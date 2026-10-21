@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildChatPrompt, type ChatMessage, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -114,7 +114,7 @@ chatRoutes.post('/', async (c) => {
     const geminiResponse = await response.json() as GeminiGenerateResponse;
 
     if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
-      console.error('Gemini returned no candidates:', JSON.stringify(geminiResponse, null, 2));
+      logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);
       const blockReason = (geminiResponse as any).promptFeedback?.blockReason;
       return c.json({
         error: 'Chat response blocked or failed',
@@ -125,7 +125,7 @@ chatRoutes.post('/', async (c) => {
     const responseText = geminiResponse.candidates[0]?.content?.parts[0]?.text;
 
     if (!responseText) {
-      console.error('Gemini candidate has no text content');
+      logUnusableGeminiResponse('Gemini candidate has no text content', geminiResponse);
       return c.json({ error: 'Empty response from chat service' }, 502);
     }
 
