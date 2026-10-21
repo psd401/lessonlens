@@ -58,7 +58,7 @@ sequenceDiagram
 - UI: `AnalysisFeedbackView`'s Coaching Chats card opens `ChatListView` as a sheet. It lists the recording's `ChatSession`s newest first, creates new ones, and pushes `ChatPanelView` for the chosen session; each message bubble is rendered by `ChatMessageView`.
 - Video-only recordings without a transcript auto-extract audio and transcribe on demand (`startTranscriptExtraction`, using `AudioExtractionService` and `TranscriptionService`).
 - Errors: `ChatError` maps 429 -> rate limited, 401/403 -> unauthorized, 5xx -> service unavailable. Request timeout is 120 s.
-- Persistence: `ChatSession` (title defaults to "New Chat", set from the first 40 chars of the first message) with cascade-deleted `ChatMessage`s (`role` is the string `user`/`assistant`). The backend maps `assistant` to Gemini's `model` role ([shared prompts](../backend/shared-prompts.md)); the route is documented in [Cloud Run API](../backend/cloud-run-api.md). The [Cloudflare Worker](../backend/cloudflare-worker.md) has no `/chat`.
+- Persistence: `ChatSession` (title defaults to "New Chat", set from the first 40 chars of the first message) with cascade-deleted `ChatMessage`s (`role` is the string `user`/`assistant`). The backend maps `assistant` to Gemini's `model` role ([shared prompts](../backend/shared-prompts.md)); the route is documented in [Cloud Run API](../backend/cloud-run-api.md).
 - Replies are rendered by `MarkdownText`, a small custom parser (bullets, numbered items, headings, bold/italic; horizontal rules dropped), tested in `MarkdownParserTests`. The chat prompt asks the model to use only that light subset, so extend both together.
 
 ## Export

@@ -24,7 +24,7 @@ openwiki:
 
 # Cloud Run API
 
-A stateless proxy between the macOS app and Google's Gemini models. It authenticates the teacher, throttles requests, builds prompts from [shared prompt templates](shared-prompts.md), forwards them to Gemini, and reshapes the reply. It stores **no** transcripts, results or sessions - see the privacy invariants in [architecture overview](../architecture/overview.md). Video handling is split out in [video analysis pipeline](video-analysis-pipeline.md). The Cloudflare alternative is in [Cloudflare Worker](cloudflare-worker.md).
+A stateless proxy between the macOS app and Google's Gemini models. It authenticates the teacher, throttles requests, builds prompts from [shared prompt templates](shared-prompts.md), forwards them to Gemini, and reshapes the reply. It stores **no** transcripts, results or sessions - see the privacy invariants in [architecture overview](../architecture/overview.md). Video handling is split out in [video analysis pipeline](video-analysis-pipeline.md). This is the only backend in the repository; the former Cloudflare variant is recorded as removed in [Cloudflare Worker (removed)](cloudflare-worker.md).
 
 **Consult this page when** adding/changing an endpoint, changing sign-in rules, rate limits, model selection, or environment variables.
 
@@ -93,6 +93,7 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 | `JWT_SECRET` | required, >= 32 chars | startup throws otherwise |
 | `GOOGLE_CLIENT_ID` | required | startup throws otherwise (without it `jose` would skip the audience check) |
 | `ALLOWED_DOMAIN` | `psd401.net` | server-side domain lock |
+| `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR` | `20`, `5`, `50` | per-user hourly limits for text analysis, video and chat (see Rate limiting above) |
 | `GEMINI_BACKEND` | `apikey` | `apikey` or `vertex`; `parseGeminiBackend` throws on anything else |
 | `GEMINI_API_KEY` | - | needed for `apikey` text/chat and for the legacy Files API video path |
 | `VERTEX_LOCATION` | `global` | Vertex location |
@@ -105,11 +106,13 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 ## Change recipes
 
 - **Add a protected endpoint:** create `routes/<name>.ts` exporting a `Hono` router, call `verifySession` first, pick or add a rate-limit key prefix, validate input sizes, build prompts via `shared/prompts`, mount with `app.route(...)` in `src/index.ts`, and add a client call in the Swift service. Add tests next to `tests/video-routes.test.ts` style (fake `globalThis.fetch` standing in for metadata server, Storage and Vertex).
-- **Change a request/response field:** update the route, the prompt/JSON schema in [shared prompts](shared-prompts.md) if the model output changes, and the Swift `Codable` models; mirror into [Cloudflare Worker](cloudflare-worker.md) only if that deployment is still in use.
+- **Change a request/response field:** update the route, the prompt/JSON schema in [shared prompts](shared-prompts.md) if the model output changes, and the Swift `Codable` models. No second backend needs mirroring; the former worker is no longer maintained ([Cloudflare Worker (removed)](cloudflare-worker.md)).
 - **Add an env var:** extend `Env` and the `env` object in `src/index.ts`; if tests import `src/index.ts`, set it in `tests/test-env.ts` (module is evaluated once per `bun test` run).
 
 ## Validation
 
 - Narrow: `cd CloudRunBackend && bun test` (tests: `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess, `gemini-client.test.ts` backend URL/auth, `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
 - Conditional: `bun run build` (`bun build src/index.ts --outdir=dist --target=bun`) when imports of `../../../shared` or packaging change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
+- Do not hand-edit `dist/`; there is no committed build output.
+ng change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
 - Do not hand-edit `dist/`; there is no committed build output.

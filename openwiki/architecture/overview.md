@@ -1,7 +1,7 @@
 ---
 type: Architecture Overview
 title: LessonLens system architecture and product invariants
-description: End-to-end view of the LessonLens macOS app, Cloud Run Gemini proxy, optional Cloudflare Worker and shared prompt module, with the data-flow, privacy and "coaching not evaluation" invariants that every change must preserve.
+description: End-to-end view of the LessonLens macOS app, the Cloud Run Gemini proxy and shared prompt module, with the data-flow, privacy and "coaching not evaluation" invariants that every change must preserve.
 tags: [architecture, privacy, data-flow, invariants, gemini]
 openwiki:
   roles: [architecture]
@@ -30,8 +30,7 @@ LessonLens is a voluntary, privacy-first AI coaching tool for Peninsula School D
 | macOS app | SwiftUI, SwiftData, WhisperKit | All user data, UI, on-device transcription, orchestration | [App overview](../app/overview.md) |
 | Cloud Run API | Bun + Hono | Auth, rate limiting, prompt building, Gemini/Vertex proxy | [Cloud Run API](../backend/cloud-run-api.md) |
 | Video pipeline | Cloud Storage + Vertex AI | Temporary video upload and analysis | [Video analysis pipeline](../backend/video-analysis-pipeline.md) |
-| Shared prompts | TypeScript | Prompt builders imported by both backends | [Shared prompts](../backend/shared-prompts.md) |
-| Cloudflare Worker | Bun + Hono, KV | Alternative stateless proxy (no chat, no Vertex) | [Cloudflare Worker](../backend/cloudflare-worker.md) |
+| Shared prompts | TypeScript | Prompt builders imported by the Cloud Run backend | [Shared prompts](../backend/shared-prompts.md) |
 | Ops tooling | bash, Docker, GH Actions | Build, deploy, sign, release, public docs | [Build/test/CI](../operations/build-test-ci.md), [Deployment/release](../operations/deployment-and-release.md) |
 
 ## Runtime data flow
@@ -76,4 +75,6 @@ The app is the only stateful part. Transcript text goes to `/analyze`; video goe
 ## Where to go next
 
 - Teacher-facing flow and status lifecycle: [lesson workflow](../app/lesson-workflow.md); post-analysis features: [reflection, chat, export](../app/reflection-chat-export.md).
+- Operating and releasing: [deployment and release](../operations/deployment-and-release.md).
+n-chat-export.md).
 - Operating and releasing: [deployment and release](../operations/deployment-and-release.md).

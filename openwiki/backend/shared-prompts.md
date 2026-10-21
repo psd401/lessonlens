@@ -1,7 +1,7 @@
 ---
 type: Module
 title: Shared prompt module (shared/prompts)
-description: Prompt builders for text analysis, video analysis and coaching chat that both backends import by relative path; covers template layout, the JSON response contract with the Swift app, the wait-time pause rule, and why the import paths must not move.
+description: Prompt builders for text analysis, video analysis and coaching chat that the Cloud Run backend imports by relative path; covers template layout, the JSON response contract with the Swift app, the wait-time pause rule, the coaching-wording test, and why the import paths must not move.
 tags: [prompts, gemini, shared, typescript, coaching-tone]
 openwiki:
   roles: [architecture, domain]
@@ -15,16 +15,19 @@ openwiki:
     - shared/prompts/templates/video-analysis.ts
     - shared/prompts/templates/chat.ts
   symbols: [buildAnalysisPrompt, buildVideoAnalysisPrompt, buildChatPrompt, processTemplate, TechniqueDefinition, PauseData, GeminiGenerateResponse]
+  test_paths:
+    - CloudRunBackend/tests/prompt-wording.test.ts
   invariants:
-    - Backends import from ../../../shared/prompts; the Dockerfile copies shared/ to keep that relative path valid.
+    - The Cloud Run backend imports from ../../../shared/prompts; the Dockerfile copies shared/ to keep that relative path valid.
     - Model output keys are camelCase (techniqueId, wasObserved); route handlers convert to snake_case for the app.
+    - Rendered analysis and chat prompts keep coaching wording and never ask the model to evaluate the teacher (pinned by tests/prompt-wording.test.ts).
   validation_commands:
-    - cd CloudRunBackend && bun test
+    - cd CloudRunBackend && bun test tests/prompt-wording.test.ts
 ---
 
 # Shared prompt module
 
-`shared/prompts` is the single place prompt wording lives. Edit **templates** to change what Gemini is asked; edit **builder.ts** only to change how pieces are assembled. It is consumed by the [Cloud Run API](cloud-run-api.md) (`routes/analyze.ts`, `analyze-video.ts`, `chat.ts`) and the [Cloudflare Worker](cloudflare-worker.md) (text + video routes).
+`shared/prompts` is the single place prompt wording lives. Edit **templates** to change what Gemini is asked; edit **builder.ts** only to change how pieces are assembled. It is consumed by the [Cloud Run API](cloud-run-api.md) (`routes/analyze.ts`, `analyze-video.ts`, `chat.ts`); the former Cloudflare variant also used it and is no longer in the repository ([removed](cloudflare-worker.md)).
 
 ## Public surface
 
@@ -54,7 +57,7 @@ Templates tell the model to use warm, factual language, avoid superlatives and e
 
 ## Change guidance
 
-- Wording change: edit the template; no route change needed. Re-run `cd CloudRunBackend && bun test` (route tests use fake Gemini replies, so they do not validate wording - review the rendered prompt by calling the builder).
-- Schema change (new field): update both `RESPONSE_SCHEMA_*`, the route mappers in `analyze.ts`/`analyze-video.ts` (and the worker equivalents), the Swift Codable response structs and the `Analysis`/`TechniqueEvaluation` SwiftData models (a SwiftData schema change can trigger the store reset described in [app overview](../app/overview.md)).
+- Wording change: edit the template; no route change needed. Run `cd CloudRunBackend && bun test tests/prompt-wording.test.ts`. That suite builds one analysis, video and chat prompt and asserts the coaching language: it fails on "evaluate the teacher", `Techniques to Evaluate`, `techniques evaluated`, or `session's effectiveness`, and requires `describe how the teacher used specific teaching techniques`, the `## Techniques to Look For` heading, and the chat sentence naming the analyzed techniques. Route tests use fake Gemini replies, so they do not validate wording; review the rendered prompt by calling the builder when you change the templates.
+- Schema change (new field): update both `RESPONSE_SCHEMA_*`, the route mappers in `analyze.ts`/`analyze-video.ts`, the Swift Codable response structs and the `Analysis`/`TechniqueEvaluation` SwiftData models (a SwiftData schema change can trigger the store reset described in [app overview](../app/overview.md)).
 - Do not change the `../../../shared` import paths or Dockerfile `COPY shared` lines without updating both: `CloudRunBackend/Dockerfile` puts `shared/` at `/app/shared` and the app at `/app/CloudRunBackend`; the root `Dockerfile` uses the same layout (see [deployment](../operations/deployment-and-release.md)).
 - Legacy duplicate: `AnalysisService.buildAnalysisPrompt` in the Swift app is an older client-side prompt copy not used by the request path (the app posts raw transcript + techniques); do not treat it as canonical.

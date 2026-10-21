@@ -74,7 +74,6 @@ Kept only for apps released before the Cloud Storage path (`gemini-files.ts` hea
 - Ownership is derived solely from the object/display name prefix; never accept a client-supplied object name without `isOwnedBy` (it also blocks path tricks by requiring the exact `uploads/<folder>/<uuid>.<ext>` shape).
 - Do not log video analysis content (`formatVideoAnalysis` logs only response length on parse failure).
 - Video output reuses the text-analysis response schema (`RESPONSE_SCHEMA_*` in [shared prompts](shared-prompts.md)) so one Swift decoder shape serves both.
-- The Cloudflare Worker has only the legacy Files-API video path; see [Cloudflare Worker](cloudflare-worker.md).
 
 ## Tests
 
