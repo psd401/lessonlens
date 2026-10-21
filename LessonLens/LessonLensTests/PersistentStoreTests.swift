@@ -95,9 +95,12 @@ final class PersistentStoreTests: XCTestCase {
 
         let (container, issue) = try PersistentStore.openContainer(schema: schema, appSupport: appSupport)
 
-        XCTAssertNil(issue)
         XCTAssertEqual(try titles(in: container), ["Current lesson"])
         XCTAssertTrue(exists(legacyURL))
+        // Its sessions aren't shown, so the teacher is told on every launch.
+        guard case .legacyStoreUnreadable = issue else { return XCTFail("expected legacyStoreUnreadable, got \(String(describing: issue))") }
+        let (_, nextIssue) = try PersistentStore.openContainer(schema: schema, appSupport: appSupport)
+        guard case .legacyStoreUnreadable = nextIssue else { return XCTFail("expected the alert again on the next launch") }
     }
 
     func testFailedMoveKeepsWorkingFromTheLegacyStore() throws {
@@ -114,11 +117,12 @@ final class PersistentStoreTests: XCTestCase {
     }
 
     func testUnreadableLegacyFileIsLeftUnchanged() throws {
+        // Can't be shown to be LessonLens's, so it's treated as another app's.
         try Data("not a database".utf8).write(to: legacyURL)
 
         let (container, issue) = try PersistentStore.openContainer(schema: schema, appSupport: appSupport)
 
-        guard case .legacyStoreUnreadable = issue else { return XCTFail("expected legacyStoreUnreadable, got \(String(describing: issue))") }
+        XCTAssertNil(issue)
         XCTAssertEqual(try titles(in: container), [])
         XCTAssertEqual(try String(contentsOf: legacyURL, encoding: .utf8), "not a database")
     }
