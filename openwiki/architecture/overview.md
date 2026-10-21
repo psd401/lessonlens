@@ -76,5 +76,3 @@ The app is the only stateful part. Transcript text goes to `/analyze`; video goe
 
 - Teacher-facing flow and status lifecycle: [lesson workflow](../app/lesson-workflow.md); post-analysis features: [reflection, chat, export](../app/reflection-chat-export.md).
 - Operating and releasing: [deployment and release](../operations/deployment-and-release.md).
-n-chat-export.md).
-- Operating and releasing: [deployment and release](../operations/deployment-and-release.md).

@@ -29,7 +29,7 @@ openwiki:
 
 ## Task routing
 
-Run commands from the repository root. Backend tests are quiet-by-default with bun; Swift checks need macOS + Xcode and are not in CI.
+Run commands from the repository root. Backend checks use bun (`bun test`, optionally with a file path to narrow); Swift checks need macOS + Xcode and are not in CI.
 
 | Change area / intent | Page | Entry points | Key symbols | Focused tests | Minimal validation |
 |---|---|---|---|---|---|
