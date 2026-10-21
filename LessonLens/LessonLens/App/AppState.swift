@@ -257,6 +257,8 @@ enum StorageError: Error, LocalizedError {
     case fileNotFound
     case accessDenied
     case corruptedData
+    case storeSetAside(backupName: String)
+    case legacyStoreUnreadable
 
     var errorDescription: String? {
         switch self {
@@ -268,6 +270,10 @@ enum StorageError: Error, LocalizedError {
             return "Access denied to storage location"
         case .corruptedData:
             return "Data is corrupted"
+        case .storeSetAside(let backupName):
+            return "LessonLens couldn't open your saved sessions, so it started with an empty library. Nothing was deleted: your earlier sessions were kept as \(backupName) in the LessonLens folder (Settings > Open Recordings Folder, then go up one level). Please don't delete that file; ask for help recovering it."
+        case .legacyStoreUnreadable:
+            return "LessonLens couldn't open sessions saved by an earlier version, so it started with an empty library. Nothing was deleted: the earlier file was left where it was. Please ask for help recovering it."
         }
     }
 }

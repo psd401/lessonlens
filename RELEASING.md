@@ -30,13 +30,22 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
   the signed app must carry; `psd-sign` checks it.
 - **Release is not sandboxed, on purpose.** Every release through v1.1.1 was
   shipped with no entitlements at all (an older signing step removed them), so
-  teachers' data lives outside the sandbox container:
-  `~/Library/Application Support/default.store` and
-  `~/Library/Application Support/com.peninsula.lessonlens/Recordings`.
+  teachers' data lives outside the sandbox container, in
+  `~/Library/Application Support/com.peninsula.lessonlens/`: the
+  `LessonLens.store` database and the `Recordings` folder.
   A sandboxed release would look in `~/Library/Containers/…` instead and the
   existing sessions would appear to vanish. Adopting the sandbox needs a
   container-migration plan and testing on a copy of real data first.
-- Debug builds keep the sandboxed `LessonLens.entitlements`.
+- **Store location.** Through v1.2.0 the database was SwiftData's generic
+  `~/Library/Application Support/default.store`. Later releases move it into
+  `com.peninsula.lessonlens/LessonLens.store` on first launch (see
+  `PersistentStore` in `LessonLensApp.swift`). If it can't be opened, the app
+  renames it to `LessonLens-backup-<timestamp>.store` and tells the teacher.
+  It never deletes it. Reinstalling v1.2.0 after that move shows an empty
+  library, but the data is still in the new location.
+- Debug builds keep the sandboxed `LessonLens.entitlements`, but an unsigned
+  build (`CODE_SIGNING_ALLOWED=NO`) runs unsandboxed and uses the real
+  Application Support folder. Unit test runs use an in-memory store.
 
 ## Released
 
