@@ -4,7 +4,7 @@
 // Audience is non-developers: avoid dev jargon such as "commits".
 window.LESSONLENS_HISTORY = {
   updated: "2026-10-21",
-  currentVersions: "App v1.2.0 · Server v1.4.3",
+  currentVersions: "App v1.2.0 · Server v1.4.4",
   stats: [
     { value: "Jan 2026", label: "project start" },
     { value: "7", label: "teaching frameworks" },
