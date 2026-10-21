@@ -259,6 +259,7 @@ enum StorageError: Error, LocalizedError {
     case corruptedData
     case storeSetAside(backupName: String)
     case legacyStoreUnreadable
+    case legacyStoreUnverified
 
     var errorDescription: String? {
         switch self {
@@ -274,6 +275,8 @@ enum StorageError: Error, LocalizedError {
             return "LessonLens couldn't open your saved sessions, so it started with an empty library. Nothing was deleted: your earlier sessions were kept as \(backupName) in the LessonLens folder (Settings > Open Recordings Folder, then go up one level). Please don't delete that file; ask for help recovering it."
         case .legacyStoreUnreadable:
             return "LessonLens found sessions saved by an earlier version that it couldn't open, so they aren't shown. Nothing was deleted: the earlier file was left where it was. Please ask for help recovering it."
+        case .legacyStoreUnverified:
+            return "LessonLens found an older library file it couldn't check, so it started with an empty library. The file was left unchanged. If you had sessions in LessonLens before, please ask for help recovering them."
         }
     }
 }

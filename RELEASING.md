@@ -46,7 +46,10 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
   in the app folder can't be opened, the app renames it to
   `LessonLens-backup-<timestamp>.store`, starts empty, and tells the teacher.
   While a LessonLens `default.store` is still present but unused, the teacher
-  is told on every launch. Nothing is ever deleted. Reinstalling v1.2.0 after that move shows an empty
+  is told on every launch. A `default.store` that can't be read gets a
+  one-time notice, and only if the Recordings folder shows LessonLens was
+  used, since it may be another app's. If even the backup rename fails, the
+  app stops instead of running on a temporary store. Nothing is ever deleted. Reinstalling v1.2.0 after that move shows an empty
   library, but the data is still in the new location.
 - Debug builds keep the sandboxed `LessonLens.entitlements`, but an unsigned
   build (`CODE_SIGNING_ALLOWED=NO`) runs unsandboxed and uses the real

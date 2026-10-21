@@ -113,6 +113,9 @@ enum PersistentStore {
             try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, allowsSave: true)])
         }
 
+        // Checked before anything is created here, to spot a first launch below.
+        let isFirstLaunchInFolder = !fileManager.fileExists(atPath: storeURL.path)
+
         // Move default.store in if it's ours and there's nothing here yet. If
         // the move fails, work from default.store this launch rather than
         // create an empty store here, so the move is retried next launch.
@@ -136,6 +139,8 @@ enum PersistentStore {
             // Never delete teacher data: it exists only on this Mac. Set the
             // store aside, start an empty one, and tell the teacher.
             print("ModelContainer failed: \(error). Setting store aside and retrying...")
+            // If even the rename fails, this throws and the app stops rather
+            // than run on a temporary store that would lose new sessions.
             let backupURL = try setAside(storeURL: storeURL, fileManager: fileManager)
             issue = .storeSetAside(backupName: backupURL.lastPathComponent)
             container = try open(storeURL)
@@ -146,6 +151,16 @@ enum PersistentStore {
         // resolved, so those sessions never disappear silently.
         if issue == nil, isLessonLensStoreFile(at: legacyURL) {
             issue = .legacyStoreUnreadable
+        }
+        // A default.store whose metadata can't be read may be another app's,
+        // so it isn't flagged on every launch. Flag it once, on the first
+        // launch here, if the Recordings folder shows LessonLens was used.
+        if issue == nil, isFirstLaunchInFolder,
+           fileManager.fileExists(atPath: legacyURL.path),
+           (try? isLessonLensStore(at: legacyURL)) == nil,
+           let recordings = try? fileManager.contentsOfDirectory(atPath: storeURL.deletingLastPathComponent().appendingPathComponent("Recordings").path),
+           !recordings.isEmpty {
+            issue = .legacyStoreUnverified
         }
         return (container, issue)
     }
