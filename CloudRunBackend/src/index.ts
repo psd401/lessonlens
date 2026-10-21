@@ -23,6 +23,7 @@ export interface Env {
   VIDEO_RATE_LIMIT_PER_HOUR: number;
   CHAT_RATE_LIMIT_PER_HOUR: number;
   VIDEO_BUCKET: string;
+  MAX_SESSION_DAYS: number;
 }
 
 // Load environment variables
@@ -39,6 +40,7 @@ export const env: Env = {
   VIDEO_RATE_LIMIT_PER_HOUR: parseInt(process.env.VIDEO_RATE_LIMIT_PER_HOUR || '5', 10),
   CHAT_RATE_LIMIT_PER_HOUR: parseInt(process.env.CHAT_RATE_LIMIT_PER_HOUR || '50', 10),
   VIDEO_BUCKET: process.env.VIDEO_BUCKET || '',
+  MAX_SESSION_DAYS: parseInt(process.env.MAX_SESSION_DAYS || '30', 10),
 };
 
 // Runtime service account credentials, shared by Vertex AI and Cloud Storage
@@ -72,6 +74,12 @@ export const videoStorage = env.VIDEO_BUCKET
 const MIN_JWT_SECRET_LENGTH = 32;
 if (!env.JWT_SECRET || env.JWT_SECRET.length < MIN_JWT_SECRET_LENGTH) {
   throw new Error(`JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters for secure token signing`);
+}
+
+// A non-numeric value would make the session cap comparison always false,
+// so refresh would never force a new Google sign-in
+if (!Number.isInteger(env.MAX_SESSION_DAYS) || env.MAX_SESSION_DAYS < 1) {
+  throw new Error('MAX_SESSION_DAYS must be a whole number of days, 1 or more');
 }
 
 // Without a client ID, jose skips the audience check and /auth/validate

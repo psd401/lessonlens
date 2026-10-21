@@ -113,7 +113,7 @@ Under Washington State Office of the Secretary of State guidelines, recordings p
 
 ### 7.4 Account Data
 
-Your authentication tokens are stored in your device's macOS Keychain (Apple's secure credential storage). Session tokens expire after 7 days; refresh tokens expire after 30 days. Signing out of LessonLens immediately clears all stored tokens.
+Your authentication tokens are stored in your device's macOS Keychain (Apple's secure credential storage). Session tokens expire after 7 days; LessonLens then asks you to sign in with Google again, which re-checks that your account is still an active district account. Signing out of LessonLens immediately clears all stored tokens.
 
 ---
 

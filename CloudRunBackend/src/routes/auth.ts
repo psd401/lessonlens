@@ -27,6 +27,65 @@ interface ValidateRequest {
   id_token: string;
 }
 
+const ACCESS_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
+const REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+type TokenType = 'access' | 'refresh';
+
+/**
+ * Which kind of token this is. Tokens carry a token_type claim so a refresh
+ * token can't be used as an access token or the reverse.
+ *
+ * Access tokens issued before token_type existed (October 2026) have none.
+ * The app only re-authenticates when its own clock says a token expired, so
+ * rejecting them outright would leave teachers seeing "Authentication failed"
+ * for up to 7 days. An untyped token that lived 7 days or less is therefore
+ * still accepted as an access token; every one expires within 7 days of the
+ * deploy that added token_type, after which this fallback can be removed.
+ * Untyped refresh tokens (30-day lifetime) are not accepted at all: the app
+ * has never refreshed successfully (its AuthResponse requires a `user` the
+ * refresh response doesn't send), so only a direct API caller could use one.
+ */
+export function tokenTypeOf(payload: jose.JWTPayload): TokenType | undefined {
+  if (payload.token_type === 'access' || payload.token_type === 'refresh') {
+    return payload.token_type;
+  }
+  if (payload.token_type !== undefined) return undefined;
+  if (typeof payload.iat !== 'number' || typeof payload.exp !== 'number') return undefined;
+  return payload.exp - payload.iat <= ACCESS_TOKEN_TTL_SECONDS ? 'access' : undefined;
+}
+
+/**
+ * Signs an access + refresh token pair. auth_time is when the teacher last
+ * signed in with Google; /auth/refresh carries it forward unchanged so a
+ * session can't be extended past MAX_SESSION_DAYS without a fresh Google
+ * sign-in, which re-checks the account's domain.
+ */
+export async function issueTokens(
+  subject: string,
+  authTime: number,
+  accessClaims: jose.JWTPayload = {}
+): Promise<{ access_token: string; refresh_token: string; expires_in: number }> {
+  const secret = new TextEncoder().encode(env.JWT_SECRET);
+  const now = Math.floor(Date.now() / 1000);
+
+  const accessToken = await new jose.SignJWT({ ...accessClaims, token_type: 'access' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + ACCESS_TOKEN_TTL_SECONDS)
+    .setSubject(subject)
+    .sign(secret);
+
+  const refreshToken = await new jose.SignJWT({ token_type: 'refresh', auth_time: authTime })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + REFRESH_TOKEN_TTL_SECONDS)
+    .setSubject(subject)
+    .sign(secret);
+
+  return { access_token: accessToken, refresh_token: refreshToken, expires_in: ACCESS_TOKEN_TTL_SECONDS };
+}
+
 /**
  * POST /auth/validate
  * Validates a Google ID token and returns a session token
@@ -92,29 +151,9 @@ authRoutes.post('/validate', async (c) => {
       photoURL: payload.picture || null,
     };
 
-    // Generate session token (7-day expiration)
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
-    const sessionToken = await new jose.SignJWT({ user })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('7d')
-      .setSubject(user.id)
-      .sign(secret);
+    const tokens = await issueTokens(user.id, Math.floor(Date.now() / 1000), { user });
 
-    // Generate refresh token (30-day expiration)
-    const refreshToken = await new jose.SignJWT({ userId: user.id })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('30d')
-      .setSubject(user.id)
-      .sign(secret);
-
-    return c.json({
-      access_token: sessionToken,
-      refresh_token: refreshToken,
-      expires_in: 7 * 24 * 60 * 60,  // 7 days in seconds
-      user,
-    });
+    return c.json({ ...tokens, user });
 
   } catch (err) {
     console.error('Auth validation error:', err);
@@ -135,39 +174,30 @@ authRoutes.post('/refresh', async (c) => {
       return c.json({ error: 'Missing refresh_token' }, 400);
     }
 
-    // Verify refresh token
     const secret = new TextEncoder().encode(env.JWT_SECRET);
-    let payload: { userId: string };
+    let payload: jose.JWTPayload;
 
     try {
-      const { payload: verifiedPayload } = await jose.jwtVerify(refresh_token, secret);
-      payload = verifiedPayload as unknown as { userId: string };
+      ({ payload } = await jose.jwtVerify(refresh_token, secret));
     } catch (err) {
       return c.json({ error: 'Invalid or expired refresh token' }, 401);
     }
 
-    // Note: In production, you'd fetch the user from a database
-    // For now, we just issue a new token with the same user ID
-    const newSessionToken = await new jose.SignJWT({ userId: payload.userId })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('7d')
-      .setSubject(payload.userId)
-      .sign(secret);
+    const authTime = payload.auth_time;
+    if (tokenTypeOf(payload) !== 'refresh' || !payload.sub || typeof authTime !== 'number') {
+      return c.json({ error: 'Invalid or expired refresh token' }, 401);
+    }
 
-    // Rotate refresh token (issue new one, old one becomes invalid)
-    const newRefreshToken = await new jose.SignJWT({ userId: payload.userId })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('30d')
-      .setSubject(payload.userId)
-      .sign(secret);
+    const now = Math.floor(Date.now() / 1000);
+    if (now - authTime > env.MAX_SESSION_DAYS * 24 * 60 * 60) {
+      return c.json({ error: 'Session expired, sign in again' }, 401);
+    }
 
-    return c.json({
-      access_token: newSessionToken,
-      refresh_token: newRefreshToken,  // Return new refresh token (rotation)
-      expires_in: 7 * 24 * 60 * 60,
-    });
+    // The service is stateless, so the old refresh token stays valid until
+    // it expires. A server-side denylist would allow true revocation but
+    // would mean storing per-user state; the MAX_SESSION_DAYS cap on
+    // auth_time bounds how long any chain of refreshes can last instead.
+    return c.json(await issueTokens(payload.sub, authTime));
 
   } catch (err) {
     console.error('Token refresh error:', err);
@@ -190,6 +220,9 @@ export async function verifySession(
 
   try {
     const { payload } = await jose.jwtVerify(token, secret);
+    if (tokenTypeOf(payload) !== 'access' || !payload.sub) {
+      return { valid: false, error: 'Invalid or expired token' };
+    }
     return { valid: true, userId: payload.sub };
   } catch (err) {
     return { valid: false, error: 'Invalid or expired token' };

@@ -79,7 +79,7 @@ afterEach(() => {
 });
 
 async function sessionFor(userId: string): Promise<string> {
-  return new jose.SignJWT({})
+  return new jose.SignJWT({ token_type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(userId)
     .setExpirationTime('1h')

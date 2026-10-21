@@ -68,7 +68,7 @@ afterEach(() => {
 });
 
 async function request(method: string, path: string, userId: string, body?: unknown): Promise<Response> {
-  const token = await new jose.SignJWT({})
+  const token = await new jose.SignJWT({ token_type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(userId)
     .setExpirationTime('1h')
