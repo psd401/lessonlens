@@ -102,6 +102,6 @@ flowchart TD
 
 ## Related
 
-- Launch ordering around this code (`resetInterruptedProcessing` and pause backfill run after the container is built) is in [app overview](overview.md#startup-and-wiring).
+- Launch ordering around this code (pause backfill, `resetInterruptedProcessing` and `finalizeInterruptedRecordings` run after the container is built) is in [app overview](overview.md#startup-and-wiring).
 - The sandbox decision that drives the unsandboxed Release path is covered in [deployment and release](../operations/deployment-and-release.md).
 - Test suite conventions are in [build, test and CI](../operations/build-test-ci.md).

@@ -12,14 +12,15 @@ openwiki:
     - LessonLens/LessonLens/App/ServiceContainer.swift
     - LessonLens/LessonLens/Core/Models/Recording.swift
     - LessonLens/LessonLens/Core/Views/ContentView.swift
-  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique]
+  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique, Recording.finalizeInterruptedRecordings]
   test_paths:
     - LessonLens/LessonLensTests/InterruptedProcessingTests.swift
+    - LessonLens/LessonLensTests/InterruptedRecordingTests.swift
     - LessonLens/LessonLensTests/PauseBackfillTests.swift
   invariants:
     - Deleting a Recording cascades to its transcript, analysis (and technique evaluations), reflection and chat sessions (and messages).
     - If the ModelContainer cannot open, the store files are renamed to a timestamped LessonLens-backup file and an empty store is created; nothing is deleted.
-    - At launch no recording may remain in uploading/transcribing/analyzing.
+    - At launch no recording may remain in uploading/transcribing/analyzing or recording; launch repair never deletes audio files.
   validation_commands:
     - xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
 ---
@@ -85,7 +86,10 @@ erDiagram
 ## Launch-time repairs (tested)
 
 - `Recording.resetInterruptedProcessing(in:)` - any recording left in a processing status by a quit/crash returns to the last finished step (`analysis != nil` -> `complete`, `transcript != nil` -> `transcribed`, else `recorded`). Tests: `InterruptedProcessingTests` (`testMidProcessRecordingsFallBackToLastFinishedStep`, `testSettledRecordingsAreLeftAlone`).
+- `Recording.finalizeInterruptedRecordings(in:directory:)` - settles recordings left at `recording` by a quit or crash mid-recording (nothing can be recording at launch). If the audio file exists the recording becomes `recorded` with the file's duration, or duration 0 when the file cannot be read, so the teacher can see it and delete it. If the audio file is gone, the recording row is deleted. No audio file is removed here. Tests: `InterruptedRecordingTests` (`testARecordingWithItsAudioBecomesRecordedWithTheFilesDuration`, `testAnUnreadableFileIsKeptAndTheSessionShownWithNoDuration`, `testARecordingWhoseAudioIsGoneIsDeleted`).
 - `TranscriptionService.backfillMissingPauses(in:)` - rebuilds pauses from stored segments for old transcripts; idempotent. Tests: `PauseBackfillTests`.
+
+`LessonLensApp.init` runs these three repairs in order: pause backfill, `resetInterruptedProcessing`, then `finalizeInterruptedRecordings`.
 
 ## Hazards
 
