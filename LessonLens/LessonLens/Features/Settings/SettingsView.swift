@@ -146,7 +146,7 @@ struct GeneralSettingsTab: View {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         // Sessions in a set-aside store still use files here; they'd look unused
         if PersistentStore.hasOtherStore(appSupport: appSupport) {
-            cleanupMessage = "LessonLens has a set-aside copy of your sessions on this Mac, so it can't tell which files are unused. Nothing was removed."
+            cleanupMessage = "LessonLens can't confirm which files are unused on this Mac, for example because a set-aside copy of your sessions is here. Nothing was removed."
             return
         }
         guard let files = Recording.unusedMediaFiles(in: modelContext) else {
@@ -162,7 +162,10 @@ struct GeneralSettingsTab: View {
     }
 
     private func removeUnusedFiles() {
-        let removed = Recording.removeUnreferencedMedia(unusedFiles.map(\.name), in: modelContext)
+        // Check again: a file may have come into use or been touched while the dialog was open
+        let stillUnused = Set(Recording.unusedMediaFiles(in: modelContext)?.map(\.name) ?? [])
+        let confirmed = unusedFiles.map(\.name).filter { stillUnused.contains($0) }
+        let removed = Recording.removeUnreferencedMedia(confirmed, in: modelContext)
         cleanupMessage = removed.count == 1 ? "Removed 1 file." : "Removed \(removed.count) files."
         unusedFiles = []
     }

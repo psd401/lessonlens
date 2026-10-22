@@ -142,18 +142,40 @@ final class MediaCleanupTests: XCTestCase {
         _ = videoRecording(audio: "extracted.m4a", video: "lesson.mov")
         try context.save()
 
-        let unused = Recording.unusedMediaFiles(in: context, directory: directory)
+        // Setting dates counts as an attribute change, so look from an hour ahead
+        let unused = Recording.unusedMediaFiles(in: context, directory: directory, now: Date().addingTimeInterval(3600))
 
         XCTAssertEqual(unused?.map(\.name), ["orphan.mov"])
         XCTAssertEqual(unused?.first?.bytes, 1)
     }
 
-    func testRecentFilesAndFoldersAreNotOffered() throws {
-        // A recording, import or extraction may still be writing a new file
+    func testRecentFilesAreNotOffered() throws {
+        // A recording or extraction may still be writing a new file
         try makeOldFile("just-written.m4a", ageMinutes: 2)
-        try FileManager.default.createDirectory(at: directory.appendingPathComponent("folder"), withIntermediateDirectories: false)
 
         XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory)?.count, 0)
+    }
+
+    func testAFreshImportCopyIsNotOfferedEvenWithAnOldModificationDate() throws {
+        // copyItem keeps the source's dates, so a just-imported video can look
+        // old before its session is saved
+        let source = directory.deletingLastPathComponent().appendingPathComponent("source-\(UUID().uuidString).mov")
+        FileManager.default.createFile(atPath: source.path, contents: Data("x".utf8))
+        defer { try? FileManager.default.removeItem(at: source) }
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(-30 * 86400)], ofItemAtPath: source.path)
+
+        try FileManager.default.copyItem(at: source, to: directory.appendingPathComponent("imported.mov"))
+
+        XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory)?.count, 0)
+    }
+
+    func testFoldersAreNotOffered() throws {
+        let folder = directory.appendingPathComponent("folder")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(-3600)], ofItemAtPath: folder.path)
+
+        // An hour from now the folder is old by any date, so only the file-type check skips it
+        XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory, now: Date().addingTimeInterval(3600))?.count, 0)
     }
 
     func testOtherStoreBlocksCleanup() throws {

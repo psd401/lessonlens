@@ -244,28 +244,31 @@ extension Recording {
 
     /// Files in the Recordings folder that no recording uses, with their sizes
     /// in bytes: left behind by deletes and re-extractions before COR-01 was
-    /// fixed. Skips files changed in the last 10 minutes, which a recording,
-    /// import or audio extraction may still be writing. nil if the folder or
-    /// the recordings can't be read.
+    /// fixed. Skips files touched in the last 10 minutes, which a recording,
+    /// import or audio extraction may still be writing or not yet have saved
+    /// a session for. An imported copy keeps the original's modification
+    /// date, so the attribute-change date (set fresh by any copy or rename)
+    /// counts too. nil if the folder or the recordings can't be read.
     static func unusedMediaFiles(
         in context: ModelContext,
         directory: URL? = Recording.recordingsDirectory,
         now: Date = Date()
     ) -> [(name: String, bytes: Int64)]? {
+        let keys: Set<URLResourceKey> = [.contentModificationDateKey, .attributeModificationDateKey, .fileSizeKey, .isRegularFileKey]
         guard let directory,
               let inUse = mediaFilesInUse(in: context),
               let urls = try? FileManager.default.contentsOfDirectory(
                 at: directory,
-                includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey, .isRegularFileKey],
+                includingPropertiesForKeys: Array(keys),
                 options: [.skipsHiddenFiles]
               ) else { return nil }
 
         var unused: [(name: String, bytes: Int64)] = []
         for url in urls where !inUse.contains(url.lastPathComponent) {
-            guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey, .isRegularFileKey]),
+            guard let values = try? url.resourceValues(forKeys: keys),
                   values.isRegularFile == true,
-                  let modified = values.contentModificationDate,
-                  now.timeIntervalSince(modified) > 10 * 60 else { continue }
+                  let touched = [values.contentModificationDate, values.attributeModificationDate].compactMap({ $0 }).max(),
+                  now.timeIntervalSince(touched) > 10 * 60 else { continue }
             unused.append((url.lastPathComponent, Int64(values.fileSize ?? 0)))
         }
         return unused.sorted { $0.name < $1.name }
