@@ -18,6 +18,7 @@ review/
 
 # Installed by the image build itself (Dockerfile runs bun install)
 node_modules/
+dist/
 
 # Local secrets never belong in a Cloud Build upload
 .env

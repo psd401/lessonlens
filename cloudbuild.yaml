@@ -6,8 +6,6 @@ steps:
       - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:v1.4.5'
       - '-t'
       - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:latest'
-      - '-f'
-      - 'CloudRunBackend/Dockerfile'
       - '.'
 images:
   - 'us-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/lessonlens-api:v1.4.5'
