@@ -14,6 +14,7 @@ openwiki:
     - CloudRunBackend/src/gemini-client.ts
     - CloudRunBackend/src/gcp-auth.ts
     - CloudRunBackend/src/gemini-error.ts
+    - CloudRunBackend/src/input-limits.ts
   symbols: [env, checkRateLimit, getRateLimitStatus, verifySession, issueTokens, tokenTypeOf, createGeminiClient, createMetadataAuth, describeGeminiError, readGeminiJson, logUnusableGeminiResponse, logUnparseableGeminiText]
   test_paths:
     - CloudRunBackend/tests/auth.test.ts
@@ -117,8 +118,10 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 ## Validation
 
-- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `gemini-logging.test.ts` log redaction for bad Gemini replies; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `gemini-logging.test.ts` log redaction for bad Gemini replies; `input-limits.test.ts` field caps and the 413 body cap; `prompt-builder.test.ts` prompt escaping; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
 - Log-output change (any new `console.error` that touches a Gemini reply): `cd CloudRunBackend && bun test tests/gemini-logging.test.ts`.
 - Auth-only focused check: `cd CloudRunBackend && bun test tests/auth.test.ts`. Its behavior matrix: `describe('verifySession')` covers access acceptance, refresh and untyped rejection, unknown `token_type`, and the 7-day untyped fallback; `describe('POST /auth/refresh')` covers the pair issuance with unchanged `auth_time`, the session-cap 401, and rejection of access, untyped, subject-less and foreign-secret tokens; `describe('MAX_SESSION_DAYS startup validation')` spawns a subprocess to check the non-numeric refusal.
 - Conditional: `bun run build` (`bun build src/index.ts --outdir=dist --target=bun`) when imports of `../../../shared` or packaging change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
+- Do not hand-edit `dist/`; there is no committed build output.
+ing change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
 - Do not hand-edit `dist/`; there is no committed build output.

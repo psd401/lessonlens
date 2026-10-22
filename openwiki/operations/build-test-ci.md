@@ -54,6 +54,8 @@ Suites, and the behaviour each one owns:
 - `video-routes.test.ts`: `POST /upload/initiate/gcs` and `POST /analyze/video with gcsObject`.
 - `legacy-video-routes.test.ts`: Gemini Files API routes (`POST /upload/initiate`, `/upload/status`, `DELETE /upload/:fileName`, `/analyze/video with geminiFileName`).
 - `prompt-wording.test.ts`: `prompt wording stays coaching, not evaluation`. It imports the builders from `shared/prompts` directly (not through a route) and uses no fake fetch. Run it alone after editing prompt templates.
+- `prompt-builder.test.ts`: `analysis prompt`, `chat prompt`. It pins escaping of user content inside data tags (see [shared prompts](../backend/shared-prompts.md)); also imports the builders directly.
+- `input-limits.test.ts`: `/analyze field caps`, `/analyze/video field caps`, `/chat field caps`, `total body cap`. Real requests through the server that assert 400/413 and zero Gemini calls; see [input size limits](../backend/input-limits.md).
 
 ## macOS app
 
