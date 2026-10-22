@@ -17,6 +17,15 @@ const MARKER = 'StudentQuoteMarker7f3a';
 const realFetch = globalThis.fetch;
 const realConsoleError = console.error;
 
+const METADATA = 'http://metadata.google.internal/';
+// Vertex calls first ask the metadata server for the project and a token
+function metadataReply(url: string): Response | null {
+  if (!url.startsWith(METADATA)) return null;
+  return url.endsWith('/project/project-id')
+    ? new Response('test-project')
+    : Response.json({ access_token: 'test-token', expires_in: 3600 });
+}
+
 let geminiReply: unknown;
 let logged: string[];
 
@@ -25,7 +34,8 @@ beforeEach(() => {
   console.error = (...args: unknown[]) => {
     logged.push(args.map((a) => (a instanceof Error ? `${a.name}: ${a.message}` : String(a))).join(' '));
   };
-  globalThis.fetch = (async () => Response.json(geminiReply)) as unknown as typeof fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) =>
+    metadataReply(String(input)) ?? Response.json(geminiReply)) as unknown as typeof fetch;
 });
 
 afterEach(() => {
@@ -104,7 +114,8 @@ describe('unusable Gemini replies are logged without their content', () => {
 
   test('a 200 reply whose envelope is not JSON: logs the error name and length only', async () => {
     const body = `${MARKER} <html>truncated`;
-    globalThis.fetch = (async () => new Response(body, { status: 200 })) as unknown as typeof fetch;
+    globalThis.fetch = (async (input: RequestInfo | URL) =>
+      metadataReply(String(input)) ?? new Response(body, { status: 200 })) as unknown as typeof fetch;
 
     expect((await analyze()).status).toBe(502);
     expect((await chat()).status).toBe(502);
@@ -114,7 +125,8 @@ describe('unusable Gemini replies are logged without their content', () => {
   });
 
   test('a Gemini error body is logged by status fields only', async () => {
-    globalThis.fetch = (async () =>
+    globalThis.fetch = (async (input: RequestInfo | URL) =>
+      metadataReply(String(input)) ??
       Response.json({ error: { status: 'INVALID_ARGUMENT', message: `Bad input near ${MARKER}` } }, { status: 400 })) as unknown as typeof fetch;
 
     expect((await analyze()).status).toBeGreaterThanOrEqual(400);

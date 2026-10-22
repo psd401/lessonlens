@@ -65,10 +65,10 @@ For full details, see the [Terms of Use and Privacy Policy](docs/TERMS_AND_PRIVA
 │              Cloud Run Backend (Hono.js)                    │
 ├─────────────────────────────────────────────────────────────┤
 │  /auth/validate    │ Google JWT → Domain check              │
-│  /analyze          │ → Gemini API (text analysis)           │
-│  /analyze/video    │ → Gemini API (video analysis)          │
-│  /chat             │ → Gemini API (coaching conversation)   │
-│  /upload/initiate  │ → Gemini File Upload                   │
+│  /analyze          │ → Vertex AI Gemini (text analysis)     │
+│  /analyze/video    │ → Vertex AI Gemini (video analysis)    │
+│  /chat             │ → Vertex AI Gemini (coaching chat)     │
+│  /upload/initiate/gcs │ → Cloud Storage upload              │
 │  Rate Limiting     │ 20 text/hr, 5 video/hr, 50 chat/hr    │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -291,8 +291,6 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 ```
 
 #### Backend (Cloud Run)
-- `GEMINI_API_KEY` - Google AI API key
-- `GEMINI_BACKEND` - Text analysis and chat backend: `apikey` (default) or `vertex`
 - `VERTEX_LOCATION` - Vertex AI location (default: `global`; `us` keeps ML processing in the US)
 - `VIDEO_BUCKET` - Temporary Cloud Storage bucket for video uploads
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
@@ -331,7 +329,6 @@ DEV_USE_BUNDLED_MODEL=1  # Optional: use bundled WhisperKit model
 | Endpoint | Description |
 |----------|-------------|
 | `POST /upload/initiate/gcs` | Start a Cloud Storage video upload, get upload URL and object name |
-| `POST /upload/initiate` | Initiate Gemini video upload, get upload URL (older apps) |
 
 ## Privacy & Security
 
