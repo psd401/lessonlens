@@ -84,7 +84,7 @@ struct SettingsView: View {
         settings.selectedFramework = selectedFramework
         settings.setEnabledTechniqueIds(Array(enabledTechniqueIds), for: selectedFramework)
 
-        try? modelContext.save()
+        try? modelContext.save()  // best-effort; preferences only
     }
 }
 

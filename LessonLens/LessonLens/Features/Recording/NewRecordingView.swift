@@ -204,7 +204,7 @@ struct NewRecordingView: View {
         services.recordingService.cancelRecording()
         if let recording = currentRecording {
             modelContext.delete(recording)
-            try? modelContext.save()
+            try? modelContext.save()  // best-effort; the audio is already gone, and the launch check removes a leftover session
             currentRecording = nil
         }
     }

@@ -276,7 +276,7 @@ final class TranscriptionService: ObservableObject {
         }
 
         if updated > 0 {
-            try? context.save()
+            try? context.save()  // best-effort; the backfill runs again next launch
             print("Backfilled pauses for \(updated) transcript(s)")
         }
         return updated

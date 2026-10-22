@@ -55,6 +55,32 @@ final class MediaCleanupTests: XCTestCase {
         XCTAssertFalse(exists("extracted.m4a"))
     }
 
+    func testDeleteReportsSuccess() throws {
+        makeFile("mic.m4a")
+        let recording = Recording(title: "Fictional lesson", audioFilePath: "mic.m4a", status: .transcribed)
+        context.insert(recording)
+        try context.save()
+
+        XCTAssertTrue(Recording.deleteWithMedia(recording, in: context, directory: directory))
+    }
+
+    func testAFailedDeleteIsRolledBackAndKeepsTheFiles() throws {
+        makeFile("lesson.mov")
+        makeFile("extracted.m4a")
+        let recording = videoRecording(audio: "extracted.m4a", video: "lesson.mov")
+        try context.save()
+
+        let deleted = Recording.deleteWithMedia(recording, in: context, directory: directory, save: { _ in
+            throw CocoaError(.fileWriteOutOfSpace)
+        })
+
+        XCTAssertFalse(deleted)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Recording>()), 1)
+        XCTAssertFalse(context.hasChanges, "nothing left pending for an autosave to complete")
+        XCTAssertTrue(exists("lesson.mov"))
+        XCTAssertTrue(exists("extracted.m4a"))
+    }
+
     func testDeletingAnAudioSessionRemovesItsFile() throws {
         makeFile("mic.m4a")
         let recording = Recording(title: "Fictional lesson", audioFilePath: "mic.m4a", status: .transcribed)

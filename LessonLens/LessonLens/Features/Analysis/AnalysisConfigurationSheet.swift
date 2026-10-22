@@ -162,7 +162,7 @@ struct AnalysisConfigurationSheet: View {
         settings.setEnabledTechniqueIds(Array(enabledTechniqueIds), for: selectedFramework)
         settings.includeRatingsInAnalysis = includeRatings
 
-        try? modelContext.save()
+        try? modelContext.save()  // best-effort; preferences only
     }
 }
 

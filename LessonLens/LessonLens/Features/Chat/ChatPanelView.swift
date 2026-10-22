@@ -286,7 +286,11 @@ struct ChatPanelView: View {
         let userChatMessage = ChatMessage(role: "user", content: userMessage)
         modelContext.insert(userChatMessage)
         userChatMessage.session = chatSession
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            errorMessage = "Your message couldn't be saved, so it may be missing from this chat after you quit."
+        }
 
         isSending = true
 
@@ -331,7 +335,12 @@ struct ChatPanelView: View {
                 let assistantMessage = ChatMessage(role: "assistant", content: responseText)
                 modelContext.insert(assistantMessage)
                 assistantMessage.session = chatSession
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    // The reply stays on screen; say it may not be there after quitting
+                    errorMessage = "This reply couldn't be saved. It's shown here, but it may be missing from this chat after you quit."
+                }
 
             } catch AuthError.cancelled {
                 // User dismissed sign-in popup, no error to show
