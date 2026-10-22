@@ -98,7 +98,7 @@ The Gemini Developer API (API key) path was retired in October 2026 (the `gemini
 | `MAX_SESSION_DAYS` | `30` | days after the last Google sign-in that `/auth/refresh` keeps issuing tokens; startup throws unless it is a whole number >= 1 (a non-numeric value would disable the cap). README and `docs/DEPLOYMENT.md` describe the same setting |
 | `ALLOWED_DOMAIN` | `psd401.net` | server-side domain lock |
 | `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR` | `20`, `5`, `50` | per-user hourly limits for text analysis, video and chat (see Rate limiting above) |
-| `VERTEX_LOCATION` | `global` | Vertex location; see `vertexHost` above |
+| `VERTEX_LOCATION` | `global` | Vertex location; see `vertexHost` above. This is the backend fallback only: `scripts/setup.sh` prompts with `us` and sets the value on the deployed service ([deployment and release](../operations/deployment-and-release.md#district-bootstrap-scripts)) |
 | `GEMINI_TEXT_MODEL`, `GEMINI_VIDEO_MODEL` | `gemini-3.8-flash` | model ids |
 | `VIDEO_BUCKET` | unset | when empty `videoStorage` is `null` and Cloud Storage routes return 503 |
 | `PORT` | `8080` | server port |

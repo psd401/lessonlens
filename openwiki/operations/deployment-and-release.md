@@ -41,7 +41,7 @@ Most of this page is operator-facing; consult it when changing Dockerfiles, scri
 
 ## District bootstrap scripts
 
-- `scripts/setup.sh`: interactive (supports dry run) wizard that checks `gcloud`/auth, sets the project, enables APIs, stores secrets in Secret Manager, runs `gcloud run deploy`, and optionally creates monitoring (log-based error metric, alert policy, uptime check).
+- `scripts/setup.sh`: interactive (supports dry run) wizard that checks `gcloud`/auth, sets the project, enables APIs, stores secrets in Secret Manager, runs `gcloud run deploy`, and optionally creates monitoring (log-based error metric, alert policy, uptime check). It prompts for `VERTEX_LOCATION` with default `us` and passes it to the deployed service. That default differs from the backend's own fallback of `global` when the variable is unset ([Cloud Run API environment](../backend/cloud-run-api.md#environment)), so a district deployed through the script keeps Gemini processing in the United States unless the operator changes the prompt. Step 5 of the same script creates the video bucket with the 1-day lifecycle rule described in [video analysis pipeline](../backend/video-analysis-pipeline.md).
 - `scripts/configure-app.sh`: writes the git-ignored `LessonLens/Config/Local.xcconfig` (and can rebrand the login-screen district name); `--dry-run` previews. Config keys and their effect on the app: [auth and config](../app/auth-and-config.md).
 - `docs/DEPLOYMENT_CHECKLIST.md` is the printable, fill-in-the-blanks companion to `docs/DEPLOYMENT.md` (district configuration fields, then phased GCP, deploy and app steps); the README links to both. It is operator paperwork, not a source of truth for code behavior.
 
