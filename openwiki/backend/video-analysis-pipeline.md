@@ -57,7 +57,7 @@ sequenceDiagram
 3. **Upload** - the app PUTs directly to the returned session URL (`URLSession.upload(for:fromFile:)`).
 4. **Analyze** - `POST /analyze/video` (`routes/analyze-video.ts`) is rate limited per user under `rate:video:` (default 5/h), requires `gcsObject` and a non-empty `techniques` list (a request with only the old `geminiFileName` field gets 400 `Missing gcsObject or techniques`), then checks ownership (404 if not the caller's), max 20 techniques and the per-field caps in [input size limits](input-limits.md), then `analyzeFromCloudStorage`: `getObject` -> 404 if missing -> 400 if the stored content type is not in `VIDEO_EXTENSIONS` -> Vertex request with a `fileData` part (`gs://bucket/object`).
 5. **Long videos** - when the app sends `durationSeconds` above `LONG_VIDEO_SECONDS` (45 min), `videoMetadataFor` adds `videoMetadata: {fps: 0.5}` to cut input tokens roughly a third.
-6. **Cleanup** - the `finally` in `analyzeFromCloudStorage` calls `deleteObject` (404 treated as success); the bucket's 1-day lifecycle rule is only a backstop and lives outside the repo (see [deployment](../operations/deployment-and-release.md)).
+6. **Cleanup** - the `finally` in `analyzeFromCloudStorage` calls `deleteObject` (404 treated as success); the bucket's 1-day lifecycle rule is only a backstop; `scripts/setup.sh` Step 5 creates it (see [deployment](../operations/deployment-and-release.md)), so a bucket created by hand may lack it.
 
 ## Error contract with the app
 

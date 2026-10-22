@@ -65,5 +65,8 @@ Areas identified but not given dedicated coverage (source anchor - reason):
 
 - Theme and shared UI (`LessonLens/LessonLens/Core/Theme/`, `Core/Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
 - `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
+- Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
+Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
+- `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
 - `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
