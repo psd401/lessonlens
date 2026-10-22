@@ -4,11 +4,12 @@
 
 export const RATING_SCALE = `
 ## Rating Scale
-1 - Developing: Technique not observed or needs significant development
-2 - Emerging: Beginning to implement technique with inconsistent results
-3 - Proficient: Solid implementation of technique with room for refinement
-4 - Accomplished: Effective and consistent use of technique
-5 - Exemplary: Strong, consistent implementation that could serve as a model
+Rate how fully the technique was carried out when it came up in this lesson, not how often it came up. A technique that came up once can earn any rating. The look-fors in each technique definition are the basis for the rating.
+1 - Emerging: Attempted, with few look-fors present.
+2 - Developing: Used with some look-fors present; key elements missing, or uneven when it came up more than once.
+3 - Established: Used as intended, with most look-fors present.
+4 - Refining: Used as intended, with attention to finer points such as timing, wording and follow-through.
+5 - Extending: Used as intended and taken further: adapted to individual students, or students took it up themselves with little prompting.
 `;
 
 export const RESPONSE_SCHEMA_WITH_RATINGS = `
@@ -78,5 +79,5 @@ export const GUIDELINES_VIDEO_BASE = `
 
 Respond ONLY with the JSON object, no additional text.`;
 
-export const RATING_GUIDELINE_WITH = '- If a technique was not observed, set wasObserved to false and rating to null';
-export const RATING_GUIDELINE_WITHOUT = '- If a technique was not observed, set wasObserved to false';
+export const RATING_GUIDELINE_WITH = '- If a technique was not observed, including when the lesson gave no occasion for it, set wasObserved to false and rating to null';
+export const RATING_GUIDELINE_WITHOUT = '- If a technique was not observed, including when the lesson gave no occasion for it, set wasObserved to false';

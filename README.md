@@ -226,15 +226,15 @@ Each technique includes:
 
 ## Rating Scale
 
-When star ratings are enabled, each technique receives a 1-5 star rating:
+When star ratings are enabled, each technique that came up in the lesson receives a 1-5 star rating. It describes how fully the technique was carried out when it came up, not how often, so a technique that came up once can earn any rating. A technique that didn't come up, including when the lesson gave no occasion for it, is marked Not observed and has no rating.
 
 | Rating | Level | Description |
 |--------|-------|-------------|
-| 1 | Developing | Technique not observed or needs significant development |
-| 2 | Emerging | Beginning to implement technique with inconsistent results |
-| 3 | Proficient | Solid implementation with room for refinement |
-| 4 | Accomplished | Effective and consistent use of technique |
-| 5 | Exemplary | Strong, consistent implementation that could serve as a model |
+| 1 | Emerging | Attempted, with few look-fors present |
+| 2 | Developing | Used with some look-fors present; key elements missing, or uneven when it came up more than once |
+| 3 | Established | Used as intended, with most look-fors present |
+| 4 | Refining | Used as intended, with attention to finer points such as timing, wording and follow-through |
+| 5 | Extending | Used as intended and taken further: adapted to individual students, or students took it up themselves with little prompting |
 
 ## Data Models
 

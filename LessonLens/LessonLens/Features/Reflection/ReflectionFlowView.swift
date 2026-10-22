@@ -328,7 +328,7 @@ struct ReflectionFlowView: View {
             TechniqueSelfRating(
                 techniqueId: eval.techniqueId,
                 techniqueName: eval.techniqueName,
-                rating: 3  // Default to proficient
+                rating: 3  // Default to established
             )
         }
     }
