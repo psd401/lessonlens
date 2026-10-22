@@ -51,3 +51,24 @@ describe('prompt wording stays coaching, not evaluation', () => {
     expect(prompts.chat).toContain('The techniques analyzed in this session were: Wait Time.');
   });
 });
+
+describe('rating scale describes the technique, not the teacher', () => {
+  const textPrompt = prompts.text;
+
+  test('uses the agreed labels in order', () => {
+    const labels = [...textPrompt.matchAll(/^(\d) - (\w+):/gm)].map((m) => `${m[1]} ${m[2]}`);
+    expect(labels).toEqual(['1 Emerging', '2 Developing', '3 Established', '4 Refining', '5 Extending']);
+  });
+
+  test('avoids evaluation-system and superlative labels', () => {
+    for (const word of ['Unsatisfactory', 'Basic', 'Proficient', 'Distinguished', 'Accomplished', 'Exemplary']) {
+      expect(textPrompt).not.toContain(word);
+    }
+  });
+
+  test('rates how fully a technique was carried out, not how often', () => {
+    expect(textPrompt).toContain('not how often it came up');
+    expect(textPrompt).toContain('including when the lesson gave no occasion for it');
+  });
+});
+

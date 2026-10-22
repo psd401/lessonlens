@@ -70,45 +70,48 @@ final class TechniqueEvaluation {
 
 // MARK: - Rating Level
 
+/// How fully a technique was carried out when it came up in the lesson, not
+/// how often. A technique that didn't come up has no rating ("Not observed").
+/// Must match RATING_SCALE in shared/prompts/templates/components.ts.
 enum RatingLevel: Int, CaseIterable {
-    case developing = 1
-    case emerging = 2
-    case proficient = 3
-    case accomplished = 4
-    case exemplary = 5
+    case emerging = 1
+    case developing = 2
+    case established = 3
+    case refining = 4
+    case extending = 5
 
     var displayText: String {
         switch self {
-        case .developing: return "Developing"
         case .emerging: return "Emerging"
-        case .proficient: return "Proficient"
-        case .accomplished: return "Accomplished"
-        case .exemplary: return "Exemplary"
+        case .developing: return "Developing"
+        case .established: return "Established"
+        case .refining: return "Refining"
+        case .extending: return "Extending"
         }
     }
 
     var color: String {
         switch self {
-        case .developing: return "red"
-        case .emerging: return "orange"
-        case .proficient: return "driftwood"
-        case .accomplished: return "meadow"
-        case .exemplary: return "whulge"
+        case .emerging: return "red"
+        case .developing: return "orange"
+        case .established: return "driftwood"
+        case .refining: return "meadow"
+        case .extending: return "whulge"
         }
     }
 
     var description: String {
         switch self {
-        case .developing:
-            return "Technique not observed or needs significant development"
         case .emerging:
-            return "Beginning to implement technique with inconsistent results"
-        case .proficient:
-            return "Solid implementation of technique with room for refinement"
-        case .accomplished:
-            return "Effective and consistent use of technique"
-        case .exemplary:
-            return "Strong, consistent implementation that could serve as a model"
+            return "Attempted, with few look-fors present."
+        case .developing:
+            return "Used with some look-fors present; key elements missing, or uneven when it came up more than once."
+        case .established:
+            return "Used as intended, with most look-fors present."
+        case .refining:
+            return "Used as intended, with attention to finer points such as timing, wording and follow-through."
+        case .extending:
+            return "Used as intended and taken further: adapted to individual students, or students took it up themselves with little prompting."
         }
     }
 
