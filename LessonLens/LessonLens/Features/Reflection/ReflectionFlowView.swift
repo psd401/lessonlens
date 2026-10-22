@@ -9,6 +9,7 @@ struct ReflectionFlowView: View {
     let onSkip: () -> Void
 
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var appState: AppState
 
     @State private var currentStep = 0
     @State private var whatWentWell = ""
@@ -352,7 +353,11 @@ struct ReflectionFlowView: View {
 
         modelContext.insert(reflection)
         recording.reflection = reflection
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            appState.handleError(.storage(.saveFailed(what: "your reflection")))
+        }
         onComplete()
     }
 
@@ -364,7 +369,7 @@ struct ReflectionFlowView: View {
 
         modelContext.insert(reflection)
         recording.reflection = reflection
-        try? modelContext.save()
+        try? modelContext.save()  // best-effort; only records that reflection was skipped
         onSkip()
     }
 }

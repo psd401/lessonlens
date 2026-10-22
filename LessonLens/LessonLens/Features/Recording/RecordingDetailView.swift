@@ -322,14 +322,20 @@ struct RecordingDetailView: View {
 
         modelContext.insert(copy)
         copy.transcript = transcript
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            appState.handleError(.storage(.saveFailed(what: "the new re-analysis session")))
+        }
 
         onReanalyze?(copy)
         startAnalysis(of: copy, framework: framework, techniqueIds: techniqueIds, includeRatings: includeRatings)
     }
 
     private func deleteRecording() {
-        Recording.deleteWithMedia(recording, in: modelContext)
+        if !Recording.deleteWithMedia(recording, in: modelContext) {
+            appState.handleError(.storage(.deleteFailed(what: "session")))
+        }
     }
 
     private func startVideoAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
@@ -355,7 +361,7 @@ struct RecordingDetailView: View {
                 let duration = recording.duration
                 let markAnalyzing: @MainActor () -> Void = { [recording, modelContext] in
                     recording.status = .analyzing
-                    try? modelContext.save()
+                    try? modelContext.save()  // best-effort; the analysis result is saved below
                 }
                 async let analysisResult = services.videoAnalysisService.analyzeVideo(
                     videoURL: videoURL,
@@ -373,7 +379,7 @@ struct RecordingDetailView: View {
                         return false  // best-effort; Audio Only can make one later
                     }
                     recording.transcript = transcript
-                    try? modelContext.save()
+                    try? modelContext.save()  // best-effort; saved again with the analysis
                     return true
                 }
 
@@ -476,7 +482,7 @@ struct RecordingDetailView: View {
             } catch ExportService.ExportError.saveCancelled {
                 // User cancelled, no error to show
             } catch {
-                print("Export error: \(error.localizedDescription)")
+                appState.handleError(.storage(.exportFailed(reason: error.localizedDescription)))
             }
         }
     }
@@ -1379,7 +1385,7 @@ struct VideoAnalysisConfigurationSheet: View {
         settings.setEnabledTechniqueIds(Array(enabledTechniqueIds), for: selectedFramework)
         settings.includeRatingsInAnalysis = includeRatings
 
-        try? modelContext.save()
+        try? modelContext.save()  // best-effort; preferences only
     }
 }
 

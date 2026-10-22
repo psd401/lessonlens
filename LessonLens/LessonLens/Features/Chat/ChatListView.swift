@@ -7,6 +7,7 @@ struct ChatListView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var appState: AppState
 
     private var sortedSessions: [ChatSession] {
         (recording.chatSessions ?? []).sorted { $0.createdAt > $1.createdAt }
@@ -125,7 +126,11 @@ struct ChatListView: View {
         let session = ChatSession()
         modelContext.insert(session)
         session.recording = recording
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            appState.handleError(.storage(.saveFailed(what: "the new chat")))
+        }
     }
 
     private func deleteSessions(at offsets: IndexSet) {
@@ -133,6 +138,12 @@ struct ChatListView: View {
             let session = sortedSessions[index]
             modelContext.delete(session)
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            // Undo it, so the chats stay and a later autosave can't delete them
+            modelContext.rollback()
+            appState.handleError(.storage(.deleteFailed(what: "chat")))
+        }
     }
 }

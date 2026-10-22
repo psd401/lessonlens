@@ -260,6 +260,10 @@ enum StorageError: Error, LocalizedError {
     case storeSetAside(backupName: String)
     case legacyStoreUnreadable
     case legacyStoreUnverified
+    case saveFailed(what: String)
+    case deleteFailed(what: String)
+    case renameFailed
+    case exportFailed(reason: String)
 
     var errorDescription: String? {
         switch self {
@@ -277,6 +281,14 @@ enum StorageError: Error, LocalizedError {
             return "LessonLens found sessions saved by an earlier version that it couldn't open, so they aren't shown. Nothing was deleted: the earlier file was left where it was. Please ask for help recovering it."
         case .legacyStoreUnverified:
             return "LessonLens found an older library file it couldn't check, so it started with an empty library. The file was left unchanged. If you had sessions in LessonLens before, please ask for help recovering them."
+        case .saveFailed(let what):
+            return "LessonLens couldn't save \(what), so it may be missing after you quit. Please try again. If this keeps happening, check that your Mac has free disk space."
+        case .deleteFailed(let what):
+            return "LessonLens couldn't delete this \(what). It's still in your library; please try again."
+        case .renameFailed:
+            return "LessonLens couldn't save the new name, so the session keeps its old name. Please try again."
+        case .exportFailed(let reason):
+            return "The export didn't finish, so no file was saved. \(reason)"
         }
     }
 }

@@ -168,7 +168,7 @@ extension Recording {
         }
 
         if reset > 0 {
-            try? context.save()
+            try? context.save()  // best-effort; statuses are recomputed next launch
         }
         return reset
     }
@@ -219,12 +219,24 @@ extension Recording {
     /// Deletes the recording and saves, then removes its audio and video files
     /// (a video session has the original video and the extracted audio),
     /// except any a re-analysis copy still uses. Nothing is removed if the
-    /// save fails.
-    static func deleteWithMedia(_ recording: Recording, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
+    /// save fails: the delete is rolled back, so the session stays in the
+    /// library with its files, and a later autosave can't complete it without
+    /// them. Returns false in that case. `save` is replaceable for tests.
+    @discardableResult
+    static func deleteWithMedia(
+        _ recording: Recording,
+        in context: ModelContext,
+        directory: URL? = Recording.recordingsDirectory,
+        save: (ModelContext) throws -> Void = { try $0.save() }
+    ) -> Bool {
         let mediaFiles = [recording.audioFilePath, recording.videoFilePath]
         context.delete(recording)
-        guard (try? context.save()) != nil else { return }
+        guard (try? save(context)) != nil else {
+            context.rollback()
+            return false
+        }
         removeUnreferencedMedia(mediaFiles, in: context, directory: directory)
+        return true
     }
 
     /// Points the recording at newly extracted audio, saves, and removes the
@@ -233,6 +245,7 @@ extension Recording {
     func replaceAudioFile(with fileName: String, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
         let previous = audioFilePath
         audioFilePath = fileName
+        // best-effort; if this save fails the old audio is simply kept
         guard (try? context.save()) != nil else { return }
         Recording.removeUnreferencedMedia([previous], in: context, directory: directory)
     }

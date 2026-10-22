@@ -298,7 +298,13 @@ struct SidebarView: View {
             Button("Rename") {
                 if let recording = recordingToRename, !renameText.trimmingCharacters(in: .whitespaces).isEmpty {
                     recording.title = renameText.trimmingCharacters(in: .whitespaces)
-                    try? modelContext.save()
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        // Undo it, so a later autosave can't apply a name the teacher was told failed
+                        modelContext.rollback()
+                        appState.handleError(.storage(.renameFailed))
+                    }
                 }
                 recordingToRename = nil
             }
