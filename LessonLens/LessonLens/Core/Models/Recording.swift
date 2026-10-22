@@ -200,7 +200,7 @@ extension Recording {
         }
 
         if settled > 0 {
-            try? context.save()
+            try? context.save()  // best-effort; settled again next launch
         }
         return settled
     }
