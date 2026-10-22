@@ -118,7 +118,7 @@ window.LESSONLENS_HISTORY = {
         {
           date: "2026-10-22",
           title: "Safer handling of lesson text",
-          body: "The server now limits how much text a single request can send for analysis, keeps lesson text out of its own error logs, and handles unusual characters in a transcript exactly as written. The older video path that relied on a separate access key is retired, so every analysis now runs through the district's own Google Cloud project. Teachers get these changes without updating the app.",
+          body: "The server now limits how much text a single request can send for analysis, no longer writes the AI's replies, which can quote a lesson, into its error logs, and handles unusual characters in a transcript exactly as written. The older video path that relied on a separate access key is retired, so every analysis now runs through the district's own Google Cloud project. Teachers get these changes without updating the app.",
           tags: ["privacy", "security"]
         }
       ]
