@@ -49,6 +49,7 @@ Suites, and the behaviour each one owns:
 
 - `index.test.ts`: `HTTP surface`, `rate limiter`, and `startup validation` (the last one imports `src/index.ts` in a subprocess via `Bun.spawnSync`).
 - `gemini-client.test.ts`: `apikey backend`, `vertex backend`, `config helpers` (backend URLs and auth).
+- `gemini-logging.test.ts`: `unusable Gemini replies are logged without their content` (no reply content in `console.error`; see [Cloud Run API](../backend/cloud-run-api.md)).
 - `video-storage.test.ts`: `object names` and `Cloud Storage requests`.
 - `video-routes.test.ts`: `POST /upload/initiate/gcs` and `POST /analyze/video with gcsObject`.
 - `legacy-video-routes.test.ts`: Gemini Files API routes (`POST /upload/initiate`, `/upload/status`, `DELETE /upload/:fileName`, `/analyze/video with geminiFileName`).
@@ -63,9 +64,9 @@ Suites, and the behaviour each one owns:
 
 ## CI
 
-`.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds one service job, `psd-ci-cloudrun-backend`, which calls the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml@main` with `working-directory: CloudRunBackend`. A combined job named `psd-ci` (`if: always()`, `needs` the service job) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. The former Cloudflare job is gone ([Cloudflare Worker (removed)](../backend/cloudflare-worker.md)). A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner).
+`.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds one service job, `psd-ci-cloudrun-backend`, which calls the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml` with `working-directory: CloudRunBackend`. The reference is pinned to a commit SHA (`@1aa5f5351a78b15f5c71668037f5d35b9613ae41 # v1.0.0`), not a branch, so updating the org gate is a deliberate edit of that pin. A combined job named `psd-ci` (`if: always()`, `needs` the service job) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. The former Cloudflare job is gone ([Cloudflare Worker (removed)](../backend/cloudflare-worker.md)). A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner).
 
-Other workflows: `security-scan.yml`, `license-check.yml`, `claude-review.yml`, and `openwiki-update.yml`. The last runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`) by calling the org reusable `reusable-openwiki.yml@main`; it shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller. `.github/dependabot.yml` configures dependency update PRs.
+Other workflows: `security-scan.yml` (calls org `reusable-security-scan.yml`), `license-check.yml`, `claude-review.yml`, and `openwiki-update.yml`. All org reusable references are pinned to the same SHA as the backend gate. `openwiki-update.yml` runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`) by calling the org reusable `reusable-openwiki.yml`; it shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller. `.github/dependabot.yml` configures dependency update PRs.
 
 Never weaken CI.
 

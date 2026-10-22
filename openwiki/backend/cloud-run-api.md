@@ -14,11 +14,12 @@ openwiki:
     - CloudRunBackend/src/gemini-client.ts
     - CloudRunBackend/src/gcp-auth.ts
     - CloudRunBackend/src/gemini-error.ts
-  symbols: [env, checkRateLimit, getRateLimitStatus, verifySession, issueTokens, tokenTypeOf, createGeminiClient, createMetadataAuth, describeGeminiError]
+  symbols: [env, checkRateLimit, getRateLimitStatus, verifySession, issueTokens, tokenTypeOf, createGeminiClient, createMetadataAuth, describeGeminiError, readGeminiJson, logUnusableGeminiResponse, logUnparseableGeminiText]
   test_paths:
     - CloudRunBackend/tests/auth.test.ts
     - CloudRunBackend/tests/index.test.ts
     - CloudRunBackend/tests/gemini-client.test.ts
+    - CloudRunBackend/tests/gemini-logging.test.ts
   validation_commands:
     - cd CloudRunBackend && bun test
 ---
@@ -63,7 +64,7 @@ Every protected route repeats the same sequence: `verifySession(Authorization)` 
 | `POST /upload/initiate/gcs`, `POST /upload/initiate`, `POST /upload/status`, `DELETE /upload/:fileName` | `routes/upload.ts` | see [video pipeline](video-analysis-pipeline.md) |
 | `POST /chat`, `GET /chat/rate-limit` | `routes/chat.ts` | coaching chat; max 50 messages, 100,000-char transcript; temperature 0.7, 2048 output tokens; uses `systemInstruction` |
 
-Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_used`, `usage`); the Swift decoders in `AnalysisService`/`VideoAnalysisService` map these via `CodingKeys` (see [lesson workflow](../app/lesson-workflow.md)). Gemini failures return 502 with only `{error, status}` - `describeGeminiError` deliberately logs enum-style status/reason fields, never `error.message` or the body, because those can echo transcript text.
+Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_used`, `usage`); the Swift decoders in `AnalysisService`/`VideoAnalysisService` map these via `CodingKeys` (see [lesson workflow](../app/lesson-workflow.md)). Gemini failures return 502 with only `{error, status}` - `describeGeminiError` deliberately logs enum-style status/reason fields, never `error.message` or the body, because those can echo transcript text. The same redaction rule covers the other log paths in `src/gemini-error.ts`: `logUnusableGeminiResponse` logs candidate counts and `finishReason`/`blockReason` enums for replies with no usable text, `readGeminiJson` logs only the parse-error name and reply length when a 200 envelope is not JSON, and `logUnparseableGeminiText` does the same for an unparseable candidate. `tests/gemini-logging.test.ts` (`unusable Gemini replies are logged without their content`) injects a marker string into each kind of bad reply and asserts it never reaches `console.error`; keep that test passing when adding a log line.
 
 ## Authentication (`routes/auth.ts`)
 
@@ -116,7 +117,8 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 ## Validation
 
-- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `gemini-logging.test.ts` log redaction for bad Gemini replies; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Log-output change (any new `console.error` that touches a Gemini reply): `cd CloudRunBackend && bun test tests/gemini-logging.test.ts`.
 - Auth-only focused check: `cd CloudRunBackend && bun test tests/auth.test.ts`. Its behavior matrix: `describe('verifySession')` covers access acceptance, refresh and untyped rejection, unknown `token_type`, and the 7-day untyped fallback; `describe('POST /auth/refresh')` covers the pair issuance with unchanged `auth_time`, the session-cap 401, and rejection of access, untyped, subject-less and foreign-secret tokens; `describe('MAX_SESSION_DAYS startup validation')` spawns a subprocess to check the non-numeric refusal.
 - Conditional: `bun run build` (`bun build src/index.ts --outdir=dist --target=bun`) when imports of `../../../shared` or packaging change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
 - Do not hand-edit `dist/`; there is no committed build output.
