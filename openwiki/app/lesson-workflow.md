@@ -15,12 +15,14 @@ openwiki:
     - LessonLens/LessonLens/Features/Transcription/TranscriptionService.swift
     - LessonLens/LessonLens/Features/Analysis/AnalysisService.swift
     - LessonLens/LessonLens/Features/Analysis/VideoAnalysisService.swift
-  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing]
+    - LessonLens/LessonLens/Core/Models/Recording.swift
+  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing, Recording.deleteWithMedia, Recording.removeUnreferencedMedia, Recording.replaceAudioFile]
   test_paths:
     - LessonLens/LessonLensTests/PauseDetectionTests.swift
     - LessonLens/LessonLensTests/PauseBackfillTests.swift
     - LessonLens/LessonLensTests/VideoAnalysisServiceTests.swift
     - LessonLens/LessonLensTests/InterruptedProcessingTests.swift
+    - LessonLens/LessonLensTests/MediaCleanupTests.swift
   invariants:
     - Audio is never uploaded; only the transcript text (or a compressed video) goes to the backend.
     - A pause is a gap of at least 3.0 seconds between consecutive transcript segments.
@@ -81,6 +83,16 @@ Tests: `PauseDetectionTests` (gap at/above threshold detected, below ignored, un
 ## Video analysis
 
 `VideoAnalysisMethod` offers `geminiVideo` ("Video Analysis", ~$0.15-0.27) or `geminiText` ("Audio Only", ~$0.01-0.03). The video path (compress -> Cloud Storage upload -> `/analyze/video`) is detailed in the [video analysis pipeline](../backend/video-analysis-pipeline.md); its `/analyze/video` request uses a 600 s timeout (`VideoAnalysisService`, versus 300 s for text analysis). In `startVideoAnalysis` the analysis and an **on-device transcript extraction** (`AudioExtractionService` -> `TranscriptionService`) run in parallel; the analysis is saved immediately and `status` becomes `complete` without waiting, and the transcript is attached later best-effort (needed for chat; chat extracts it on demand for video-only recordings). Errors with `offersTranscriptFallback` set `videoFallbackMessage` instead of an alert.
+
+## Media files and cleanup
+
+A `Recording` stores bare file names (`audioFilePath`, `videoFilePath`) that resolve inside the app's `Recordings` folder (`Recording.recordingsDirectory`, under Application Support). All deletion and audio replacement goes through the "Media File Cleanup" extension in `Core/Models/Recording.swift`, not ad-hoc `FileManager` calls:
+
+- `Recording.deleteWithMedia` runs when the teacher deletes a session (`RecordingDetailView.deleteRecording`). It captures both file names, deletes the recording and saves, and removes the files only after the save succeeds.
+- `replaceAudioFile(with:in:directory:)` runs after on-device extraction (`RecordingDetailView`, and `ChatPanelView` when chat extracts audio on demand). It points the recording at the new audio, saves, then removes the previous audio file. It never removes the video.
+- `Recording.removeUnreferencedMedia` deletes a named file only when no remaining recording uses it as its audio or video. It skips empty names, names containing `/`, `.` and `..`, so nothing outside the folder can be touched. It returns the names it removed.
+
+Invariants the tests pin (`LessonLensTests/MediaCleanupTests.swift`): a video session's deletion removes both the original video and the extracted audio; re-analysis copies share their original's files, so a shared file survives until its last user is deleted (`testSharedFilesStayUntilTheLastSessionUsingThemIsDeleted`); a new video import uses the video as its own audio until extraction, and replacing it must keep the video (`testFirstExtractionKeepsTheVideoItReplacesAsAudio`). Store-level file recovery is a separate concern; see [persistent store](persistent-store.md).
 
 ## Change guidance
 

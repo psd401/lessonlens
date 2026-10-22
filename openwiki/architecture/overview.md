@@ -45,7 +45,7 @@ flowchart LR
     WK -- transcript + techniques --> API
     CMP -- PUT video via signed session URL --> GCS[(Temp Cloud Storage bucket)]
     SD -- chat context --> API
-    API[Cloud Run API - stateless] -- prompt --> GEM[Gemini API key or Vertex AI]
+    API[Cloud Run API - stateless] -- prompt --> GEM[Gemini on Vertex AI]
     API -- gs:// URI --> VTX[Vertex AI]
     GCS --> VTX
     API -- delete after analysis --> GCS

@@ -60,7 +60,7 @@ Each checker returns `null` when the input fits, or a `LimitError` (`{error, fie
 | Route | Order inside the handler (after the middleware) | Checker |
 |---|---|---|
 | `POST /analyze` | auth -> text rate limit -> JSON parse -> required fields -> transcript/technique/pause count and length constants -> field caps | `checkTechniques(techniques) ?? checkPauseText(pauseData)` |
-| `POST /analyze/video` | auth -> video rate limit -> JSON parse -> source checks (`gcsObject` ownership, `geminiFileName` format) -> technique count (20) -> field caps | `checkTechniques(techniques)` (see [video analysis pipeline](video-analysis-pipeline.md)) |
+| `POST /analyze/video` | auth -> video rate limit -> JSON parse -> required fields and `gcsObject` ownership -> technique count (20) -> field caps | `checkTechniques(techniques)` (see [video analysis pipeline](video-analysis-pipeline.md)) |
 | `POST /chat` | auth -> chat rate limit -> JSON parse -> required fields -> transcript and message-count constants -> field caps | `checkChatFields({...})` |
 
 ```mermaid
@@ -90,7 +90,7 @@ Caption: the order a prompt request passes through before any Gemini call. Rate 
 `CloudRunBackend/tests/input-limits.test.ts` imports `../src/index` through `./test-env` and posts real requests with a per-request JWT. Its suites:
 
 - `/analyze field caps`: oversized technique description (400 with `maxLength`), too many look-fors, a non-string name, oversized pause text, and the maxed 20-technique acceptance case.
-- `/analyze/video field caps`: an oversized technique name is rejected before Gemini (uses `geminiFileName` as the request source).
+- `/analyze/video field caps`: an oversized technique name is rejected before Gemini (the request uses a `gcsObject` the caller owns, so the ownership check passes first).
 - `/chat field caps`: oversized message, messages that are not a list, oversized analysis summary and reflection, and the at-every-cap acceptance case.
 - `total body cap`: a body of `MAX_BODY_BYTES` characters gets 413 on both `/analyze` and `/chat`.
 

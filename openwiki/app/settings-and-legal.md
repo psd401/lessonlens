@@ -97,6 +97,7 @@ Section 4 and section 5 describe what the app sends and stores, so they must mat
 - **No current user, no settings.** `loadSettings()` returns early when `appState.currentUser` is nil, so Settings edits made in that state are not saved.
 - **Settings is a second `ModelContainer` consumer.** It shares the same schema as the main window (`LessonLensApp`); a schema change must update both.
 - **Terms section 11 does not match the build.** `TermsAndPrivacyView` says local data is stored "within the application's sandboxed storage", but Release builds are deliberately unsandboxed and the store lives in the shared Application Support folder ([persistent store](persistent-store.md), [deployment and release](../operations/deployment-and-release.md)). Do not "fix" the sentence in code alone; it is legal copy that needs review.
+- **The Terms draft is stale on video.** `docs/TERMS_AND_PRIVACY_DRAFT.md` says video is uploaded to Google's Gemini Files API. The shipped path sends video to a temporary Google Cloud Storage bucket that the backend analyzes on Vertex AI and then deletes ([video analysis pipeline](../backend/video-analysis-pipeline.md)); the in-app `TermsAndPrivacyView` already names Google Cloud Storage. Flag the draft for legal review rather than editing the Swift text to match it.
 
 ## Validation
 

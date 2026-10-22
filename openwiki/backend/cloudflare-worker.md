@@ -22,7 +22,7 @@ The worker was a lower-capability mirror of the Cloud Run service. Its differenc
 - Config came from `wrangler.toml` bindings rather than `process.env`, with no startup check on `JWT_SECRET` length.
 - Rate limits were stored in a KV namespace instead of the in-process `Map` used by [Cloud Run API](cloud-run-api.md).
 - Gemini was reached only through an API key; there was no Vertex path and no chat route.
-- Video used only the legacy Gemini Files API path described in [video analysis pipeline](video-analysis-pipeline.md).
+- Video used the Gemini Files API, a path that the Cloud Storage pipeline in [video analysis pipeline](video-analysis-pipeline.md) has since replaced.
 
 ## If someone proposes restoring it
 
