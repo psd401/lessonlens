@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { bodyLimit } from 'hono/body-limit';
 import { authRoutes } from './routes/auth';
 import { analyzeRoutes } from './routes/analyze';
 import { analyzeVideoRoutes } from './routes/analyze-video';
@@ -8,6 +9,7 @@ import { chatRoutes } from './routes/chat';
 import { createGeminiClient, parseGeminiBackend, type GeminiBackend } from './gemini-client';
 import { createMetadataAuth } from './gcp-auth';
 import { createVideoStorage } from './video-storage';
+import { MAX_BODY_BYTES } from './input-limits';
 
 // Environment configuration
 export interface Env {
@@ -160,6 +162,14 @@ app.get('/', (c) => {
     runtime: 'Cloud Run'
   });
 });
+
+// Total body cap on the prompt-bound routes (SEC-05); per-field caps live in input-limits.ts
+for (const path of ['/analyze/*', '/chat/*']) {
+  app.use(path, bodyLimit({
+    maxSize: MAX_BODY_BYTES,
+    onError: (c) => c.json({ error: 'Request body too large', maxBytes: MAX_BODY_BYTES }, 413),
+  }));
+}
 
 // Mount routes
 app.route('/auth', authRoutes);

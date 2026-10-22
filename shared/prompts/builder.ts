@@ -26,21 +26,41 @@ import {
   CHAT_SYSTEM_PROMPT,
   CHAT_CONTEXT_SECTION,
   CHAT_REFLECTION_SECTION,
+  CHAT_REFLECTION_DATA_SECTION,
 } from './templates/chat';
 
 /**
- * Simple template processor for {{variable}} substitution
+ * Simple template processor for {{variable}} substitution.
+ *
+ * One pass with a function replacer: values are inserted literally (no
+ * `$&`-style replacement patterns), and a value that itself contains
+ * `{{otherKey}}` is not expanded again.
  */
 function processTemplate(template: string, vars: Record<string, string>): string {
-  let result = template;
-  for (const [key, value] of Object.entries(vars)) {
-    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-  }
-  return result;
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) =>
+    Object.hasOwn(vars, key) ? vars[key] : match
+  );
 }
 
 /**
- * Format a single technique for inclusion in the prompt
+ * Escapes the `<` of any closing `</tag>` in content placed inside `<tag>` in
+ * a template, so the content can't end its own data section early. One pass
+ * is enough: escaping adds no `<`, so (unlike removing the tag) it can't join
+ * the surrounding text into a new closing tag.
+ */
+function insideTag(tag: string, content: string): string {
+  return content.replace(new RegExp(`<\\s*/\\s*${tag}\\s*>`, 'gi'), (match) => `&lt;${match.slice(1)}`);
+}
+
+/**
+ * Format a single technique for inclusion in the prompt.
+ *
+ * Technique text comes from the client and is inlined as-is. The app only
+ * sends its bundled frameworks, but an authenticated caller could send any
+ * text here and steer the prompt (review finding SEC-06). Accepted on
+ * purpose: the backend caps its size (CloudRunBackend/src/input-limits.ts),
+ * replies go only to that caller, and a server-side allowlist would have to
+ * change with every framework update in the app.
  */
 function formatTechnique(technique: TechniqueDefinition): string {
   return `
@@ -76,7 +96,7 @@ function formatPauseData(pauseData: PauseData): string {
     pauseAvgDuration: pauseData.summary.averageDuration.toFixed(1),
     pauseMaxDuration: pauseData.summary.maxDuration.toFixed(1),
     pauseTotalTime: pauseData.summary.totalPauseTime.toFixed(1),
-    pauseDetails,
+    pauseDetails: insideTag('pause_details', pauseDetails),
   });
 }
 
@@ -89,7 +109,7 @@ export function buildAnalysisPrompt(options: TextAnalysisPromptOptions): string 
   let prompt = TEXT_ANALYSIS_SYSTEM;
 
   // Add transcript section
-  prompt += processTemplate(TEXT_ANALYSIS_TRANSCRIPT_SECTION, { transcript });
+  prompt += processTemplate(TEXT_ANALYSIS_TRANSCRIPT_SECTION, { transcript: insideTag('transcript', transcript) });
 
   // Add pause data section if provided and wait-time technique is selected
   if (pauseData && techniques.some(t => t.id === 'wait-time')) {
@@ -165,14 +185,16 @@ export function buildChatPrompt(options: ChatPromptOptions): {
 
   // Add context section
   systemPrompt += processTemplate(CHAT_CONTEXT_SECTION, {
-    transcript,
-    analysisSummary,
-    techniqueEvaluationsSummary,
+    transcript: insideTag('transcript', transcript),
+    analysisSummary: insideTag('analysis_summary', analysisSummary),
+    techniqueEvaluationsSummary: insideTag('technique_evaluations', techniqueEvaluationsSummary ?? ''),
   });
 
-  // Add reflection context if available
+  // Add reflection context if available (the app sends it pre-formatted)
   if (reflectionSummary) {
-    systemPrompt += reflectionSummary;
+    systemPrompt += processTemplate(CHAT_REFLECTION_DATA_SECTION, {
+      reflectionSummary: insideTag('teacher_reflection', reflectionSummary.trim()),
+    });
   }
 
   // Convert messages to Gemini format
