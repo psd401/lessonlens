@@ -123,7 +123,7 @@ window.LESSONLENS_HISTORY = {
         {
           date: "2026-10-22",
           title: "v1.3.0: safer with teachers' sessions",
-          body: "If LessonLens can't open a teacher's saved sessions, it now keeps a backup instead of starting over, and nothing is ever deleted. Deleting a session now removes its video too, and a new Settings option clears out recording files left behind earlier. If something can't be saved, the teacher is told. Technique ratings use new labels, from Emerging to Extending, that describe how fully a technique was used rather than judging the teacher. The app also uses less memory between transcriptions.",
+          body: "If LessonLens can't open a teacher's saved sessions, it now keeps them as a backup instead of starting over, so they aren't lost. Deleting a session now removes its video too, and a new Settings option clears out recording files left behind earlier. If something can't be saved, the teacher is told. Technique ratings use new labels, from Emerging to Extending, that describe how fully a technique was used rather than judging the teacher. The app also uses less memory between transcriptions.",
           tags: ["v1.3.0", "privacy", "ratings"],
           milestone: true,
           current: true

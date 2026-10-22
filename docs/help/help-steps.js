@@ -309,7 +309,11 @@ window.LESSONLENS_HELP = {
     },
     {
       "q": "How do I rename or delete a session?",
-      "a": "Right-click a session in the sidebar and choose <b>Rename</b>. To delete, open the session and click the trash button in the toolbar."
+      "a": "Right-click a session in the sidebar and choose <b>Rename</b>. To delete, open the session and click the trash button in the toolbar. Deleting a session also removes its audio and video files from your Mac, unless a re-analysis copy of that session still uses them."
+    },
+    {
+      "q": "How do I clear out old recording files?",
+      "a": "Open <b>Settings</b>, go to <b>General</b>, and click <b>Remove Unused Files…</b>. LessonLens shows how many files no session uses, and how much space they take, before removing anything. Earlier versions left a session's video behind when the session was deleted; this clears those out."
     },
     {
       "q": "What does Re-analyze do?",
