@@ -16,10 +16,11 @@ openwiki:
     - LessonLens/LessonLens/Features/Analysis/AnalysisService.swift
     - LessonLens/LessonLens/Features/Analysis/VideoAnalysisService.swift
     - LessonLens/LessonLens/Core/Models/Recording.swift
-  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing, Recording.deleteWithMedia, Recording.removeUnreferencedMedia, Recording.replaceAudioFile, Recording.unusedMediaFiles, GeneralSettingsTab.findUnusedFiles]
+  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, IdleUnloader, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing, Recording.deleteWithMedia, Recording.removeUnreferencedMedia, Recording.replaceAudioFile, Recording.unusedMediaFiles, GeneralSettingsTab.findUnusedFiles]
   test_paths:
     - LessonLens/LessonLensTests/PauseDetectionTests.swift
     - LessonLens/LessonLensTests/PauseBackfillTests.swift
+    - LessonLens/LessonLensTests/IdleUnloaderTests.swift
     - LessonLens/LessonLensTests/VideoAnalysisServiceTests.swift
     - LessonLens/LessonLensTests/InterruptedProcessingTests.swift
     - LessonLens/LessonLensTests/MediaCleanupTests.swift
@@ -27,6 +28,7 @@ openwiki:
     - Audio is never uploaded; only the transcript text (or a compressed video) goes to the backend.
     - A pause is a gap of at least 3.0 seconds between consecutive transcript segments.
     - Every failure path returns the recording to a retryable status rather than leaving it in a processing status.
+    - The WhisperKit model stays loaded only while a transcription runs or within the 5-minute idle grace period; a failed load is not cached.
   validation_commands:
     - xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test -only-testing:LessonLensTests/PauseDetectionTests
 ---
@@ -74,7 +76,30 @@ Notes: `recorded`/`transcribed` are the safe resting states; `failed` exists in 
 
 `TranscriptionService` wraps WhisperKit: `loadModel()` uses `config.whisperModel` (`openai_whisper-large-v3`, downloaded on demand) or, when `DEV_USE_BUNDLED_MODEL=1` and a bundled folder is found, `openai_whisper-base`. `transcribe` runs `DecodingOptions(language: "en", wordTimestamps: true, chunkingStrategy: .vad)`, maps results to `TranscriptSegment`s (confidence = `exp(avgLogprob)`), and derives `TranscriptPause`s with `detectPauses(in:threshold:)` where `pauseThreshold = 3.0` s (`preceding`/`following` text are 5-word snippets). `detectPauses` is `nonisolated static` so stored segments can be reprocessed without Whisper (`backfillMissingPauses`). Progress comes from a 0.5 s timer polling `whisperKit.progress`. Bundled model files are in an ignored resources path and are not documented here.
 
-Tests: `PauseDetectionTests` (gap at/above threshold detected, below ignored, unsorted input ordered, single segment none), `PauseBackfillTests` (backfill only when missing, idempotent).
+### Model residency (idle unloading)
+
+The Whisper model is several GB, so `TranscriptionService` does not keep it for the app's lifetime. Its `model` property is an `IdleUnloader<WhisperKit>` built with a 5-minute `idleDelay` around `loadModel()`. `transcribe` calls `model.begin()` before any work and `model.end()` in a `defer`, so the countdown starts however the transcription exits. `IdleUnloader` (in the same file, generic over `Resource`, `@MainActor`) has these rules:
+
+- Concurrent `begin()` calls share one in-flight load.
+- A `begin()` during the grace period reuses the loaded model and cancels the pending unload.
+- The model is released only when the last use ends and the delay passes with no new use.
+- A failed load ends its own use inside `begin()` and is not cached, so the next use retries.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Unloaded
+    Unloaded --> Loading: begin, no model loaded
+    Loading --> Loaded: load succeeds
+    Loading --> Unloaded: load fails, use ended, nothing cached
+    Loaded --> Loaded: begin or end while uses remain
+    Loaded --> GracePeriod: last end, idle timer starts
+    GracePeriod --> Loaded: begin, timer cancelled
+    GracePeriod --> Unloaded: idle delay passes with no uses
+```
+
+Caption: `IdleUnloader` residency states for the WhisperKit model. `TranscriptionService.transcribe` drives it through `begin()` and `end()`.
+
+Tests: `PauseDetectionTests` (gap at/above threshold detected, below ignored, unsorted input ordered, single segment none), `PauseBackfillTests` (backfill only when missing, idempotent). `IdleUnloaderTests` pins the residency rules: `testUnloadsAfterTheIdleDelay`, `testAUseDuringTheGracePeriodReusesTheModel`, `testConcurrentUsesShareOneLoad`, `testItStaysLoadedUntilTheLastUseEnds`, `testAFailedLoadEndsItsUseAndTheNextUseRetries`, `testReloadsAfterUnloading`. These use short delays, so they run quickly without WhisperKit.
 
 ## Text analysis
 
@@ -111,4 +136,5 @@ Change guidance: a file is only protected from cleanup while a saved `Recording`
 - Adding a pipeline step: keep status transitions reversible and add the new processing status to `RecordingStatus.isProcessing` and `statusAfterInterruptedProcessing`, otherwise launch recovery will miss it.
 - Changing the request/response shape with the backend: update `AnalysisService`/`VideoAnalysisService` Codable structs, the route mappers, and [shared prompts](../backend/shared-prompts.md) together; `VideoAnalysisServiceTests` has request-body and status-mapping tests, there is no equivalent for `AnalysisService`.
 - Long transcriptions or Whisper behaviour cannot be exercised in CI (WhisperKit models, macOS); rely on the pure static helpers for unit tests.
+- Changing when the model is loaded or released: edit `IdleUnloader` or its use in `TranscriptionService.transcribe`, not `loadModel()` alone. Validate with `xcodebuild -quiet -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test -only-testing:LessonLensTests/IdleUnloaderTests` (macOS and Xcode only; it is not in CI).
 - Keep copy "coaching, not evaluation" in any user-visible message you touch.
