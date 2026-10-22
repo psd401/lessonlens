@@ -43,19 +43,13 @@ function processTemplate(template: string, vars: Record<string, string>): string
 }
 
 /**
- * Removes any closing `</tag>` from content placed inside `<tag>` in a
- * template, so the content can't end its own data section early. Repeats
- * until none remain, since removing one can join the pieces around it into
- * another (`</tran</transcript>script>`).
+ * Escapes the `<` of any closing `</tag>` in content placed inside `<tag>` in
+ * a template, so the content can't end its own data section early. One pass
+ * is enough: escaping adds no `<`, so (unlike removing the tag) it can't join
+ * the surrounding text into a new closing tag.
  */
 function insideTag(tag: string, content: string): string {
-  const closing = new RegExp(`<\\s*/\\s*${tag}\\s*>`, 'gi');
-  let result = content;
-  while (closing.test(result)) {
-    closing.lastIndex = 0;
-    result = result.replace(closing, '');
-  }
-  return result;
+  return content.replace(new RegExp(`<\\s*/\\s*${tag}\\s*>`, 'gi'), (match) => `&lt;${match.slice(1)}`);
 }
 
 /**
