@@ -172,3 +172,68 @@ extension Recording {
         return reset
     }
 }
+
+// MARK: - Media File Cleanup
+
+extension Recording {
+    /// The Recordings folder that audioFilePath and videoFilePath are relative to
+    static var recordingsDirectory: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("com.peninsula.lessonlens")
+            .appendingPathComponent("Recordings")
+    }
+
+    /// Deletes the recording and saves, then removes its audio and video files
+    /// (a video session has the original video and the extracted audio),
+    /// except any a re-analysis copy still uses. Nothing is removed if the
+    /// save fails.
+    static func deleteWithMedia(_ recording: Recording, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
+        let mediaFiles = [recording.audioFilePath, recording.videoFilePath]
+        context.delete(recording)
+        guard (try? context.save()) != nil else { return }
+        removeUnreferencedMedia(mediaFiles, in: context, directory: directory)
+    }
+
+    /// Points the recording at newly extracted audio, saves, and removes the
+    /// audio it replaces, unless that's the video itself or a re-analysis
+    /// copy uses it
+    func replaceAudioFile(with fileName: String, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
+        let previous = audioFilePath
+        audioFilePath = fileName
+        guard (try? context.save()) != nil else { return }
+        Recording.removeUnreferencedMedia([previous], in: context, directory: directory)
+    }
+
+    /// Deletes each named media file that no recording still uses as its audio
+    /// or video file. Call after the recording that used it was deleted or
+    /// pointed at a new file, and saved. Re-analysis copies share their
+    /// original's files, so a shared file stays until its last user is gone.
+    /// If the recordings can't be fetched, nothing is deleted. Returns the
+    /// names of the files removed.
+    @discardableResult
+    static func removeUnreferencedMedia(
+        _ fileNames: [String?],
+        in context: ModelContext,
+        directory: URL? = Recording.recordingsDirectory
+    ) -> [String] {
+        guard let directory,
+              let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return [] }
+
+        var inUse = Set<String>()
+        for recording in recordings {
+            inUse.insert(recording.audioFilePath)
+            if let video = recording.videoFilePath { inUse.insert(video) }
+        }
+
+        var removed: [String] = []
+        for name in Set(fileNames.compactMap { $0 }) {
+            // Names are bare file names; anything else could reach outside the folder
+            guard !name.isEmpty, !name.contains("/"), name != ".", name != "..", !inUse.contains(name) else { continue }
+            let url = directory.appendingPathComponent(name)
+            if (try? FileManager.default.removeItem(at: url)) != nil {
+                removed.append(name)
+            }
+        }
+        return removed
+    }
+}

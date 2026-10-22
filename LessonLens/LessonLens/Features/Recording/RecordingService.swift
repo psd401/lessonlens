@@ -160,12 +160,6 @@ final class RecordingService: NSObject, ObservableObject {
         return nil
     }
 
-    /// Deletes the audio file for a recording
-    func deleteAudioFile(for recording: Recording) {
-        guard let url = recording.absoluteAudioPath else { return }
-        try? FileManager.default.removeItem(at: url)
-    }
-
     /// Gets the file size of a recording
     func getFileSize(for recording: Recording) -> Int64? {
         guard let url = recording.absoluteAudioPath,

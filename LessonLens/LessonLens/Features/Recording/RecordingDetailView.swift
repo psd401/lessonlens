@@ -329,17 +329,7 @@ struct RecordingDetailView: View {
     }
 
     private func deleteRecording() {
-        // Re-analysis copies share the original's audio file; only remove it when no other recording uses it
-        let path = recording.audioFilePath
-        let id = recording.id
-        let sharingCount = (try? modelContext.fetchCount(FetchDescriptor<Recording>(
-            predicate: #Predicate { $0.audioFilePath == path && $0.id != id }
-        ))) ?? 1  // If the check fails, keep the file rather than risk breaking another recording
-        if sharingCount == 0 {
-            services.recordingService.deleteAudioFile(for: recording)
-        }
-        modelContext.delete(recording)
-        try? modelContext.save()
+        Recording.deleteWithMedia(recording, in: modelContext)
     }
 
     private func startVideoAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
@@ -431,9 +421,10 @@ struct RecordingDetailView: View {
     /// Extract audio from video and transcribe it, returning the transcript
     private func extractAndTranscribe(videoURL: URL) async throws -> Transcript {
         let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
-        recording.audioFilePath = audioURL.lastPathComponent
+        recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
         return try await services.transcriptionService.transcribe(recording: recording)
     }
+
 
     private func startAudioExtractionAndTranscription() {
         guard recording.isVideo,
@@ -452,7 +443,7 @@ struct RecordingDetailView: View {
                 let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
 
                 // Update recording with extracted audio path
-                recording.audioFilePath = audioURL.lastPathComponent
+                recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
 
                 // Transcribe the extracted audio
                 let transcript = try await services.transcriptionService.transcribe(recording: recording)

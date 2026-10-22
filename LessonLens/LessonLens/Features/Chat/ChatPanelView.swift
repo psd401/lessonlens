@@ -352,7 +352,7 @@ struct ChatPanelView: View {
             do {
                 // Extract audio from video
                 let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
-                recording.audioFilePath = audioURL.lastPathComponent
+                recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
 
                 // Transcribe
                 let transcript = try await services.transcriptionService.transcribe(recording: recording)
