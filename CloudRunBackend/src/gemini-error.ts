@@ -55,3 +55,18 @@ export function logUnparseableGeminiText(err: unknown, textLength: number): void
   const name = err instanceof Error ? err.name : 'UnknownError';
   console.error('Failed to parse Gemini response:', name, `length=${textLength}`);
 }
+
+/**
+ * Reads a 200 reply's JSON envelope. A non-JSON body (truncated, or an HTML
+ * error page) would otherwise throw a parse error that quotes the body into
+ * the route's catch-all log. Returns null after logging name and length only.
+ */
+export async function readGeminiJson<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    logUnparseableGeminiText(err, text.length);
+    return null;
+  }
+}

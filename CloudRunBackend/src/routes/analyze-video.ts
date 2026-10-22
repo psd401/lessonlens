@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { VIDEO_EXTENSIONS } from '../video-storage';
 import { getOwnedGeminiFile } from '../gemini-files';
 import { env, vertexGemini, videoStorage, checkRateLimit, getRateLimitStatus } from '../index';
@@ -230,7 +230,7 @@ async function analyzeFromCloudStorage(
       }, 502);
     }
 
-    return formatVideoAnalysis(c, await response.json() as GeminiGenerateResponse);
+    return formatVideoAnalysis(c, await readGeminiJson<GeminiGenerateResponse>(response));
   } catch (err) {
     console.error('Video analysis failed:', err);
     return c.json({ error: 'Video analysis failed' }, 500);
@@ -245,7 +245,12 @@ async function analyzeFromCloudStorage(
  * Turns Gemini's JSON reply into the app's analysis response (same structure
  * as text analysis). Shared by both video paths.
  */
-function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse) {
+function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse | null) {
+  // Null when the envelope wasn't JSON; readGeminiJson has already logged it
+  if (!geminiResponse) {
+    return c.json({ error: 'Invalid response format from analysis service' }, 502);
+  }
+
   // Check if Gemini returned candidates (may be blocked by safety filters)
   if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
     logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);
@@ -364,7 +369,7 @@ async function callGeminiWithVideo(
   prompt: string,
   model: string,
   apiKey: string
-): Promise<GeminiGenerateResponse> {
+): Promise<GeminiGenerateResponse | null> {
   const response = await fetch(
     `${GEMINI_API_BASE}/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -401,7 +406,7 @@ async function callGeminiWithVideo(
     throw new Error(`Gemini API error: ${response.status}`);
   }
 
-  return response.json() as Promise<GeminiGenerateResponse>;
+  return readGeminiJson<GeminiGenerateResponse>(response);
 }
 
 /**

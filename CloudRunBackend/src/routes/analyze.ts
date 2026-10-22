@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildAnalysisPrompt, type TechniqueDefinition, type PauseData, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -99,7 +99,10 @@ analyzeRoutes.post('/', async (c) => {
       }, 502);
     }
 
-    const geminiResponse = await response.json() as GeminiGenerateResponse;
+    const geminiResponse = await readGeminiJson<GeminiGenerateResponse>(response);
+    if (!geminiResponse) {
+      return c.json({ error: 'Invalid response format from analysis service' }, 502);
+    }
 
     // Check if Gemini returned candidates (may be blocked by safety filters)
     if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {

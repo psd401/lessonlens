@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError, logUnusableGeminiResponse } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, readGeminiJson } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildChatPrompt, type ChatMessage, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -111,7 +111,10 @@ chatRoutes.post('/', async (c) => {
       }, 502);
     }
 
-    const geminiResponse = await response.json() as GeminiGenerateResponse;
+    const geminiResponse = await readGeminiJson<GeminiGenerateResponse>(response);
+    if (!geminiResponse) {
+      return c.json({ error: 'Invalid response format from chat service' }, 502);
+    }
 
     if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
       logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);

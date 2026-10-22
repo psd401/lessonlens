@@ -69,6 +69,7 @@ describe('unusable Gemini replies are logged without their content', () => {
     expect((await analyze()).status).toBe(502);
     expect(allLogs()).toContain('blockReason=SAFETY');
     expect(allLogs()).toContain('candidates=0');
+    expect(logged).toHaveLength(1);
     expect(allLogs()).not.toContain(MARKER);
   });
 
@@ -79,6 +80,7 @@ describe('unusable Gemini replies are logged without their content', () => {
 
     expect((await analyze()).status).toBe(502);
     expect(allLogs()).toContain(`length=${text.length}`);
+    expect(logged).toHaveLength(1);
     expect(allLogs()).not.toContain(MARKER);
   });
 
@@ -87,6 +89,7 @@ describe('unusable Gemini replies are logged without their content', () => {
 
     expect((await chat()).status).toBe(502);
     expect(allLogs()).toContain('finishReason=MAX_TOKENS');
+    expect(logged).toHaveLength(1);
     expect(allLogs()).not.toContain(MARKER);
   });
 
@@ -94,7 +97,19 @@ describe('unusable Gemini replies are logged without their content', () => {
     geminiReply = { candidates: [{ content: { parts: [] }, finishReason: `quoted: ${MARKER}` }] };
 
     expect((await chat()).status).toBe(502);
-    expect(allLogs()).toContain('finishReason=');
+    expect(allLogs()).toMatch(/finishReason=( |$)/m);
+    expect(logged).toHaveLength(1);
+    expect(allLogs()).not.toContain(MARKER);
+  });
+
+  test('a 200 reply whose envelope is not JSON: logs the error name and length only', async () => {
+    const body = `${MARKER} <html>truncated`;
+    globalThis.fetch = (async () => new Response(body, { status: 200 })) as unknown as typeof fetch;
+
+    expect((await analyze()).status).toBe(502);
+    expect((await chat()).status).toBe(502);
+    expect(allLogs()).toContain(`length=${body.length}`);
+    expect(logged).toHaveLength(2);
     expect(allLogs()).not.toContain(MARKER);
   });
 
@@ -104,6 +119,7 @@ describe('unusable Gemini replies are logged without their content', () => {
 
     expect((await analyze()).status).toBeGreaterThanOrEqual(400);
     expect(allLogs()).toContain('INVALID_ARGUMENT');
+    expect(logged).toHaveLength(1);
     expect(allLogs()).not.toContain(MARKER);
   });
 });
