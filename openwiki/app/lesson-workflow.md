@@ -16,7 +16,7 @@ openwiki:
     - LessonLens/LessonLens/Features/Analysis/AnalysisService.swift
     - LessonLens/LessonLens/Features/Analysis/VideoAnalysisService.swift
     - LessonLens/LessonLens/Core/Models/Recording.swift
-  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing, Recording.deleteWithMedia, Recording.removeUnreferencedMedia, Recording.replaceAudioFile]
+  symbols: [RecordingDetailView, TranscriptionService.transcribe, TranscriptionService.detectPauses, AnalysisService.analyze, VideoAnalysisService.analyzeVideo, VideoAnalysisMethod, Recording.statusAfterInterruptedProcessing, Recording.deleteWithMedia, Recording.removeUnreferencedMedia, Recording.replaceAudioFile, Recording.unusedMediaFiles, GeneralSettingsTab.findUnusedFiles]
   test_paths:
     - LessonLens/LessonLensTests/PauseDetectionTests.swift
     - LessonLens/LessonLensTests/PauseBackfillTests.swift
@@ -92,7 +92,19 @@ A `Recording` stores bare file names (`audioFilePath`, `videoFilePath`) that res
 - `replaceAudioFile(with:in:directory:)` runs after on-device extraction (`RecordingDetailView`, and `ChatPanelView` when chat extracts audio on demand). It points the recording at the new audio, saves, then removes the previous audio file. It never removes the video.
 - `Recording.removeUnreferencedMedia` deletes a named file only when no remaining recording uses it as its audio or video. It skips empty names, names containing `/`, `.` and `..`, so nothing outside the folder can be touched. It returns the names it removed.
 
+### Unused-file cleanup (Settings)
+
+Files left behind by older deletes and re-extractions can be reclaimed from **Settings > General > Remove Unused Files…** (`GeneralSettingsTab.findUnusedFiles`). The flow is deliberately conservative:
+
+1. `PersistentStore.hasOtherStore(appSupport:)` runs first. If a set-aside `LessonLens-backup-*.store` or an unreadable/LessonLens `default.store` exists, or the `com.peninsula.lessonlens` folder cannot be listed, the cleanup refuses with a "can't confirm" message, because sessions in that other store still point at these files. See [persistent store](persistent-store.md#other-stores-and-unused-file-cleanup).
+2. `Recording.unusedMediaFiles(in:directory:now:)` lists regular files in `Recordings/` that no recording uses as audio or video, with their sizes. It skips anything modified or attribute-changed in the last 10 minutes (a recording, import or extraction may still be writing it, or its session is not saved yet), so a freshly copied import whose source had an old modification date is not offered. Folders are skipped. It returns nil when the folder or the recordings cannot be read, and the UI then reports that nothing was removed.
+3. The teacher confirms in an alert. `removeUnusedFiles` then recomputes the unused set and removes only names still unused, through `removeUnreferencedMedia`, so a file that came into use while the dialog was open is kept.
+
+Focused tests in `MediaCleanupTests`: `testUnusedFilesAreFoundAndFilesInUseAreNot`, `testRecentFilesAreNotOffered`, `testAFreshImportCopyIsNotOfferedEvenWithAnOldModificationDate`, `testFoldersAreNotOffered`, `testOtherStoreBlocksCleanup`, `testUnlistableFolderBlocksCleanup`. The SwiftUI alert and button are not tested.
+
 Invariants the tests pin (`LessonLensTests/MediaCleanupTests.swift`): a video session's deletion removes both the original video and the extracted audio; re-analysis copies share their original's files, so a shared file survives until its last user is deleted (`testSharedFilesStayUntilTheLastSessionUsingThemIsDeleted`); a new video import uses the video as its own audio until extraction, and replacing it must keep the video (`testFirstExtractionKeepsTheVideoItReplacesAsAudio`). Store-level file recovery is a separate concern; see [persistent store](persistent-store.md).
+
+Change guidance: a file is only protected from cleanup while a saved `Recording` references it or it was touched in the last 10 minutes, so any new code that writes into `Recordings/` must save the referencing recording promptly. Do not add a cleanup path that skips `hasOtherStore`, since sessions in a set-aside store still reference these files.
 
 ## Change guidance
 

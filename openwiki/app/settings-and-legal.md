@@ -13,7 +13,7 @@ openwiki:
     - LessonLens/LessonLens/Core/Views/ContentView.swift
     - LessonLens/LessonLens/Features/HowItWorks/HowItWorksView.swift
     - LessonLens/LessonLens/Features/Legal/TermsAndPrivacyView.swift
-  symbols: [SettingsView, GeneralSettingsTab, TechniquesSettingsTab, AccountSettingsTab, AboutTab, UserSettings, UserSettings.enabledTechniqueIds, UserSettings.setEnabledTechniqueIds, HowItWorksView, TermsAndPrivacyView, MainView]
+  symbols: [SettingsView, GeneralSettingsTab, GeneralSettingsTab.findUnusedFiles, TechniquesSettingsTab, AccountSettingsTab, AboutTab, UserSettings, UserSettings.enabledTechniqueIds, UserSettings.setEnabledTechniqueIds, Recording.unusedMediaFiles, HowItWorksView, TermsAndPrivacyView, MainView]
   invariants:
     - UserSettings is keyed by the signed-in user's email; without a current user, SettingsView loads nothing and saves nothing.
     - Every change in the Settings window calls saveSettings(), which writes the whole settings row, so the row always mirrors the window's state.
@@ -54,12 +54,14 @@ flowchart TD
 
 | Tab | Controls | Persisted where |
 |---|---|---|
-| General (`GeneralSettingsTab`) | "Show timestamps in transcript" toggle; a button that opens the recordings folder in Finder | `UserSettings.showTimestamps` |
+| General (`GeneralSettingsTab`) | "Show timestamps in transcript" toggle; a button that opens the recordings folder in Finder; "Remove Unused Files…", which lists and deletes recording files no session uses after confirmation | `UserSettings.showTimestamps`; the cleanup writes nothing to SwiftData |
 | Techniques (`TechniquesSettingsTab`) | Framework segmented picker; per-technique toggles grouped by `TechniqueCategory`; Select All / Deselect All; info popover with look-fors and up to three example phrases | `selectedFrameworkId` and `frameworkTechniqueSelectionsData` (JSON map from framework raw value to technique ids) |
 | Account (`AccountSettingsTab`) | Shows name and email from `AppState.currentUser`; Sign Out calls `appState.signOut()` | Not stored here; sign-in state lives in [auth and config](auth-and-config.md) |
 | About (`AboutTab`) | Version and build from the bundle, district and "Powered by WhisperKit and Gemini" credits | Nothing |
 
 The General tab's storage label reads `~/Library/Application Support/com.peninsula.lessonlens/`, but the "Open Recordings Folder" button opens the `Recordings` subfolder of that directory. Keep the two in step if the storage location changes.
+
+"Remove Unused Files…" is the only destructive control in Settings. It is implemented in `GeneralSettingsTab.findUnusedFiles` and `removeUnusedFiles` on top of `Recording.unusedMediaFiles` and `Recording.removeUnreferencedMedia`, and it refuses to run while `PersistentStore.hasOtherStore` reports a set-aside or legacy store. The rules, guards and tests are in [lesson workflow](lesson-workflow.md#unused-file-cleanup-settings) and [persistent store](persistent-store.md#other-stores-and-unused-file-cleanup).
 
 ### How a change is saved
 
@@ -101,6 +103,6 @@ Section 4 and section 5 describe what the app sends and stores, so they must mat
 
 ## Validation
 
-- Narrow: there are no focused unit tests for these views or for `UserSettings`. A build is the minimal check: `xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build`.
+- Narrow: there are no focused unit tests for these views or for `UserSettings`; the cleanup helpers behind "Remove Unused Files…" are covered by `MediaCleanupTests` (`xcodebuild ... test -only-testing:LessonLensTests/MediaCleanupTests`). A build is the minimal check: `xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build`.
 - Manual check for preference changes: open Settings, toggle a value, relaunch, and confirm it persists. For technique selection, confirm that Deselect All behaves as described above.
 - Expensive or unnecessary: running the full Swift test target is not needed for copy-only changes.

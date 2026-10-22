@@ -9,9 +9,10 @@ openwiki:
   source_paths:
     - LessonLens/LessonLens/App/LessonLensApp.swift
     - LessonLens/LessonLens/App/AppState.swift
-  symbols: [PersistentStore, PersistentStore.openContainer, PersistentStore.setAside, PersistentStore.isLessonLensStore, PersistentStore.launchIssue, StorageError, LessonLensApp.sharedModelContainer]
+  symbols: [PersistentStore, PersistentStore.openContainer, PersistentStore.setAside, PersistentStore.isLessonLensStore, PersistentStore.hasOtherStore, PersistentStore.launchIssue, StorageError, LessonLensApp.sharedModelContainer]
   test_paths:
     - LessonLens/LessonLensTests/PersistentStoreTests.swift
+    - LessonLens/LessonLensTests/MediaCleanupTests.swift
   invariants:
     - Teacher data is never deleted by store recovery; a store that cannot be opened is renamed to a timestamped LessonLens-backup-*.store file in the same folder.
     - default.store is only moved or read as LessonLens data when it is recognised as a LessonLens store (it has Recording and Transcript entities).
@@ -77,6 +78,10 @@ flowchart TD
 | `legacyStoreUnverified` | `default.store` cannot be read as a store and the `Recordings` folder is non-empty | an older library file was not checked; it was left unchanged |
 
 `legacyStoreUnverified` is only raised when the Recordings folder shows that LessonLens was used on this Mac, because an unreadable file alone may belong to another app. Both legacy cases repeat on every launch until the file is resolved.
+
+## Other stores and unused-file cleanup
+
+`PersistentStore.hasOtherStore(appSupport:)` answers whether a store other than the open one may still list sessions whose files live in `Recordings/`. It returns true when the folder has a `LessonLens-backup-*.store`, when `default.store` is a LessonLens store or cannot be read, and when the folder cannot be listed. `SettingsView`'s General tab calls it before `Recording.unusedMediaFiles`, which would otherwise see files owned by a set-aside or legacy store as unused. The cleanup flow itself is documented in [lesson workflow](lesson-workflow.md#unused-file-cleanup-settings). Keep this guard in place when you change the set-aside or legacy rules: a new kind of backup file must also be recognised here, or the cleanup can delete files a backup still needs.
 
 ## Tests
 
