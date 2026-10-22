@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { VIDEO_EXTENSIONS } from '../video-storage';
 import { getOwnedGeminiFile } from '../gemini-files';
 import { env, vertexGemini, videoStorage, checkRateLimit, getRateLimitStatus } from '../index';
@@ -230,7 +230,7 @@ async function analyzeFromCloudStorage(
       }, 502);
     }
 
-    return formatVideoAnalysis(c, await response.json() as GeminiGenerateResponse);
+    return formatVideoAnalysis(c, await readGeminiJson<GeminiGenerateResponse>(response));
   } catch (err) {
     console.error('Video analysis failed:', err);
     return c.json({ error: 'Video analysis failed' }, 500);
@@ -245,10 +245,15 @@ async function analyzeFromCloudStorage(
  * Turns Gemini's JSON reply into the app's analysis response (same structure
  * as text analysis). Shared by both video paths.
  */
-function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse) {
+function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse | null) {
+  // Null when the envelope wasn't JSON; readGeminiJson has already logged it
+  if (!geminiResponse) {
+    return c.json({ error: 'Invalid response format from analysis service' }, 502);
+  }
+
   // Check if Gemini returned candidates (may be blocked by safety filters)
   if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
-    console.error('Gemini returned no candidates:', JSON.stringify(geminiResponse, null, 2));
+    logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);
     const blockReason = (geminiResponse as any).promptFeedback?.blockReason;
     return c.json({
       error: 'Video analysis blocked or failed',
@@ -259,7 +264,7 @@ function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse)
   const analysisText = geminiResponse.candidates[0]?.content?.parts[0]?.text;
 
   if (!analysisText) {
-    console.error('Gemini candidate has no text content');
+    logUnusableGeminiResponse('Gemini candidate has no text content', geminiResponse);
     return c.json({ error: 'Empty response from analysis service' }, 502);
   }
 
@@ -273,8 +278,7 @@ function formatVideoAnalysis(c: Context, geminiResponse: GeminiGenerateResponse)
     analysisResult = JSON.parse(jsonText);
   } catch (parseErr) {
     // Log error details server-side only (avoid logging video analysis content)
-    console.error('Failed to parse Gemini response:', parseErr);
-    console.error('Response length:', analysisText.length);
+    logUnparseableGeminiText(parseErr, analysisText.length);
     return c.json({
       error: 'Invalid response format from analysis service'
     }, 502);
@@ -365,7 +369,7 @@ async function callGeminiWithVideo(
   prompt: string,
   model: string,
   apiKey: string
-): Promise<GeminiGenerateResponse> {
+): Promise<GeminiGenerateResponse | null> {
   const response = await fetch(
     `${GEMINI_API_BASE}/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -402,7 +406,7 @@ async function callGeminiWithVideo(
     throw new Error(`Gemini API error: ${response.status}`);
   }
 
-  return response.json() as Promise<GeminiGenerateResponse>;
+  return readGeminiJson<GeminiGenerateResponse>(response);
 }
 
 /**

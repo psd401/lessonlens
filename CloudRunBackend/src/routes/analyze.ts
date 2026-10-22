@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { verifySession } from './auth';
-import { describeGeminiError } from '../gemini-error';
+import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildAnalysisPrompt, type TechniqueDefinition, type PauseData, type GeminiGenerateResponse } from '../../../shared/prompts';
 
@@ -99,11 +99,14 @@ analyzeRoutes.post('/', async (c) => {
       }, 502);
     }
 
-    const geminiResponse = await response.json() as GeminiGenerateResponse;
+    const geminiResponse = await readGeminiJson<GeminiGenerateResponse>(response);
+    if (!geminiResponse) {
+      return c.json({ error: 'Invalid response format from analysis service' }, 502);
+    }
 
     // Check if Gemini returned candidates (may be blocked by safety filters)
     if (!geminiResponse.candidates || geminiResponse.candidates.length === 0) {
-      console.error('Gemini returned no candidates:', JSON.stringify(geminiResponse, null, 2));
+      logUnusableGeminiResponse('Gemini returned no candidates', geminiResponse);
       const blockReason = (geminiResponse as any).promptFeedback?.blockReason;
       return c.json({
         error: 'Analysis blocked or failed',
@@ -115,7 +118,7 @@ analyzeRoutes.post('/', async (c) => {
     const analysisText = geminiResponse.candidates[0]?.content?.parts[0]?.text;
 
     if (!analysisText) {
-      console.error('Gemini candidate has no text content');
+      logUnusableGeminiResponse('Gemini candidate has no text content', geminiResponse);
       return c.json({ error: 'Empty response from analysis service' }, 502);
     }
 
@@ -131,8 +134,7 @@ analyzeRoutes.post('/', async (c) => {
       analysisResult = JSON.parse(jsonText);
     } catch (parseErr) {
       // Log error details server-side only (redact transcript content)
-      console.error('Failed to parse Gemini response:', parseErr);
-      console.error('Response length:', analysisText.length);
+      logUnparseableGeminiText(parseErr, analysisText.length);
       return c.json({
         error: 'Invalid response format from analysis service'
       }, 502);
