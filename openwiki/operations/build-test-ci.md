@@ -76,5 +76,3 @@ Never weaken CI.
 - Full Xcode build + launch: only when Swift code, project settings, entitlements, or package pins change.
 - `bun run build`: when changing imports across `../../../shared` or Dockerfile layout (see [shared prompts](../backend/shared-prompts.md)).
 - Docker image build / `gcloud` deploys: only for deployment changes ([deployment and release](deployment-and-release.md)); never as a routine check.
-nd/shared-prompts.md)).
-- Docker image build / `gcloud` deploys: only for deployment changes ([deployment and release](deployment-and-release.md)); never as a routine check.
