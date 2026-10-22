@@ -53,7 +53,7 @@ Run commands from the repository root. Backend checks use bun (`bun test`, optio
 
 ### Cross-boundary reminders
 
-- A wire-contract change (request/response key, new field) spans: template in `shared/prompts/templates/components.ts` -> route mapper -> Swift Codable structs -> SwiftData model. Verify with backend tests plus the Swift `VideoAnalysisServiceTests`; there is no automated end-to-end test, so smoke-test against a dev backend when the contract changes.
+- A wire-contract change (request/response key, new field) spans: template in `shared/prompts/templates/components.ts` -> route mapper -> Swift Codable structs -> SwiftData model. A new request field that reaches a prompt also needs a size cap in `CloudRunBackend/src/input-limits.ts` (see [input size limits](backend/input-limits.md)). Verify with backend tests plus the Swift `VideoAnalysisServiceTests`; there is no automated end-to-end test, so smoke-test against a dev backend when the contract changes.
 - The shipped surface for the backend is the Docker image built from the repo root (`shared/` must be copied); a change that typechecks inside `CloudRunBackend/` can still break the image if the `../../../shared` layout moves. Conditional check: `cd CloudRunBackend && bun run build`.
 - The macOS app's real consumer-facing configuration comes from `Local.xcconfig` -> `Info.plist` -> `AppConfiguration.load()`; a feature that "works in tests" can still fail sign-in if the keys are empty.
 
@@ -62,6 +62,10 @@ Run commands from the repository root. Backend checks use bun (`bun test`, optio
 Areas identified but not given dedicated coverage (source anchor - reason):
 
 - Theme and shared UI (`LessonLens/LessonLens/Core/Theme/`, `Core/Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
+- `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
+- `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
+- Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
+iew.md).
 - `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
 - `CloudRunBackend` bucket and IAM provisioning - infrastructure is not in the repository, so it cannot be documented from source.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
