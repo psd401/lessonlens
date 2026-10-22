@@ -69,7 +69,7 @@ The app is the only stateful part. Transcript text goes to `/analyze`; video goe
 2. Do not upload audio; do not retain video beyond the analysis call (Cloud Storage object deleted in a `finally`; bucket lifecycle is a backstop).
 3. Keep domain restriction on both client (`hd` hint) and server (`hd`, email domain, `email_verified`). Never add a dev auth bypass.
 4. Keep user-facing and prompt copy as coaching (growth-oriented, no superlatives, no evaluative framing).
-5. Keep `JWT_SECRET >= 32` chars and non-empty `GOOGLE_CLIENT_ID` startup checks.
+5. Keep the backend's startup checks: `JWT_SECRET >= 32` chars, non-empty `GOOGLE_CLIENT_ID`, and a whole-number `MAX_SESSION_DAYS >= 1` (see [Cloud Run API](../backend/cloud-run-api.md)).
 6. Do not hardcode infrastructure identifiers in this public repo.
 
 ## Where to go next

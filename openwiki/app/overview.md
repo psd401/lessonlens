@@ -96,4 +96,3 @@ erDiagram
 ## Where to start
 
 UI navigation: `ContentView.swift` (`MainView`, `SidebarView`, `WelcomeView`). Persistence: `Core/Models/*`, with store location and recovery in [persistent store](persistent-store.md). Cross-cutting services: `ServiceContainer.swift`. Run `xcodebuild ... test` (macOS only) for model or lifecycle changes.
-cutting services: `ServiceContainer.swift`. Run `xcodebuild ... test` (macOS only) for model or lifecycle changes.
