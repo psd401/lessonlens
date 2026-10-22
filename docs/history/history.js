@@ -4,11 +4,11 @@
 // Audience is non-developers: avoid dev jargon such as "commits".
 window.LESSONLENS_HISTORY = {
   updated: "2026-10-22",
-  currentVersions: "App v1.2.0 · Server v1.4.5",
+  currentVersions: "App v1.3.0 · Server v1.4.5",
   stats: [
     { value: "Jan 2026", label: "project start" },
     { value: "7", label: "teaching frameworks" },
-    { value: "3", label: "app releases" }
+    { value: "4", label: "app releases" }
   ],
   legs: [
     {
@@ -112,14 +112,21 @@ window.LESSONLENS_HISTORY = {
           title: "v1.2.0: full-length lessons",
           body: "Lessons can run up to 90 minutes. Videos are made smaller on the Mac before they are sent, feedback appears without waiting for the transcript, and a lesson that can't be analyzed as video can be analyzed from its transcript instead. Coaching chat no longer freezes after a follow-up, and the app is easier to read in dark mode.",
           tags: ["v1.2.0", "video", "coaching chat"],
-          milestone: true,
-          current: true
+          milestone: true
         },
         {
           date: "2026-10-22",
           title: "Safer handling of lesson text",
           body: "The server now limits how much text a single request can send for analysis, no longer writes the AI's replies, which can quote a lesson, into its error logs, and handles unusual characters in a transcript exactly as written. The older video path that relied on a separate access key is retired, so every analysis now runs through the district's own Google Cloud project. Teachers get these changes without updating the app.",
           tags: ["privacy", "security"]
+        },
+        {
+          date: "2026-10-22",
+          title: "v1.3.0: safer with teachers' sessions",
+          body: "If LessonLens can't open a teacher's saved sessions, it now keeps them as a backup instead of starting over, so they aren't lost. Deleting a session now removes its video too, and a new Settings option clears out recording files left behind earlier. If something can't be saved, the teacher is told. Technique ratings use new labels, from Emerging to Extending, that describe how fully a technique was used rather than judging the teacher. The app also uses less memory between transcriptions.",
+          tags: ["v1.3.0", "privacy", "ratings"],
+          milestone: true,
+          current: true
         }
       ]
     }
