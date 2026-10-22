@@ -179,6 +179,22 @@ enum PersistentStore {
         FileManager.default.fileExists(atPath: url.path) && (try? isLessonLensStore(at: url)) == true
     }
 
+    /// True when a store other than the open one may still list sessions whose
+    /// files are in Recordings/: a set-aside backup, or a default.store that
+    /// is LessonLens's or can't be read. Those sessions' files look unused to
+    /// the open store, so the unused-file cleanup must not run. Also true if
+    /// the folder can't be listed.
+    static func hasOtherStore(appSupport: URL, fileManager: FileManager = .default) -> Bool {
+        let folder = appSupport.appendingPathComponent(folderName)
+        guard let names = try? fileManager.contentsOfDirectory(atPath: folder.path) else { return true }
+        if names.contains(where: { $0.hasPrefix("LessonLens-backup-") && $0.hasSuffix(".store") }) {
+            return true
+        }
+        let legacyURL = legacyStoreURL(in: appSupport)
+        guard fileManager.fileExists(atPath: legacyURL.path) else { return false }
+        return (try? isLessonLensStore(at: legacyURL)) != false
+    }
+
     /// Renames the store files to a timestamped backup in the same folder and
     /// returns the backup's URL. The backup can be opened as a store later.
     static func setAside(storeURL: URL, date: Date = Date(), fileManager: FileManager = .default) throws -> URL {
