@@ -186,9 +186,11 @@ done
 ```
 
 **Step 3: Deploy to Cloud Run**
+
+Run this from the repository root, not `CloudRunBackend/`: the Dockerfile there also copies `shared/`, which the backend imports.
 ```bash
 gcloud run deploy lessonlens-api \
-  --source ./CloudRunBackend \
+  --source . \
   --region YOUR_REGION \
   --allow-unauthenticated \
   --service-account=$SA \
@@ -399,14 +401,14 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 
 ---
 
-## Included Observation Frameworks
+## Included Teaching Frameworks
 
-Every deployment ships with these 7 instructional frameworks — no configuration needed:
+Every deployment ships with these 7 frameworks (58 techniques), with no configuration needed. Teachers choose which techniques the coaching feedback looks for.
 
-1. **Danielson Framework for Teaching** — 4 domains, 22 components
-2. **Marzano Focused Teacher Evaluation** — 4 domains, 23 elements
-3. **NIET Teaching Standards** — 5 standards, rubric-based
-4. **5D+ Teacher Evaluation** — 5 dimensions, sub-dimensions
-5. **Marshall's Teacher Evaluation** — 6 domains, mini-observation focus
-6. **Project GLAD** — Guided Language Acquisition Design strategies
-7. **PSD Essentials** — Peninsula School District's instructional framework
+1. **TLAC (Teach Like A Champion)**: 10 techniques
+2. **Danielson Framework**: 9 observable components from Domains 2 and 3
+3. **Rosenshine's Principles of Instruction**: 10 principles
+4. **AVID WICOR**: 5 strategies
+5. **National Board Standards**: 8 techniques
+6. **PSD Instructional Essentials**: Peninsula School District's 6 essentials
+7. **Behavior Support Strategies**: 10 strategies

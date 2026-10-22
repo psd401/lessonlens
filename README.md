@@ -267,9 +267,7 @@ When star ratings are enabled, each technique receives a 1-5 star rating:
 # Automated (recommended)
 bash scripts/setup.sh
 
-# Or manually:
-cd CloudRunBackend
-bun install
+# Or manually, from the repository root (the build also needs shared/):
 gcloud run deploy lessonlens-api --source .
 ```
 
