@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import AVFoundation
 
 // MARK: - Media Type
 
@@ -170,6 +171,38 @@ extension Recording {
             try? context.save()
         }
         return reset
+    }
+
+    /// Settles recordings left at .recording by a quit or crash mid-recording;
+    /// nothing is recording at launch. One whose audio file exists becomes
+    /// .recorded with the file's duration, or 0 if the file can't be read (a
+    /// crash usually leaves it unplayable), so the teacher can see it and
+    /// delete it; no audio is deleted here. One whose file is gone is deleted.
+    /// Returns the count settled.
+    @discardableResult
+    static func finalizeInterruptedRecordings(
+        in context: ModelContext,
+        directory: URL? = Recording.recordingsDirectory
+    ) -> Int {
+        guard let directory,
+              let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return 0 }
+
+        var settled = 0
+        for recording in recordings where recording.status == .recording {
+            let url = directory.appendingPathComponent(recording.audioFilePath)
+            if FileManager.default.fileExists(atPath: url.path) {
+                recording.duration = (try? AVAudioPlayer(contentsOf: url).duration) ?? 0
+                recording.status = .recorded
+            } else {
+                context.delete(recording)
+            }
+            settled += 1
+        }
+
+        if settled > 0 {
+            try? context.save()
+        }
+        return settled
     }
 }
 
