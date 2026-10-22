@@ -59,6 +59,7 @@
 		0050 /* JosefinSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1050 /* JosefinSans-Bold.ttf */; };
 		0051 /* JosefinSlab-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1051 /* JosefinSlab-Regular.ttf */; };
 		0052 /* JosefinSlab-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1052 /* JosefinSlab-Bold.ttf */; };
+		00F0 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 10F0 /* OFL.txt */; };
 		0053 /* psd-logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 1053 /* psd-logo.png */; };
 		0054 /* Reflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1054 /* Reflection.swift */; };
 		0055 /* ChatSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1055 /* ChatSession.swift */; };
@@ -148,6 +149,7 @@
 		1050 /* JosefinSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JosefinSans-Bold.ttf"; sourceTree = "<group>"; };
 		1051 /* JosefinSlab-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JosefinSlab-Regular.ttf"; sourceTree = "<group>"; };
 		1052 /* JosefinSlab-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JosefinSlab-Bold.ttf"; sourceTree = "<group>"; };
+		10F0 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		1053 /* psd-logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "psd-logo.png"; sourceTree = "<group>"; };
 		1054 /* Reflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflection.swift; sourceTree = "<group>"; };
 		1055 /* ChatSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSession.swift; sourceTree = "<group>"; };
@@ -443,6 +445,7 @@
 				1050 /* JosefinSans-Bold.ttf */,
 				1051 /* JosefinSlab-Regular.ttf */,
 				1052 /* JosefinSlab-Bold.ttf */,
+				10F0 /* OFL.txt */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -603,6 +606,7 @@
 				0050 /* JosefinSans-Bold.ttf in Resources */,
 				0051 /* JosefinSlab-Regular.ttf in Resources */,
 				0052 /* JosefinSlab-Bold.ttf in Resources */,
+				00F0 /* OFL.txt in Resources */,
 				0053 /* psd-logo.png in Resources */,
 				0064 /* lessonlens-logo.png in Resources */,
 				0065 /* Assets.xcassets in Resources */,
