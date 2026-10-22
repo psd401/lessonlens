@@ -91,7 +91,7 @@ erDiagram
 
 - **Schema change has a visible cost.** An incompatible `@Model` edit makes the store fail to open. The store is then renamed to a `LessonLens-backup-*.store` file and the teacher starts with an empty library and a notice; the sessions are kept, but they are no longer shown. Prefer additive properties with defaults (as `mediaType`, `ratingsIncluded`, `frameworkId` do) and discuss before changing schema. The recovery rules and tests are in [persistent store](persistent-store.md).
 - Release builds are intentionally **not sandboxed**. The store lives at `~/Library/Application Support/com.peninsula.lessonlens/LessonLens.store` (an older `default.store` is moved in on first launch), alongside the `com.peninsula.lessonlens/Recordings` folder (see [deployment and release](../operations/deployment-and-release.md)).
-- Re-analysis creates a *copy* `Recording` that shares the original's media file; `deleteRecording` only removes the media when no other recording references the same `audioFilePath` (see [lesson workflow](lesson-workflow.md)).
+- Re-analysis creates a *copy* `Recording` that shares the original's media file; deleting a session removes a media file only when no other recording uses it as audio or video (see [media files and cleanup](lesson-workflow.md#media-files-and-cleanup)).
 
 ## Where to start
 

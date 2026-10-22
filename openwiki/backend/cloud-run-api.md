@@ -1,7 +1,7 @@
 ---
 type: Service
 title: Cloud Run API (CloudRunBackend)
-description: The primary Bun + Hono backend for LessonLens - routes, session JWT auth with access/refresh token types and a refresh session cap, in-memory rate limiting, Gemini API-key/Vertex client, environment variables, startup invariants and focused tests.
+description: The primary Bun + Hono backend for LessonLens - routes, session JWT auth with access/refresh token types and a refresh session cap, in-memory rate limiting, the Vertex AI Gemini client, environment variables, startup invariants and focused tests.
 tags: [backend, hono, bun, cloud-run, gemini, auth, rate-limiting]
 openwiki:
   roles: [architecture, integration]
@@ -47,7 +47,7 @@ sequenceDiagram
     RL-->>API: allowed or 429
     API->>API: validate sizes, buildAnalysisPrompt
     API->>G: generateContent(model, body)
-    G-->>API: Gemini JSON (apikey or Vertex)
+    G-->>API: Gemini JSON (Vertex AI)
     API-->>App: snake_case analysis JSON
 ```
 
@@ -62,7 +62,7 @@ Every protected route repeats the same sequence: `verifySession(Authorization)` 
 | `POST /auth/refresh` | `routes/auth.ts` | refresh JWT -> new access JWT + refresh JWT with the same `auth_time`; refused (401) once `auth_time` is older than `MAX_SESSION_DAYS` |
 | `POST /analyze`, `GET /analyze/rate-limit` | `routes/analyze.ts` | transcript analysis; limits: transcript 100,000 chars, 20 techniques, 100 pauses; temperature 0.4, 8192 output tokens, JSON mime type |
 | `POST /analyze/video`, `GET /analyze/video/rate-limit` | `routes/analyze-video.ts` | see [video pipeline](video-analysis-pipeline.md) |
-| `POST /upload/initiate/gcs`, `POST /upload/initiate`, `POST /upload/status`, `DELETE /upload/:fileName` | `routes/upload.ts` | see [video pipeline](video-analysis-pipeline.md) |
+| `POST /upload/initiate/gcs` | `routes/upload.ts` | starts a Cloud Storage resumable upload; see [video pipeline](video-analysis-pipeline.md) |
 | `POST /chat`, `GET /chat/rate-limit` | `routes/chat.ts` | coaching chat; max 50 messages, 100,000-char transcript; temperature 0.7, 2048 output tokens; uses `systemInstruction` |
 
 Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_used`, `usage`); the Swift decoders in `AnalysisService`/`VideoAnalysisService` map these via `CodingKeys` (see [lesson workflow](../app/lesson-workflow.md)). Gemini failures return 502 with only `{error, status}` - `describeGeminiError` deliberately logs enum-style status/reason fields, never `error.message` or the body, because those can echo transcript text. The same redaction rule covers the other log paths in `src/gemini-error.ts`: `logUnusableGeminiResponse` logs candidate counts and `finishReason`/`blockReason` enums for replies with no usable text, `readGeminiJson` logs only the parse-error name and reply length when a 200 envelope is not JSON, and `logUnparseableGeminiText` does the same for an unparseable candidate. `tests/gemini-logging.test.ts` (`unusable Gemini replies are logged without their content`) injects a marker string into each kind of bad reply and asserts it never reaches `console.error`; keep that test passing when adding a log line.
@@ -79,17 +79,15 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 `rateLimitStore` is an in-process `Map` keyed `rate:text|video|chat:<userId>`, hourly window, defaults 20 / 5 / 50 via `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR`. This is an explicit, commented design decision: resets on restart, not shared across instances, "courtesy throttling" - real protection is auth, Gemini quotas and Cloud Run limits. Read the comment block before changing it; the migration path noted there is Memorystore (Redis). Tests share this store, which is why `tests/test-env.ts` sets `VIDEO_RATE_LIMIT_PER_HOUR=1000`.
 
-**Stale README claim:** `CloudRunBackend/README.md` says rate-limited responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. No file under `CloudRunBackend/src` sets these headers, so do not rely on them or add clients that parse them. Clients read quota state from the `GET .../rate-limit` endpoints (`getRateLimitStatus`). The README's project-structure list is also incomplete (it omits `gcp-auth.ts`, `gemini-client.ts`, `gemini-files.ts` and `video-storage.ts`); this page's file references are the current ones.
+**Stale README claim:** `CloudRunBackend/README.md` says rate-limited responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. No file under `CloudRunBackend/src` sets these headers, so do not rely on them or add clients that parse them. Clients read quota state from the `GET .../rate-limit` endpoints (`getRateLimitStatus`). The README's project-structure list is also incomplete (it omits `gcp-auth.ts`, `gemini-client.ts` and `video-storage.ts`); this page's file references are the current ones.
 
-## Gemini backend selection (`gemini-client.ts`, `gcp-auth.ts`)
+## Gemini client (`gemini-client.ts`, `gcp-auth.ts`)
 
-`createGeminiClient({backend, apiKey, vertexLocation, auth})` returns `generateContent(model, body)`:
+The Gemini Developer API (API key) path was retired in October 2026 (the `gemini-client.ts` header records this). There is now a single backend: Vertex AI, authenticated as the service's runtime service account.
 
-- `apikey`: `generativelanguage.googleapis.com/v1beta/models/<model>:generateContent?key=...`.
-- `vertex`: `https://<vertexHost(location)>/v1/projects/<project>/locations/<location>/publishers/google/models/<model>:generateContent` with a bearer token. `vertexHost`: `global` -> `aiplatform.googleapis.com`; `us`/`eu` -> `aiplatform.<loc>.rep.googleapis.com` (keeps ML processing in that jurisdiction; the global endpoint does not); otherwise `<loc>-aiplatform.googleapis.com`.
-- `createMetadataAuth` reads project ID and service-account access token from the Cloud Run metadata server (cached, refreshed 60 s before expiry), so no project identifier lives in source.
+`createGeminiClient({vertexLocation, auth, fetch?})` returns `generateContent(model, body)`, which posts to `https://<vertexHost(location)>/v1/projects/<project>/locations/<location>/publishers/google/models/<model>:generateContent` with a bearer token. `vertexHost`: `global` -> `aiplatform.googleapis.com`; `us`/`eu` -> `aiplatform.<loc>.rep.googleapis.com` (keeps ML processing in that jurisdiction; the global endpoint does not); otherwise `<loc>-aiplatform.googleapis.com`.
 
-`src/index.ts` creates two clients: `gemini` (text + chat, honours `GEMINI_BACKEND`) and `vertexGemini` (always Vertex; required because Cloud Storage videos are only readable by Vertex).
+`createMetadataAuth` reads project ID and service-account access token from the Cloud Run metadata server (cached, refreshed 60 s before expiry), so no project identifier lives in source. `src/index.ts` creates one shared client, `gemini`, used by the text, chat and video routes, and `videoStorage`, which uses the same auth object for Cloud Storage.
 
 ## Environment
 
@@ -100,9 +98,7 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 | `MAX_SESSION_DAYS` | `30` | days after the last Google sign-in that `/auth/refresh` keeps issuing tokens; startup throws unless it is a whole number >= 1 (a non-numeric value would disable the cap). README and `docs/DEPLOYMENT.md` describe the same setting |
 | `ALLOWED_DOMAIN` | `psd401.net` | server-side domain lock |
 | `RATE_LIMIT_PER_HOUR`, `VIDEO_RATE_LIMIT_PER_HOUR`, `CHAT_RATE_LIMIT_PER_HOUR` | `20`, `5`, `50` | per-user hourly limits for text analysis, video and chat (see Rate limiting above) |
-| `GEMINI_BACKEND` | `apikey` | `apikey` or `vertex`; `parseGeminiBackend` throws on anything else |
-| `GEMINI_API_KEY` | - | needed for `apikey` text/chat and for the legacy Files API video path |
-| `VERTEX_LOCATION` | `global` | Vertex location |
+| `VERTEX_LOCATION` | `global` | Vertex location; see `vertexHost` above |
 | `GEMINI_TEXT_MODEL`, `GEMINI_VIDEO_MODEL` | `gemini-3.8-flash` | model ids |
 | `VIDEO_BUCKET` | unset | when empty `videoStorage` is `null` and Cloud Storage routes return 503 |
 | `PORT` | `8080` | server port |
@@ -118,10 +114,9 @@ Responses use snake_case (`overall_summary`, `technique_evaluations`, `model_use
 
 ## Validation
 
-- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` backend URL/auth; `gemini-logging.test.ts` log redaction for bad Gemini replies; `input-limits.test.ts` field caps and the 413 body cap; `prompt-builder.test.ts` prompt escaping; `video-routes.test.ts`, `legacy-video-routes.test.ts`, `video-storage.test.ts`).
+- Narrow: `cd CloudRunBackend && bun test` (tests: `auth.test.ts` session-token rules, the refresh cap and the `MAX_SESSION_DAYS` startup check; `index.test.ts` HTTP surface/rate limiter/startup validation spawned in a subprocess; `gemini-client.test.ts` Vertex endpoint URL and metadata auth; `gemini-logging.test.ts` log redaction for bad Gemini replies; `input-limits.test.ts` field caps and the 413 body cap; `prompt-builder.test.ts` prompt escaping; `video-routes.test.ts`, `video-storage.test.ts`).
 - Log-output change (any new `console.error` that touches a Gemini reply): `cd CloudRunBackend && bun test tests/gemini-logging.test.ts`.
 - Auth-only focused check: `cd CloudRunBackend && bun test tests/auth.test.ts`. Its behavior matrix: `describe('verifySession')` covers access acceptance, refresh and untyped rejection, unknown `token_type`, and the 7-day untyped fallback; `describe('POST /auth/refresh')` covers the pair issuance with unchanged `auth_time`, the session-cap 401, and rejection of access, untyped, subject-less and foreign-secret tokens; `describe('MAX_SESSION_DAYS startup validation')` spawns a subprocess to check the non-numeric refusal.
 - Conditional: `bun run build` (`bun build src/index.ts --outdir=dist --target=bun`) when imports of `../../../shared` or packaging change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
 - Do not hand-edit `dist/`; there is no committed build output.
-ing change; CI runs the org gate per backend dir (see [build, test and CI](../operations/build-test-ci.md)).
-- Do not hand-edit `dist/`; there is no committed build output.
+
