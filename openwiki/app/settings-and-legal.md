@@ -87,7 +87,7 @@ Section 4 and section 5 describe what the app sends and stores, so they must mat
 
 ## Change recipes
 
-- **Add a user preference that changes behavior:** add a stored property with a default to `UserSettings` (SwiftData migration is handled by the store-reset fallback in `LessonLensApp`; see [app overview](overview.md)), add a control in the matching `SettingsView` tab, copy it into `@State` in `loadSettings()`, write it back in `saveSettings()`, and add the reader where the behavior lives.
+- **Add a user preference that changes behavior:** add a stored property with a default to `UserSettings` (a defaulted property migrates in place; if the store still fails to open it is set aside, see [persistent store](persistent-store.md)), add a control in the matching `SettingsView` tab, copy it into `@State` in `loadSettings()`, write it back in `saveSettings()`, and add the reader where the behavior lives.
 - **Change default technique selection:** the defaults come from `FrameworkRegistry.defaultEnabledIds`; changing the stored-empty fallback in `UserSettings.enabledTechniqueIds(for:)` affects every framework.
 - **Edit legal or explainer copy:** edit the Swift strings in the two views; no tests cover them. Keep the claims consistent with the data-flow rules in the [architecture overview](../architecture/overview.md).
 
@@ -96,6 +96,7 @@ Section 4 and section 5 describe what the app sends and stores, so they must mat
 - **Deselect All is not durable.** `saveSettings()` stores `[]`, but `enabledTechniqueIds(for:)` treats an empty stored list as "unset" and returns every technique for the framework. After the Settings window reloads, all techniques are enabled again. Fix this in `UserSettings` if empty selections must be respected.
 - **No current user, no settings.** `loadSettings()` returns early when `appState.currentUser` is nil, so Settings edits made in that state are not saved.
 - **Settings is a second `ModelContainer` consumer.** It shares the same schema as the main window (`LessonLensApp`); a schema change must update both.
+- **Terms section 11 does not match the build.** `TermsAndPrivacyView` says local data is stored "within the application's sandboxed storage", but Release builds are deliberately unsandboxed and the store lives in the shared Application Support folder ([persistent store](persistent-store.md), [deployment and release](../operations/deployment-and-release.md)). Do not "fix" the sentence in code alone; it is legal copy that needs review.
 
 ## Validation
 

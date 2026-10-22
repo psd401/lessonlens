@@ -53,7 +53,7 @@ flowchart LR
     Mac -. Google OAuth + ID token .-> API
 ```
 
-The app is the only stateful part. Transcript text goes to `/analyze`; video goes via Cloud Storage and `/analyze/video`; chat sends the full session context on every call to `/chat`. Results come back as JSON and are written to SwiftData. See [lesson workflow](../app/lesson-workflow.md) for the sequence and status lifecycle.
+The app is the only stateful part. Transcript text goes to `/analyze`; video goes via Cloud Storage and `/analyze/video`; chat sends the full session context on every call to `/chat`. Results come back as JSON and are written to SwiftData, whose file location and recovery rules are in [persistent store](../app/persistent-store.md). See [lesson workflow](../app/lesson-workflow.md) for the sequence and status lifecycle.
 
 ## Cross-cutting contracts
 
