@@ -296,27 +296,6 @@ final class TranscriptionService: ObservableObject {
         return firstWords.joined(separator: " ")
     }
 
-    /// Checks if sufficient memory is available for transcription
-    func checkMemoryAvailability() -> Bool {
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-
-        let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
-            }
-        }
-
-        guard result == KERN_SUCCESS else { return true }  // Default to allowing if check fails
-
-        // WhisperKit large-v3 needs ~2-3GB RAM
-        let usedMemory = info.resident_size
-        let availableMemory = ProcessInfo.processInfo.physicalMemory - usedMemory
-
-        // Require at least 3GB available
-        return availableMemory > 3 * 1024 * 1024 * 1024
-    }
-
     /// Finds the bundled model path
     /// Returns the folder containing the mlmodelc files directly
     private func findBundledModelPath() -> String? {

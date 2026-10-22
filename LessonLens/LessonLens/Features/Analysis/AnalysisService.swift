@@ -149,76 +149,7 @@ final class AnalysisService: ObservableObject {
         return analysis
     }
 
-    /// Builds the analysis prompt
-    static func buildAnalysisPrompt(transcript: String, techniques: [Technique]) -> String {
-        var prompt = """
-        You are an expert instructional coach analyzing a teaching session transcript. Your task is to evaluate the teacher's use of specific teaching techniques and provide constructive feedback.
-
-        ## Teaching Session Transcript
-        ```
-        \(transcript)
-        ```
-
-        ## Techniques to Evaluate
-        Analyze the transcript for evidence of the following teaching techniques:
-
-        """
-
-        for technique in techniques {
-            prompt += """
-
-            ### \(technique.name)
-            **Description:** \(technique.descriptionText)
-
-            **Look-fors (observable indicators):**
-            \(technique.lookFors.map { "- \($0)" }.joined(separator: "\n"))
-
-            **Exemplar phrases:**
-            \(technique.exemplarPhrases.map { "- \"\($0)\"" }.joined(separator: "\n"))
-
-            """
-        }
-
-        prompt += """
-
-        ## Response Format
-        Provide your analysis as a JSON object with the following structure:
-        {
-            "overallSummary": "2-3 sentence summary of the teaching session's effectiveness",
-            "strengths": ["strength 1", "strength 2", "strength 3"],
-            "growthAreas": ["growth area 1", "growth area 2"],
-            "actionableNextSteps": ["specific action 1", "specific action 2", "specific action 3"],
-            "techniqueEvaluations": [
-                {
-                    "techniqueId": "technique-id",
-                    "wasObserved": true/false,
-                    "rating": 1-5 (null if not observed),
-                    "evidence": ["specific quote or behavior from transcript"],
-                    "feedback": "Detailed feedback about technique usage",
-                    "suggestions": ["specific improvement suggestion"]
-                }
-            ]
-        }
-
-        ## Rating Scale
-        1 - Developing: Technique not observed or needs significant development
-        2 - Emerging: Beginning to implement technique with inconsistent results
-        3 - Proficient: Solid implementation of technique with room for refinement
-        4 - Accomplished: Effective and consistent use of technique
-        5 - Exemplary: Strong, consistent implementation that could serve as a model
-
-        ## Guidelines
-        - Be specific and cite evidence from the transcript
-        - Provide actionable, growth-oriented feedback
-        - Balance recognition of strengths with constructive suggestions
-        - If a technique was not observed, set wasObserved to false and rating to null
-        - Focus on patterns rather than isolated instances
-
-        Respond ONLY with the JSON object, no additional text.
-        """
-
-        return prompt
-    }
+    // Prompts are built server-side from shared/prompts, the single source of truth.
 }
 
 // MARK: - Request/Response Models
