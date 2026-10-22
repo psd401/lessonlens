@@ -14,7 +14,7 @@ Before involving your IT team, review these prerequisites and decisions.
 |-------------|---------|------------|
 | **Google Workspace** | District must use Google Workspace for Education | Domain: `____________` |
 | **Google Cloud account** | A GCP billing account (free tier covers most usage) | Project ID: `____________` |
-| **Gemini API key** | From Google AI Studio (ai.google.dev) | Key: `____________` |
+| **Vertex AI** | Gemini runs on Vertex AI in your GCP project and is billed to it; no API key | Location: `____________` |
 | **Apple Developer account** | For signing and distributing the macOS app ($99/yr) | Team ID: `____________` |
 | **MDM solution** | Mosyle, Jamf, Kandji, or similar for app distribution | MDM: `____________` |
 | **macOS devices** | Teacher laptops running macOS 14 (Sonoma) or later | |
@@ -25,7 +25,7 @@ Before involving your IT team, review these prerequisites and decisions.
 | Service | Estimated Monthly Cost | Notes |
 |---------|----------------------|-------|
 | Google Cloud Run | $0–15/mo | Scales to zero when idle; free tier covers light usage |
-| Gemini API | $0.01–0.27/analysis | Text analysis ~$0.01; video analysis ~$0.27 per lesson |
+| Gemini on Vertex AI | $0.01–0.27/analysis | Text analysis ~$0.01; video analysis ~$0.27 per lesson |
 | Apple Developer Program | $99/yr | Required for signing and notarization |
 | **Total** | **~$5–20/mo + $99/yr** | For a typical district of 50–200 teachers |
 
@@ -37,18 +37,21 @@ Before your IT team begins, decide:
    - `us-west1` (Oregon), `us-central1` (Iowa), `us-east1` (South Carolina), etc.
    - Your choice: `____________`
 
-2. **Bundle ID prefix**: A reverse-domain identifier for your app (e.g., `com.mydistrict.lessonlens`).
+2. **Vertex AI location**: Where Gemini processes lessons. `us` keeps processing in the United States; `global` can route anywhere.
    - Your choice: `____________`
 
-3. **Branding**: Do you want to customize the app's login screen with your district name? (Optional — can be done later.)
+3. **Bundle ID prefix**: A reverse-domain identifier for your app (e.g., `com.mydistrict.lessonlens`).
+   - Your choice: `____________`
 
-4. **MDM distribution**: How will you push the app to teacher laptops?
+4. **Branding**: Do you want to customize the app's login screen with your district name? (Optional — can be done later.)
+
+5. **MDM distribution**: How will you push the app to teacher laptops?
 
 ### Timeline Expectations
 
 | Phase | What happens |
 |-------|-------------|
-| Phase 1: Google Cloud Setup | Create project, enable APIs, get Gemini key |
+| Phase 1: Google Cloud Setup | Create project, enable APIs, create the runtime service account and video bucket |
 | Phase 2: Backend Deployment | Run setup script or manual deployment |
 | Phase 3: App Configuration | Run configure script, set signing identity |
 | Phase 4: Build & Distribute | Archive in Xcode, notarize, push via MDM |
@@ -75,6 +78,8 @@ In the GCP Console, navigate to **APIs & Services → Enable APIs** and enable:
 - Secret Manager API
 - Artifact Registry API
 - Cloud Build API
+- Vertex AI API
+- Cloud Storage API
 
 Or use the CLI:
 ```bash
@@ -83,15 +88,44 @@ gcloud services enable \
   secretmanager.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
+  aiplatform.googleapis.com \
+  storage.googleapis.com \
   --project YOUR_PROJECT_ID
 ```
 
-#### 1.3 Get a Gemini API Key
+#### 1.3 Create the Runtime Service Account and Video Bucket
 
-1. Go to [ai.google.dev](https://ai.google.dev)
-2. Click **Get API key** → **Create API key**
-3. Select your GCP project
-4. Copy and save the key securely — you'll need it for backend deployment
+The backend calls Gemini on Vertex AI as its own service account, so there is no API key to create or rotate. Videos are uploaded to a temporary bucket, analyzed, and deleted.
+
+> If you'll use the setup script (Phase 2, Option A), skip this step — the script does it for you.
+
+```bash
+PROJECT=YOUR_PROJECT_ID
+REGION=YOUR_REGION
+SA=lessonlens-runtime@$PROJECT.iam.gserviceaccount.com
+BUCKET=$PROJECT-video-tmp
+
+# Service account the Cloud Run service runs as
+gcloud iam service-accounts create lessonlens-runtime --project $PROJECT
+
+# Call Gemini on Vertex AI
+gcloud projects add-iam-policy-binding $PROJECT \
+  --member="serviceAccount:$SA" --role="roles/aiplatform.user"
+
+# Temporary video bucket: no public access, no soft delete, objects deleted after 1 day
+gcloud storage buckets create gs://$BUCKET --project $PROJECT --location $REGION \
+  --uniform-bucket-level-access --public-access-prevention --soft-delete-duration=0
+cat > /tmp/lifecycle.json <<'JSON'
+{"rule": [{"action": {"type": "Delete"}, "condition": {"age": 1}}]}
+JSON
+gcloud storage buckets update gs://$BUCKET --lifecycle-file=/tmp/lifecycle.json
+
+# Only the service account can read and write videos
+gcloud storage buckets add-iam-policy-binding gs://$BUCKET \
+  --member="serviceAccount:$SA" --role="roles/storage.objectAdmin"
+```
+
+The backend deletes each video as soon as its analysis finishes; the 1-day rule is only a backstop.
 
 #### 1.4 Create Google OAuth Credentials
 
@@ -116,11 +150,12 @@ bash scripts/setup.sh
 
 The script will:
 - Verify prerequisites (gcloud CLI, authentication, bun)
-- Prompt for your project ID, region, email domain, and Gemini API key
+- Prompt for your project ID, region, email domain, and Vertex AI location
 - Enable required GCP APIs
+- Create the runtime service account and temporary video bucket (step 1.3)
 - Generate a secure JWT secret
 - Store secrets in Google Secret Manager
-- Deploy the backend to Cloud Run
+- Deploy the backend to Cloud Run as that service account
 - Validate the deployment with a health check
 
 Run with `--dry-run` to preview all steps without executing them.
@@ -141,8 +176,13 @@ JWT_SECRET=$(openssl rand -base64 48)
 
 # Store secrets in Secret Manager
 echo -n "$JWT_SECRET" | gcloud secrets create jwt-secret --data-file=-
-echo -n "YOUR_GEMINI_API_KEY" | gcloud secrets create gemini-api-key --data-file=-
 echo -n "YOUR_GOOGLE_CLIENT_ID" | gcloud secrets create google-client-id --data-file=-
+
+# Let the runtime service account read them
+for s in jwt-secret google-client-id; do
+  gcloud secrets add-iam-policy-binding $s \
+    --member="serviceAccount:$SA" --role="roles/secretmanager.secretAccessor"
+done
 ```
 
 **Step 3: Deploy to Cloud Run**
@@ -151,8 +191,9 @@ gcloud run deploy lessonlens-api \
   --source ./CloudRunBackend \
   --region YOUR_REGION \
   --allow-unauthenticated \
-  --set-secrets="JWT_SECRET=jwt-secret:latest,GEMINI_API_KEY=gemini-api-key:latest,GOOGLE_CLIENT_ID=google-client-id:latest" \
-  --set-env-vars="ALLOWED_DOMAIN=yourdomain.org,RATE_LIMIT_PER_HOUR=20,GEMINI_TEXT_MODEL=gemini-3.8-flash,GEMINI_VIDEO_MODEL=gemini-3.8-flash,VIDEO_RATE_LIMIT_PER_HOUR=5,CHAT_RATE_LIMIT_PER_HOUR=50"
+  --service-account=$SA \
+  --set-secrets="JWT_SECRET=jwt-secret:latest,GOOGLE_CLIENT_ID=google-client-id:latest" \
+  --set-env-vars="ALLOWED_DOMAIN=yourdomain.org,VERTEX_LOCATION=us,VIDEO_BUCKET=$BUCKET,RATE_LIMIT_PER_HOUR=20,GEMINI_TEXT_MODEL=gemini-3.8-flash,GEMINI_VIDEO_MODEL=gemini-3.8-flash,VIDEO_RATE_LIMIT_PER_HOUR=5,CHAT_RATE_LIMIT_PER_HOUR=50"
 ```
 
 **Step 4: Verify deployment**
@@ -285,15 +326,17 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | "JWT_SECRET must be at least 32 characters" | Re-create the secret: the value is too short or empty |
 | 401 on login | Verify GOOGLE_CLIENT_ID matches your OAuth credential and the domain in ALLOWED_DOMAIN matches your Google Workspace domain |
 | Rate limit errors | Increase RATE_LIMIT_PER_HOUR env var on Cloud Run |
-| Gemini API errors | Verify your API key is valid and has the Generative Language API enabled |
+| Analysis fails with a Gemini 403 (`PERMISSION_DENIED`) | Enable the Vertex AI API and check the service runs as the service account with `roles/aiplatform.user` |
+| Analysis fails with a Gemini 404 (`NOT_FOUND`) | The model isn't offered in `VERTEX_LOCATION`; check `GEMINI_TEXT_MODEL` / `GEMINI_VIDEO_MODEL` against that location |
+| Video upload returns 503 | `VIDEO_BUCKET` isn't set on the Cloud Run service |
 
 ### App Issues
 
 | Problem | Solution |
 |---------|----------|
-| "Domain not allowed" on login | Check `allowedDomain` in ServiceContainer.swift matches your Google Workspace domain |
+| "Domain not allowed" on login | Check `LL_ALLOWED_DOMAIN` in `LessonLens/Config/Local.xcconfig` matches your Google Workspace domain (and `ALLOWED_DOMAIN` on Cloud Run) |
 | Google Sign-In fails | Verify the OAuth Client ID bundle ID matches your app's bundle ID exactly |
-| Can't connect to backend | Check the `backendURL` in ServiceContainer.swift — try `curl`-ing it from Terminal |
+| Can't connect to backend | Check `LL_BACKEND_HOST` in `LessonLens/Config/Local.xcconfig` (host only, no `https://`) — try `curl`-ing it from Terminal |
 | Recordings not saving | Check disk permissions for `~/Library/Application Support/your.bundle.id/` |
 | Code signing errors in Xcode | Ensure your Apple Developer team is selected and provisioning profiles are current |
 
@@ -316,20 +359,21 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 │   (macOS, Swift)    │                │   (Bun + Hono)       │
 │                     │                │                      │
 │  - Records lessons  │                │  - Google OAuth auth │
-│  - Sends audio/video│                │  - Gemini API proxy  │
-│  - Displays analysis│                │  - Rate limiting     │
+│  - Sends transcript │                │  - Vertex AI proxy   │
+│    or 720p video    │                │  - Rate limiting     │
+│  - Displays analysis│                │                      │
 └─────────────────────┘                └──────────┬───────────┘
                                                   │
                                                   ▼
                                        ┌──────────────────────┐
-                                       │   Google Gemini API   │
-                                       │   (AI Analysis)       │
+                                       │  Gemini on Vertex AI │
+                                       │  + temp video bucket │
                                        └──────────────────────┘
 ```
 
 **Key design points:**
-- The backend acts as an authenticated proxy to Gemini — it never stores lesson content
-- All audio/video processing happens on-device or via Gemini's API
+- The backend acts as an authenticated proxy to Gemini on Vertex AI, in the district's own GCP project — it never stores lesson content
+- Transcription happens on-device; only the transcript, or a compressed video copy that is deleted after analysis, leaves the Mac
 - No student data is collected or transmitted — only teacher instruction is analyzed
 - Rate limiting prevents runaway API costs
 - Each district runs its own isolated backend instance
@@ -341,9 +385,7 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `JWT_SECRET` | Yes | — | Secret for signing auth tokens (min 32 chars) |
-| `GEMINI_API_KEY` | Yes | — | Google Gemini API key (video always uses it; text and chat only when `GEMINI_BACKEND=apikey`) |
-| `GEMINI_BACKEND` | No | `apikey` | Text analysis and chat backend: `apikey` or `vertex` (Vertex AI in the Cloud Run project, as the runtime service account) |
-| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region); used for text and chat when `GEMINI_BACKEND=vertex`, and always for Cloud Storage video |
+| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region). All Gemini calls go to Vertex AI in the Cloud Run project, as the runtime service account, which needs `roles/aiplatform.user`. `us` keeps processing in the United States. `scripts/setup.sh` defaults to `us`; the backend falls back to `global` only when the variable is unset |
 | `VIDEO_BUCKET` | No | — | Temporary Cloud Storage bucket for video uploads (uniform access, public access prevention, 1-day delete lifecycle rule, `roles/storage.objectAdmin` for the runtime service account only) |
 | `GOOGLE_CLIENT_ID` | Yes | — | OAuth client ID for Google Sign-In |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Google Workspace domain to restrict login |

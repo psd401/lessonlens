@@ -7,15 +7,26 @@ import './test-env';
 import * as jose from 'jose';
 import { LIMITS, MAX_BODY_BYTES } from '../src/input-limits';
 
-const { default: server } = await import('../src/index');
+const { default: server, videoStorage } = await import('../src/index');
 
 const realFetch = globalThis.fetch;
+const METADATA = 'http://metadata.google.internal/';
+// Vertex calls first ask the metadata server for the project and a token
+function metadataReply(url: string): Response | null {
+  if (!url.startsWith(METADATA)) return null;
+  return url.endsWith('/project/project-id')
+    ? new Response('test-project')
+    : Response.json({ access_token: 'test-token', expires_in: 3600 });
+}
+
 let geminiCalls = 0;
 let userCount = 0;
 
 beforeEach(() => {
   geminiCalls = 0;
-  globalThis.fetch = (async () => {
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const metadata = metadataReply(String(input));
+    if (metadata) return metadata;
     geminiCalls++;
     const text = JSON.stringify({ overallSummary: 'ok', strengths: [], growthAreas: [], actionableNextSteps: [], techniqueEvaluations: [] });
     return Response.json({ candidates: [{ content: { parts: [{ text }] }, finishReason: 'STOP' }] });
@@ -26,11 +37,11 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
-async function post(path: string, body: unknown): Promise<Response> {
-  // A fresh user per request, so the shared rate limiter never interferes
+// A fresh user per request by default, so the shared rate limiter never interferes
+async function post(path: string, body: unknown, subject = `limits-test-${++userCount}`): Promise<Response> {
   const token = await new jose.SignJWT({ token_type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
-    .setSubject(`limits-test-${++userCount}`)
+    .setSubject(subject)
     .setIssuedAt()
     .setExpirationTime('1h')
     .sign(new TextEncoder().encode(process.env.JWT_SECRET));
@@ -107,7 +118,9 @@ describe('/analyze field caps', () => {
 
 describe('/analyze/video field caps', () => {
   test('an oversized technique is rejected', async () => {
-    const res = await post('/analyze/video', { geminiFileName: 'files/abc123', techniques: [technique({ name: s(LIMITS.techniqueName + 1) })] });
+    const subject = 'limits-video-user';
+    const gcsObject = videoStorage!.newObjectName(subject, 'video/mp4');
+    const res = await post('/analyze/video', { gcsObject, techniques: [technique({ name: s(LIMITS.techniqueName + 1) })] }, subject);
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ field: 'techniques[0].name' });
     expect(geminiCalls).toBe(0);

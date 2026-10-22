@@ -5,7 +5,7 @@
  * metadata server is simulated with the response shapes Cloud Run returns.
  */
 import { describe, expect, test } from 'bun:test';
-import { createGeminiClient, parseGeminiBackend, vertexHost } from '../src/gemini-client';
+import { createGeminiClient, vertexHost } from '../src/gemini-client';
 
 interface Call {
   url: string;
@@ -32,26 +32,10 @@ function recordingFetch(tokenExpiresIn = 3600) {
 
 const body = { contents: [{ role: 'user', parts: [{ text: 'hello' }] }] };
 
-describe('apikey backend', () => {
-  test('posts to the Gemini Developer API with the key and never calls the metadata server', async () => {
-    const { fetchFn, calls } = recordingFetch();
-    const client = createGeminiClient({ backend: 'apikey', apiKey: 'k123', vertexLocation: 'global', fetch: fetchFn });
-
-    await client.generateContent('gemini-3.8-flash', body);
-
-    expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=k123'
-    );
-    expect(calls[0].init?.method).toBe('POST');
-    expect(JSON.parse(String(calls[0].init?.body))).toEqual(body);
-  });
-});
-
 describe('vertex backend', () => {
   test('posts to the Vertex global endpoint with a bearer token and the metadata project', async () => {
     const { fetchFn, calls } = recordingFetch();
-    const client = createGeminiClient({ backend: 'vertex', apiKey: '', vertexLocation: 'global', fetch: fetchFn });
+    const client = createGeminiClient({ vertexLocation: 'global', fetch: fetchFn });
 
     await client.generateContent('gemini-3.8-flash', body);
 
@@ -72,7 +56,7 @@ describe('vertex backend', () => {
 
   test('reuses the token and project across requests', async () => {
     const { fetchFn, calls } = recordingFetch();
-    const client = createGeminiClient({ backend: 'vertex', apiKey: '', vertexLocation: 'global', fetch: fetchFn });
+    const client = createGeminiClient({ vertexLocation: 'global', fetch: fetchFn });
 
     await client.generateContent('m', body);
     await client.generateContent('m', body);
@@ -84,7 +68,7 @@ describe('vertex backend', () => {
   test('refreshes a token that is about to expire', async () => {
     // A 30-second token is inside the 60-second refresh margin
     const { fetchFn, calls } = recordingFetch(30);
-    const client = createGeminiClient({ backend: 'vertex', apiKey: '', vertexLocation: 'global', fetch: fetchFn });
+    const client = createGeminiClient({ vertexLocation: 'global', fetch: fetchFn });
 
     await client.generateContent('m', body);
     await client.generateContent('m', body);
@@ -99,7 +83,7 @@ describe('vertex backend', () => {
       calls.push(String(input));
       return new Response('nope', { status: 500 });
     }) as typeof fetch;
-    const client = createGeminiClient({ backend: 'vertex', apiKey: '', vertexLocation: 'global', fetch: failing });
+    const client = createGeminiClient({ vertexLocation: 'global', fetch: failing });
 
     await expect(client.generateContent('m', body)).rejects.toThrow('Metadata server returned 500');
     expect(calls.some((u) => u.includes('aiplatform'))).toBe(false);
@@ -107,13 +91,6 @@ describe('vertex backend', () => {
 });
 
 describe('config helpers', () => {
-  test('GEMINI_BACKEND defaults to apikey and rejects unknown values', () => {
-    expect(parseGeminiBackend(undefined)).toBe('apikey');
-    expect(parseGeminiBackend('')).toBe('apikey');
-    expect(parseGeminiBackend('vertex')).toBe('vertex');
-    expect(() => parseGeminiBackend('Vertex')).toThrow();
-  });
-
   test('regional and multi-region locations use their Vertex hosts', () => {
     expect(vertexHost('global')).toBe('aiplatform.googleapis.com');
     expect(vertexHost('us-west1')).toBe('us-west1-aiplatform.googleapis.com');
