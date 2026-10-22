@@ -68,7 +68,7 @@ stateDiagram-v2
     complete --> [*]
 ```
 
-Notes: `recorded`/`transcribed` are the safe resting states; `failed` exists in `RecordingStatus` but the detail-view error paths revert to the last good state instead. On the next launch `Recording.resetInterruptedProcessing` applies the same rule to anything left in `uploading/transcribing/analyzing` (see [app overview](overview.md)). Completed sessions offer **Re-analyze**, which makes a new `Recording` copy titled `"<title> (Re-analysis <date>)"` (sharing the media file and copying `segmentsData`/`pausesData`) so the original feedback, reflection and chats are kept; plain re-analysis of a `transcribed` recording, and any new analysis, clears `reflection` and `chatSessions` on the target recording.
+Notes: `recorded`/`transcribed` are the safe resting states; `failed` exists in `RecordingStatus` but the detail-view error paths revert to the last good state instead. On the next launch `Recording.resetInterruptedProcessing` applies the same rule to anything left in `uploading/transcribing/analyzing`, and `Recording.finalizeInterruptedRecordings` settles a session still at `recording` (see [app overview](overview.md)). A recording whose audio file is missing at that point is deleted; the file itself is never removed by launch recovery. Completed sessions offer **Re-analyze**, which makes a new `Recording` copy titled `"<title> (Re-analysis <date>)"` (sharing the media file and copying `segmentsData`/`pausesData`) so the original feedback, reflection and chats are kept; plain re-analysis of a `transcribed` recording, and any new analysis, clears `reflection` and `chatSessions` on the target recording.
 
 ## Transcription (on-device)
 
