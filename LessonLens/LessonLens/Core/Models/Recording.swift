@@ -207,7 +207,7 @@ extension Recording {
         var removed: [String] = []
         for name in Set(fileNames.compactMap { $0 }) {
             // Names are bare file names; anything else could reach outside the folder
-            guard !name.isEmpty, !name.contains("/"), name != "..", !inUse.contains(name) else { continue }
+            guard !name.isEmpty, !name.contains("/"), name != ".", name != "..", !inUse.contains(name) else { continue }
             let url = directory.appendingPathComponent(name)
             if (try? FileManager.default.removeItem(at: url)) != nil {
                 removed.append(name)

@@ -121,12 +121,13 @@ final class MediaCleanupTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: outside) }
 
         let removed = Recording.removeUnreferencedMedia(
-            ["already-gone.m4a", "", "../\(outside.lastPathComponent)", nil],
+            ["already-gone.m4a", "", ".", "..", "../\(outside.lastPathComponent)", nil],
             in: context,
             directory: directory
         )
 
         XCTAssertEqual(removed, [])
         XCTAssertTrue(FileManager.default.fileExists(atPath: outside.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path), "\".\" must not remove the folder itself")
     }
 }
