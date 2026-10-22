@@ -3,6 +3,7 @@ import { verifySession } from './auth';
 import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { VIDEO_EXTENSIONS } from '../video-storage';
 import { getOwnedGeminiFile } from '../gemini-files';
+import { checkTechniques } from '../input-limits';
 import { env, vertexGemini, videoStorage, checkRateLimit, getRateLimitStatus } from '../index';
 import { buildVideoAnalysisPrompt, type TechniqueDefinition, type GeminiGenerateResponse } from '../../../shared/prompts';
 import type { Context } from 'hono';
@@ -118,6 +119,11 @@ analyzeVideoRoutes.post('/', async (c) => {
 
   if (techniques.length > MAX_TECHNIQUES) {
     return c.json({ error: 'Too many techniques', maxTechniques: MAX_TECHNIQUES }, 400);
+  }
+
+  const limitError = checkTechniques(techniques);
+  if (limitError) {
+    return c.json(limitError, 400);
   }
 
   if (gcsObject) {

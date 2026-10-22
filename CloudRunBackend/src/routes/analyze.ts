@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { describeGeminiError, logUnusableGeminiResponse, logUnparseableGeminiText, readGeminiJson } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
+import { checkTechniques, checkPauseText } from '../input-limits';
 import { buildAnalysisPrompt, type TechniqueDefinition, type PauseData, type GeminiGenerateResponse } from '../../../shared/prompts';
 
 export const analyzeRoutes = new Hono();
@@ -69,6 +70,11 @@ analyzeRoutes.post('/', async (c) => {
 
   if (pauseData?.pauses && pauseData.pauses.length > MAX_PAUSES) {
     return c.json({ error: 'Too many pauses', maxPauses: MAX_PAUSES }, 400);
+  }
+
+  const limitError = checkTechniques(techniques) ?? checkPauseText(pauseData);
+  if (limitError) {
+    return c.json(limitError, 400);
   }
 
   // Build the analysis prompt

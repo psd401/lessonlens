@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { verifySession } from './auth';
 import { describeGeminiError, logUnusableGeminiResponse, readGeminiJson } from '../gemini-error';
 import { env, gemini, checkRateLimit, getRateLimitStatus } from '../index';
+import { checkChatFields } from '../input-limits';
 import { buildChatPrompt, type ChatMessage, type GeminiGenerateResponse } from '../../../shared/prompts';
 
 export const chatRoutes = new Hono();
@@ -71,6 +72,11 @@ chatRoutes.post('/', async (c) => {
 
   if (messages.length > MAX_MESSAGES) {
     return c.json({ error: 'Too many messages', maxMessages: MAX_MESSAGES }, 400);
+  }
+
+  const limitError = checkChatFields({ analysis_summary, technique_evaluations_summary, reflection_summary, messages, technique_names });
+  if (limitError) {
+    return c.json(limitError, 400);
   }
 
   // Build chat prompt
