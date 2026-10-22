@@ -18,7 +18,7 @@ openwiki:
     - LessonLens/LessonLensTests/PauseBackfillTests.swift
   invariants:
     - Deleting a Recording cascades to its transcript, analysis (and technique evaluations), reflection and chat sessions (and messages).
-    - If the ModelContainer cannot open, the default SwiftData store files are deleted and recreated.
+    - If the ModelContainer cannot open, the store files are renamed to a timestamped LessonLens-backup file and an empty store is created; nothing is deleted.
     - At launch no recording may remain in uploading/transcribing/analyzing.
   validation_commands:
     - xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
@@ -32,7 +32,7 @@ A native macOS 14+ app (Apple Silicon, for WhisperKit) written in SwiftUI with S
 
 | Area | Role | Deeper page |
 |---|---|---|
-| `App/` | `LessonLensApp` (`@main`), `AppState`, `ServiceContainer`/`AppConfiguration` | this page |
+| `App/` | `LessonLensApp` (`@main`), `AppState`, `ServiceContainer`/`AppConfiguration`, `PersistentStore` (store location and recovery, in [persistent store](persistent-store.md)) | this page |
 | `Core/Models/` | SwiftData `@Model` types + `TeachingFramework` enum | this page |
 | `Core/Views/ContentView.swift` | auth gate, `MainView` split view, sidebar, welcome | this page |
 | `Core/Theme/`, `Core/Services/KeychainService.swift` | PSD branding (`PSDColors`, `PSDTheme`, `PSDFonts`), Keychain wrapper | [auth and config](auth-and-config.md) |
@@ -49,7 +49,7 @@ A native macOS 14+ app (Apple Silicon, for WhisperKit) written in SwiftUI with S
 ```mermaid
 flowchart TD
     A[LessonLensApp.init] --> B[Build ModelContainer for 9 model types]
-    B -->|open fails| C[Delete default.store, -shm, -wal and retry]
+    B -->|open fails| C[Set store aside as a backup, reopen empty]
     A --> D[TranscriptionService.backfillMissingPauses]
     A --> E[Recording.resetInterruptedProcessing]
     A --> F[ContentView]
@@ -89,10 +89,11 @@ erDiagram
 
 ## Hazards
 
-- **Schema change = possible data loss.** `LessonLensApp` responds to any `ModelContainer` failure by deleting `default.store*` in Application Support and recreating, so an incompatible `@Model` edit silently wipes teachers' sessions on their machines. Prefer additive properties with defaults (as `mediaType`, `ratingsIncluded`, `frameworkId` do) and discuss before changing schema.
-- Release builds are intentionally **not sandboxed**, so data lives at `~/Library/Application Support/default.store` and the `com.peninsula.lessonlens/Recordings` folder (see [deployment and release](../operations/deployment-and-release.md)).
+- **Schema change has a visible cost.** An incompatible `@Model` edit makes the store fail to open. The store is then renamed to a `LessonLens-backup-*.store` file and the teacher starts with an empty library and a notice; the sessions are kept, but they are no longer shown. Prefer additive properties with defaults (as `mediaType`, `ratingsIncluded`, `frameworkId` do) and discuss before changing schema. The recovery rules and tests are in [persistent store](persistent-store.md).
+- Release builds are intentionally **not sandboxed**. The store lives at `~/Library/Application Support/com.peninsula.lessonlens/LessonLens.store` (an older `default.store` is moved in on first launch), alongside the `com.peninsula.lessonlens/Recordings` folder (see [deployment and release](../operations/deployment-and-release.md)).
 - Re-analysis creates a *copy* `Recording` that shares the original's media file; `deleteRecording` only removes the media when no other recording references the same `audioFilePath` (see [lesson workflow](lesson-workflow.md)).
 
 ## Where to start
 
-UI navigation: `ContentView.swift` (`MainView`, `SidebarView`, `WelcomeView`). Persistence: `Core/Models/*`. Cross-cutting services: `ServiceContainer.swift`. Run `xcodebuild ... test` (macOS only) for model or lifecycle changes.
+UI navigation: `ContentView.swift` (`MainView`, `SidebarView`, `WelcomeView`). Persistence: `Core/Models/*`, with store location and recovery in [persistent store](persistent-store.md). Cross-cutting services: `ServiceContainer.swift`. Run `xcodebuild ... test` (macOS only) for model or lifecycle changes.
+cutting services: `ServiceContainer.swift`. Run `xcodebuild ... test` (macOS only) for model or lifecycle changes.

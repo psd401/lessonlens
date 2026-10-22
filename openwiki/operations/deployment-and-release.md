@@ -53,7 +53,7 @@ Checklist: ensure `Local.xcconfig` exists on the build Mac; bump `MARKETING_VERS
 
 The repo scripts are the generic path: `sign-and-package.sh` (sign -> notarize -> staple -> package -> notarize pkg -> verify; takes `APPLE_TEAM_ID`/`APPLE_DEVELOPER_NAME` from env or prompts), `package.sh` (signed `.pkg`; `PKG_BUNDLE_ID` defaults to a placeholder), `notarize-pkg.sh`. Both packaging scripts run `check-app-config.sh`, which rejects empty `LL*` values or the placeholder bundle id.
 
-**Sandbox decision:** Release uses `Resources/LessonLens-Release.entitlements` (hardened runtime, only `com.apple.security.device.audio-input`; matches `LessonLens/expected-entitlements.txt`) and is deliberately **not sandboxed** so existing teacher data under `~/Library/Application Support` stays visible; Debug uses the sandboxed `LessonLens.entitlements`. Moving to the sandbox needs a container-migration plan tested on a copy of real data (`RELEASING.md`). SwiftData store handling also matters here ([app overview](../app/overview.md)).
+**Sandbox decision:** Release uses `Resources/LessonLens-Release.entitlements` (hardened runtime, only `com.apple.security.device.audio-input`; matches `LessonLens/expected-entitlements.txt`) and is deliberately **not sandboxed** so existing teacher data under `~/Library/Application Support` stays visible; Debug uses the sandboxed `LessonLens.entitlements`. Moving to the sandbox needs a container-migration plan tested on a copy of real data (`RELEASING.md`). SwiftData store location and recovery also matter here ([persistent store](../app/persistent-store.md)).
 
 ## Public docs (`docs/`, GitHub Pages)
 
