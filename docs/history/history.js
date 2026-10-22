@@ -3,8 +3,8 @@
 // Sources: git log and GitHub Releases. Keep claims tied to that record.
 // Audience is non-developers: avoid dev jargon such as "commits".
 window.LESSONLENS_HISTORY = {
-  updated: "2026-10-21",
-  currentVersions: "App v1.2.0 · Server v1.4.4",
+  updated: "2026-10-22",
+  currentVersions: "App v1.2.0 · Server v1.4.5",
   stats: [
     { value: "Jan 2026", label: "project start" },
     { value: "7", label: "teaching frameworks" },
@@ -114,6 +114,12 @@ window.LESSONLENS_HISTORY = {
           tags: ["v1.2.0", "video", "coaching chat"],
           milestone: true,
           current: true
+        },
+        {
+          date: "2026-10-22",
+          title: "Safer handling of lesson text",
+          body: "The server now limits how much text a single request can send for analysis, keeps lesson text out of its own error logs, and handles unusual characters in a transcript exactly as written. The older video path that relied on a separate access key is retired, so every analysis now runs through the district's own Google Cloud project. Teachers get these changes without updating the app.",
+          tags: ["privacy", "security"]
         }
       ]
     }

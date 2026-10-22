@@ -15,3 +15,6 @@ LICENSE
 explainer-video/
 press-kit-draft/
 review/
+
+# Installed by the image build itself (Dockerfile runs bun install)
+node_modules/
