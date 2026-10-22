@@ -112,6 +112,9 @@ export function checkChatFields(fields: {
     checkStringList(fields.technique_names, 'technique_names', LIMITS.techniqueNames, LIMITS.techniqueNameEntry);
   if (fieldErr) return fieldErr;
 
+  if (!Array.isArray(fields.messages)) {
+    return { error: 'Field must be a list', field: 'messages' };
+  }
   for (let i = 0; i < fields.messages.length; i++) {
     const err = checkString(fields.messages[i]?.content, `messages[${i}].content`, LIMITS.chatMessage);
     if (err) return err;

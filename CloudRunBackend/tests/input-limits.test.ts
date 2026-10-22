@@ -109,6 +109,7 @@ describe('/analyze/video field caps', () => {
   test('an oversized technique is rejected', async () => {
     const res = await post('/analyze/video', { geminiFileName: 'files/abc123', techniques: [technique({ name: s(LIMITS.techniqueName + 1) })] });
     expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ field: 'techniques[0].name' });
     expect(geminiCalls).toBe(0);
   });
 });
@@ -119,6 +120,12 @@ describe('/chat field caps', () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ field: 'messages[0].content' });
     expect(geminiCalls).toBe(0);
+  });
+
+  test('messages that are not a list are rejected', async () => {
+    const res = await post('/chat', chatBody({ messages: { role: 'user', content: 'hi' } }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ field: 'messages' });
   });
 
   test('an oversized summary is rejected', async () => {
