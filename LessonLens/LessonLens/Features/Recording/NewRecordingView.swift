@@ -112,13 +112,13 @@ struct NewRecordingView: View {
         }
         .onDisappear {
             if isRecording {
-                services.recordingService.cancelRecording()
+                discardRecording()
             }
         }
         .alert("Cancel Recording?", isPresented: $showingConfirmCancel) {
             Button("Keep Recording", role: .cancel) { }
             Button("Discard", role: .destructive) {
-                services.recordingService.cancelRecording()
+                discardRecording()
                 isPresented = false
             }
         } message: {
@@ -129,6 +129,14 @@ struct NewRecordingView: View {
         }
         .onReceive(services.recordingService.$audioLevel) { level in
             audioLevel = level
+        }
+        .onReceive(services.recordingService.$isRecording) { serviceIsRecording in
+            // The service stopped on its own (the 90-minute limit): save the
+            // session as the Stop button would. Stop and Discard clear
+            // isRecording first, so they don't land here.
+            if !serviceIsRecording && isRecording {
+                stopRecording()
+            }
         }
     }
 
@@ -172,9 +180,9 @@ struct NewRecordingView: View {
     }
 
     private func stopRecording() {
+        isRecording = false
         let duration = services.recordingService.stopRecording()
         recordingDuration = duration
-        isRecording = false
 
         // Update recording
         if let recording = currentRecording {
@@ -186,6 +194,18 @@ struct NewRecordingView: View {
             } catch {
                 errorMessage = "Failed to save recording: \(error.localizedDescription)"
             }
+        }
+    }
+
+    /// Stops the recorder, deletes its audio, and deletes the session saved
+    /// when recording started, so discarding leaves nothing behind
+    private func discardRecording() {
+        isRecording = false
+        services.recordingService.cancelRecording()
+        if let recording = currentRecording {
+            modelContext.delete(recording)
+            try? modelContext.save()
+            currentRecording = nil
         }
     }
 
