@@ -172,3 +172,47 @@ extension Recording {
         return reset
     }
 }
+
+// MARK: - Media File Cleanup
+
+extension Recording {
+    /// The Recordings folder that audioFilePath and videoFilePath are relative to
+    static var recordingsDirectory: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("com.peninsula.lessonlens")
+            .appendingPathComponent("Recordings")
+    }
+
+    /// Deletes each named media file that no recording still uses as its audio
+    /// or video file. Call after the recording that used it was deleted or
+    /// pointed at a new file, and saved. Re-analysis copies share their
+    /// original's files, so a shared file stays until its last user is gone.
+    /// If the recordings can't be fetched, nothing is deleted. Returns the
+    /// names of the files removed.
+    @discardableResult
+    static func removeUnreferencedMedia(
+        _ fileNames: [String?],
+        in context: ModelContext,
+        directory: URL? = Recording.recordingsDirectory
+    ) -> [String] {
+        guard let directory,
+              let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return [] }
+
+        var inUse = Set<String>()
+        for recording in recordings {
+            inUse.insert(recording.audioFilePath)
+            if let video = recording.videoFilePath { inUse.insert(video) }
+        }
+
+        var removed: [String] = []
+        for name in Set(fileNames.compactMap { $0 }) {
+            // Names are bare file names; anything else could reach outside the folder
+            guard !name.isEmpty, !name.contains("/"), name != "..", !inUse.contains(name) else { continue }
+            let url = directory.appendingPathComponent(name)
+            if (try? FileManager.default.removeItem(at: url)) != nil {
+                removed.append(name)
+            }
+        }
+        return removed
+    }
+}
