@@ -186,13 +186,9 @@ describe('POST /analyze/video with gcsObject', () => {
     expect(calls.some(isVertex)).toBe(false);
   });
 
-  test('sending both gcsObject and geminiFileName is rejected', async () => {
-    const objectName = await initiate('user-123');
-    const res = await post('/analyze/video', 'user-123', {
-      gcsObject: objectName,
-      geminiFileName: 'files/abc',
-      techniques,
-    });
+  test('an older app sending geminiFileName instead of gcsObject is rejected', async () => {
+    const res = await post('/analyze/video', 'user-123', { geminiFileName: 'files/abc', techniques });
     expect(res.status).toBe(400);
+    expect(calls.some(isVertex)).toBe(false);
   });
 });

@@ -82,7 +82,7 @@ analyzeRoutes.post('/', async (c) => {
 
   const model = env.GEMINI_TEXT_MODEL;
 
-  // Call Gemini (API key or Vertex AI, per GEMINI_BACKEND)
+  // Call Gemini on Vertex AI
   try {
     const response = await gemini.generateContent(model, {
       contents: [

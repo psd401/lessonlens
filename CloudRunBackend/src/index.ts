@@ -6,7 +6,7 @@ import { analyzeRoutes } from './routes/analyze';
 import { analyzeVideoRoutes } from './routes/analyze-video';
 import { uploadRoutes } from './routes/upload';
 import { chatRoutes } from './routes/chat';
-import { createGeminiClient, parseGeminiBackend, type GeminiBackend } from './gemini-client';
+import { createGeminiClient } from './gemini-client';
 import { createMetadataAuth } from './gcp-auth';
 import { createVideoStorage } from './video-storage';
 import { MAX_BODY_BYTES } from './input-limits';
@@ -17,8 +17,6 @@ export interface Env {
   JWT_SECRET: string;
   ALLOWED_DOMAIN: string;
   RATE_LIMIT_PER_HOUR: number;
-  GEMINI_BACKEND: GeminiBackend;
-  GEMINI_API_KEY: string;
   VERTEX_LOCATION: string;
   GEMINI_TEXT_MODEL: string;
   GEMINI_VIDEO_MODEL: string;
@@ -34,8 +32,6 @@ export const env: Env = {
   JWT_SECRET: process.env.JWT_SECRET || '',
   ALLOWED_DOMAIN: process.env.ALLOWED_DOMAIN || 'psd401.net',
   RATE_LIMIT_PER_HOUR: parseInt(process.env.RATE_LIMIT_PER_HOUR || '20', 10),
-  GEMINI_BACKEND: parseGeminiBackend(process.env.GEMINI_BACKEND),
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
   VERTEX_LOCATION: process.env.VERTEX_LOCATION || 'global',
   GEMINI_TEXT_MODEL: process.env.GEMINI_TEXT_MODEL || 'gemini-3.8-flash',
   GEMINI_VIDEO_MODEL: process.env.GEMINI_VIDEO_MODEL || 'gemini-3.8-flash',
@@ -48,21 +44,8 @@ export const env: Env = {
 // Runtime service account credentials, shared by Vertex AI and Cloud Storage
 const gcpAuth = createMetadataAuth();
 
-// Text analysis and chat go through this client; GEMINI_BACKEND picks the
-// API key or Vertex AI.
+// Text analysis, chat and video analysis all go to Vertex AI
 export const gemini = createGeminiClient({
-  backend: env.GEMINI_BACKEND,
-  apiKey: env.GEMINI_API_KEY,
-  vertexLocation: env.VERTEX_LOCATION,
-  auth: gcpAuth,
-});
-
-// Videos uploaded to Cloud Storage can only be read by Vertex AI, so the
-// Cloud Storage video path always uses Vertex regardless of GEMINI_BACKEND.
-// The older Gemini Files API video path still uses the API key directly.
-export const vertexGemini = createGeminiClient({
-  backend: 'vertex',
-  apiKey: '',
   vertexLocation: env.VERTEX_LOCATION,
   auth: gcpAuth,
 });
