@@ -12,7 +12,8 @@ openwiki:
     - LessonLens/LessonLens/App/ServiceContainer.swift
     - LessonLens/LessonLens/Core/Models/Recording.swift
     - LessonLens/LessonLens/Core/Views/ContentView.swift
-  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique, Recording.finalizeInterruptedRecordings]
+    - LessonLens/LessonLens/Core/Theme/PSDTheme.swift
+  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique, Recording.finalizeInterruptedRecordings, PSDTheme.ratingColor]
   test_paths:
     - LessonLens/LessonLensTests/InterruptedProcessingTests.swift
     - LessonLens/LessonLensTests/InterruptedRecordingTests.swift
@@ -96,6 +97,12 @@ erDiagram
 - **Schema change has a visible cost.** An incompatible `@Model` edit makes the store fail to open. The store is then renamed to a `LessonLens-backup-*.store` file and the teacher starts with an empty library and a notice; the sessions are kept, but they are no longer shown. Prefer additive properties with defaults (as `mediaType`, `ratingsIncluded`, `frameworkId` do) and discuss before changing schema. The recovery rules and tests are in [persistent store](persistent-store.md).
 - Release builds are intentionally **not sandboxed**. The store lives at `~/Library/Application Support/com.peninsula.lessonlens/LessonLens.store` (an older `default.store` is moved in on first launch), alongside the `com.peninsula.lessonlens/Recordings` folder (see [deployment and release](../operations/deployment-and-release.md)).
 - Re-analysis creates a *copy* `Recording` that shares the original's media file; deleting a session removes a media file only when no other recording uses it as audio or video (see [media files and cleanup](lesson-workflow.md#media-files-and-cleanup)).
+
+## Theme and shared UI
+
+`Core/Theme/` holds the PSD brand layer used across feature views. `PSDTheme` (`PSDTheme.swift`) is the semantic palette: `accent` (a darker Sea Glass in light mode for WCAG AA contrast), backgrounds, feedback colors and `ratingColor(_:)`, the 1-5 scale from red through driftwood, meadow to whulge. `ratingNeedsBorder(_:)` returns true only for level 3, which would otherwise disappear on the page background. Recording and error states stay plain red by design, since they are functional rather than branded. `PSDViewModifiers.swift` provides the `psdCard()` modifier and `LessonLensLogoView`/`PSDLogoView`, which fall back to SF Symbols when the logo PNGs are missing from the bundle. The rating palette is shared by `AnalysisFeedbackView`, the PDF/Markdown export views, the [growth dashboard](growth-dashboard.md), and the self-rating and comparison views in the [reflection flow](reflection-chat-export.md).
+
+Change notes: a new rating color or palette entry belongs in `PSDTheme`, not in a view. No automated test covers the theme; verify visually with the Debug app build (see [build, test and CI](../operations/build-test-ci.md)).
 
 ## Where to start
 
