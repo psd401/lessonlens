@@ -216,14 +216,7 @@ extension Recording {
         in context: ModelContext,
         directory: URL? = Recording.recordingsDirectory
     ) -> [String] {
-        guard let directory,
-              let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return [] }
-
-        var inUse = Set<String>()
-        for recording in recordings {
-            inUse.insert(recording.audioFilePath)
-            if let video = recording.videoFilePath { inUse.insert(video) }
-        }
+        guard let directory, let inUse = mediaFilesInUse(in: context) else { return [] }
 
         var removed: [String] = []
         for name in Set(fileNames.compactMap { $0 }) {
@@ -235,5 +228,49 @@ extension Recording {
             }
         }
         return removed
+    }
+
+    /// Every file name a recording uses as its audio or video, or nil if the
+    /// recordings can't be fetched
+    static func mediaFilesInUse(in context: ModelContext) -> Set<String>? {
+        guard let recordings = try? context.fetch(FetchDescriptor<Recording>()) else { return nil }
+        var inUse = Set<String>()
+        for recording in recordings {
+            inUse.insert(recording.audioFilePath)
+            if let video = recording.videoFilePath { inUse.insert(video) }
+        }
+        return inUse
+    }
+
+    /// Files in the Recordings folder that no recording uses, with their sizes
+    /// in bytes: left behind by deletes and re-extractions before COR-01 was
+    /// fixed. Skips files touched in the last 10 minutes, which a recording,
+    /// import or audio extraction may still be writing or not yet have saved
+    /// a session for. An imported copy keeps the original's modification
+    /// date, so the attribute-change date (set fresh by any copy or rename)
+    /// counts too. nil if the folder or the recordings can't be read.
+    static func unusedMediaFiles(
+        in context: ModelContext,
+        directory: URL? = Recording.recordingsDirectory,
+        now: Date = Date()
+    ) -> [(name: String, bytes: Int64)]? {
+        let keys: Set<URLResourceKey> = [.contentModificationDateKey, .attributeModificationDateKey, .fileSizeKey, .isRegularFileKey]
+        guard let directory,
+              let inUse = mediaFilesInUse(in: context),
+              let urls = try? FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: Array(keys),
+                options: [.skipsHiddenFiles]
+              ) else { return nil }
+
+        var unused: [(name: String, bytes: Int64)] = []
+        for url in urls where !inUse.contains(url.lastPathComponent) {
+            guard let values = try? url.resourceValues(forKeys: keys),
+                  values.isRegularFile == true,
+                  let touched = [values.contentModificationDate, values.attributeModificationDate].compactMap({ $0 }).max(),
+                  now.timeIntervalSince(touched) > 10 * 60 else { continue }
+            unused.append((url.lastPathComponent, Int64(values.fileSize ?? 0)))
+        }
+        return unused.sorted { $0.name < $1.name }
     }
 }

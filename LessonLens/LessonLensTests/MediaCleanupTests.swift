@@ -124,4 +124,81 @@ final class MediaCleanupTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: outside.path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path), "\".\" must not remove the folder itself")
     }
+
+    // MARK: - Remove Unused Files (Settings)
+
+    private func makeOldFile(_ name: String, ageMinutes: Double = 60) throws {
+        makeFile(name)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date().addingTimeInterval(-ageMinutes * 60)],
+            ofItemAtPath: directory.appendingPathComponent(name).path
+        )
+    }
+
+    func testUnusedFilesAreFoundAndFilesInUseAreNot() throws {
+        try makeOldFile("orphan.mov")
+        try makeOldFile("lesson.mov")
+        try makeOldFile("extracted.m4a")
+        _ = videoRecording(audio: "extracted.m4a", video: "lesson.mov")
+        try context.save()
+
+        // Setting dates counts as an attribute change, so look from an hour ahead
+        let unused = Recording.unusedMediaFiles(in: context, directory: directory, now: Date().addingTimeInterval(3600))
+
+        XCTAssertEqual(unused?.map(\.name), ["orphan.mov"])
+        XCTAssertEqual(unused?.first?.bytes, 1)
+    }
+
+    func testRecentFilesAreNotOffered() throws {
+        // A recording or extraction may still be writing a new file
+        try makeOldFile("just-written.m4a", ageMinutes: 2)
+
+        XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory)?.count, 0)
+    }
+
+    func testAFreshImportCopyIsNotOfferedEvenWithAnOldModificationDate() throws {
+        // copyItem keeps the source's dates, so a just-imported video can look
+        // old before its session is saved
+        let source = directory.deletingLastPathComponent().appendingPathComponent("source-\(UUID().uuidString).mov")
+        FileManager.default.createFile(atPath: source.path, contents: Data("x".utf8))
+        defer { try? FileManager.default.removeItem(at: source) }
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(-30 * 86400)], ofItemAtPath: source.path)
+
+        try FileManager.default.copyItem(at: source, to: directory.appendingPathComponent("imported.mov"))
+
+        XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory)?.count, 0)
+    }
+
+    func testFoldersAreNotOffered() throws {
+        let folder = directory.appendingPathComponent("folder")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(-3600)], ofItemAtPath: folder.path)
+
+        // An hour from now the folder is old by any date, so only the file-type check skips it
+        XCTAssertEqual(Recording.unusedMediaFiles(in: context, directory: directory, now: Date().addingTimeInterval(3600))?.count, 0)
+    }
+
+    func testOtherStoreBlocksCleanup() throws {
+        let appSupport = directory!
+        let folder = appSupport.appendingPathComponent(PersistentStore.folderName)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+
+        XCTAssertFalse(PersistentStore.hasOtherStore(appSupport: appSupport))
+
+        // A set-aside backup from a store that wouldn't open
+        let backup = folder.appendingPathComponent("LessonLens-backup-2026-10-22-120000.store")
+        FileManager.default.createFile(atPath: backup.path, contents: Data())
+        XCTAssertTrue(PersistentStore.hasOtherStore(appSupport: appSupport))
+        try FileManager.default.removeItem(at: backup)
+
+        // A default.store that can't be read might be LessonLens's
+        let legacy = PersistentStore.legacyStoreURL(in: appSupport)
+        FileManager.default.createFile(atPath: legacy.path, contents: Data("not a store".utf8))
+        XCTAssertTrue(PersistentStore.hasOtherStore(appSupport: appSupport))
+    }
+
+    func testUnlistableFolderBlocksCleanup() {
+        let missing = directory.appendingPathComponent("no-such-app-support")
+        XCTAssertTrue(PersistentStore.hasOtherStore(appSupport: missing))
+    }
 }

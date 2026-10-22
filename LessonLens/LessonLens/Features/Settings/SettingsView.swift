@@ -93,6 +93,11 @@ struct SettingsView: View {
 struct GeneralSettingsTab: View {
     @Binding var showTimestamps: Bool
 
+    @Environment(\.modelContext) private var modelContext
+    @State private var unusedFiles: [(name: String, bytes: Int64)] = []
+    @State private var showingRemoveConfirmation = false
+    @State private var cleanupMessage: String?
+
     var body: some View {
         Form {
             Section("Display") {
@@ -109,10 +114,60 @@ struct GeneralSettingsTab: View {
                 Button("Open Recordings Folder") {
                     openRecordingsFolder()
                 }
+
+                Button("Remove Unused Files…") {
+                    findUnusedFiles()
+                }
+                .help("Removes recording files that no session uses, such as videos from sessions deleted before this was fixed")
             }
         }
         .formStyle(.grouped)
         .padding()
+        .alert(removeTitle, isPresented: $showingRemoveConfirmation) {
+            Button("Remove", role: .destructive) { removeUnusedFiles() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("These files aren't used by any session. This can't be undone.")
+        }
+        .alert(cleanupMessage ?? "", isPresented: Binding(
+            get: { cleanupMessage != nil },
+            set: { if !$0 { cleanupMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        }
+    }
+
+    private var removeTitle: String {
+        let size = ByteCountFormatter.string(fromByteCount: unusedFiles.reduce(0) { $0 + $1.bytes }, countStyle: .file)
+        return unusedFiles.count == 1 ? "Remove 1 unused file (\(size))?" : "Remove \(unusedFiles.count) unused files (\(size))?"
+    }
+
+    private func findUnusedFiles() {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        // Sessions in a set-aside store still use files here; they'd look unused
+        if PersistentStore.hasOtherStore(appSupport: appSupport) {
+            cleanupMessage = "LessonLens can't confirm which files are unused on this Mac, for example because a set-aside copy of your sessions is here. Nothing was removed."
+            return
+        }
+        guard let files = Recording.unusedMediaFiles(in: modelContext) else {
+            cleanupMessage = "The recordings folder couldn't be checked. Nothing was removed."
+            return
+        }
+        if files.isEmpty {
+            cleanupMessage = "There are no unused files."
+            return
+        }
+        unusedFiles = files
+        showingRemoveConfirmation = true
+    }
+
+    private func removeUnusedFiles() {
+        // Check again: a file may have come into use or been touched while the dialog was open
+        let stillUnused = Set(Recording.unusedMediaFiles(in: modelContext)?.map(\.name) ?? [])
+        let confirmed = unusedFiles.map(\.name).filter { stillUnused.contains($0) }
+        let removed = Recording.removeUnreferencedMedia(confirmed, in: modelContext)
+        cleanupMessage = removed.count == 1 ? "Removed 1 file." : "Removed \(removed.count) files."
+        unusedFiles = []
     }
 
     private func openRecordingsFolder() {
