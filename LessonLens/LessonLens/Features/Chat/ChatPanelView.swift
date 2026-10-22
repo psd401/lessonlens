@@ -352,12 +352,7 @@ struct ChatPanelView: View {
             do {
                 // Extract audio from video
                 let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
-                let previousAudio = recording.audioFilePath
-                recording.audioFilePath = audioURL.lastPathComponent
-                // Remove the audio this replaces, unless it's the video or a re-analysis copy uses it
-                if (try? modelContext.save()) != nil {
-                    Recording.removeUnreferencedMedia([previousAudio], in: modelContext)
-                }
+                recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
 
                 // Transcribe
                 let transcript = try await services.transcriptionService.transcribe(recording: recording)

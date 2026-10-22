@@ -38,12 +38,9 @@ final class MediaCleanupTests: XCTestCase {
         return recording
     }
 
-    /// Mirrors RecordingDetailView.deleteRecording
-    private func delete(_ recording: Recording) throws {
-        let files = [recording.audioFilePath, recording.videoFilePath]
-        context.delete(recording)
-        try context.save()
-        Recording.removeUnreferencedMedia(files, in: context, directory: directory)
+    /// What RecordingDetailView.deleteRecording calls
+    private func delete(_ recording: Recording) {
+        Recording.deleteWithMedia(recording, in: context, directory: directory)
     }
 
     func testDeletingAVideoSessionRemovesTheVideoAndTheExtractedAudio() throws {
@@ -52,7 +49,7 @@ final class MediaCleanupTests: XCTestCase {
         let recording = videoRecording(audio: "extracted.m4a", video: "lesson.mov")
         try context.save()
 
-        try delete(recording)
+        delete(recording)
 
         XCTAssertFalse(exists("lesson.mov"))
         XCTAssertFalse(exists("extracted.m4a"))
@@ -64,7 +61,7 @@ final class MediaCleanupTests: XCTestCase {
         context.insert(recording)
         try context.save()
 
-        try delete(recording)
+        delete(recording)
 
         XCTAssertFalse(exists("mic.m4a"))
     }
@@ -76,11 +73,11 @@ final class MediaCleanupTests: XCTestCase {
         let reanalysis = videoRecording(audio: "extracted.m4a", video: "lesson.mov")
         try context.save()
 
-        try delete(original)
+        delete(original)
         XCTAssertTrue(exists("lesson.mov"))
         XCTAssertTrue(exists("extracted.m4a"))
 
-        try delete(reanalysis)
+        delete(reanalysis)
         XCTAssertFalse(exists("lesson.mov"))
         XCTAssertFalse(exists("extracted.m4a"))
     }
@@ -92,11 +89,9 @@ final class MediaCleanupTests: XCTestCase {
         let recording = videoRecording(audio: "old.m4a", video: "lesson.mov")
         try context.save()
 
-        recording.audioFilePath = "new.m4a"
-        try context.save()
-        let removed = Recording.removeUnreferencedMedia(["old.m4a"], in: context, directory: directory)
+        recording.replaceAudioFile(with: "new.m4a", in: context, directory: directory)
 
-        XCTAssertEqual(removed, ["old.m4a"])
+        XCTAssertFalse(exists("old.m4a"))
         XCTAssertTrue(exists("lesson.mov"))
         XCTAssertTrue(exists("new.m4a"))
     }
@@ -108,10 +103,9 @@ final class MediaCleanupTests: XCTestCase {
         let recording = videoRecording(audio: "lesson.mov", video: "lesson.mov")
         try context.save()
 
-        recording.audioFilePath = "new.m4a"
-        try context.save()
-        Recording.removeUnreferencedMedia(["lesson.mov"], in: context, directory: directory)
+        recording.replaceAudioFile(with: "new.m4a", in: context, directory: directory)
 
+        XCTAssertEqual(recording.audioFilePath, "new.m4a")
         XCTAssertTrue(exists("lesson.mov"))
     }
 

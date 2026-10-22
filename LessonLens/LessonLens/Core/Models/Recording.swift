@@ -183,6 +183,27 @@ extension Recording {
             .appendingPathComponent("Recordings")
     }
 
+    /// Deletes the recording and saves, then removes its audio and video files
+    /// (a video session has the original video and the extracted audio),
+    /// except any a re-analysis copy still uses. Nothing is removed if the
+    /// save fails.
+    static func deleteWithMedia(_ recording: Recording, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
+        let mediaFiles = [recording.audioFilePath, recording.videoFilePath]
+        context.delete(recording)
+        guard (try? context.save()) != nil else { return }
+        removeUnreferencedMedia(mediaFiles, in: context, directory: directory)
+    }
+
+    /// Points the recording at newly extracted audio, saves, and removes the
+    /// audio it replaces, unless that's the video itself or a re-analysis
+    /// copy uses it
+    func replaceAudioFile(with fileName: String, in context: ModelContext, directory: URL? = Recording.recordingsDirectory) {
+        let previous = audioFilePath
+        audioFilePath = fileName
+        guard (try? context.save()) != nil else { return }
+        Recording.removeUnreferencedMedia([previous], in: context, directory: directory)
+    }
+
     /// Deletes each named media file that no recording still uses as its audio
     /// or video file. Call after the recording that used it was deleted or
     /// pointed at a new file, and saved. Re-analysis copies share their

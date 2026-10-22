@@ -329,12 +329,7 @@ struct RecordingDetailView: View {
     }
 
     private func deleteRecording() {
-        // Both media files go (a video session has the original video and the
-        // extracted audio), except any a re-analysis copy still shares
-        let mediaFiles = [recording.audioFilePath, recording.videoFilePath]
-        modelContext.delete(recording)
-        guard (try? modelContext.save()) != nil else { return }
-        Recording.removeUnreferencedMedia(mediaFiles, in: modelContext)
+        Recording.deleteWithMedia(recording, in: modelContext)
     }
 
     private func startVideoAnalysis(framework: TeachingFramework, techniqueIds: [String], includeRatings: Bool = true) {
@@ -426,18 +421,10 @@ struct RecordingDetailView: View {
     /// Extract audio from video and transcribe it, returning the transcript
     private func extractAndTranscribe(videoURL: URL) async throws -> Transcript {
         let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
-        replaceAudioFile(with: audioURL)
+        recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
         return try await services.transcriptionService.transcribe(recording: recording)
     }
 
-    /// Points the recording at newly extracted audio and removes the audio it
-    /// replaces, unless that's the video itself or a re-analysis copy uses it
-    private func replaceAudioFile(with audioURL: URL) {
-        let previous = recording.audioFilePath
-        recording.audioFilePath = audioURL.lastPathComponent
-        guard (try? modelContext.save()) != nil else { return }
-        Recording.removeUnreferencedMedia([previous], in: modelContext)
-    }
 
     private func startAudioExtractionAndTranscription() {
         guard recording.isVideo,
@@ -456,7 +443,7 @@ struct RecordingDetailView: View {
                 let audioURL = try await services.audioExtractionService.extractAudio(from: videoURL)
 
                 // Update recording with extracted audio path
-                replaceAudioFile(with: audioURL)
+                recording.replaceAudioFile(with: audioURL.lastPathComponent, in: modelContext)
 
                 // Transcribe the extracted audio
                 let transcript = try await services.transcriptionService.transcribe(recording: recording)
