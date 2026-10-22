@@ -385,7 +385,7 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `JWT_SECRET` | Yes | — | Secret for signing auth tokens (min 32 chars) |
-| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region). All Gemini calls go to Vertex AI in the Cloud Run project, as the runtime service account, which needs `roles/aiplatform.user`. `us` keeps processing in the United States |
+| `VERTEX_LOCATION` | No | `global` | Vertex AI location (`global`, a multi-region such as `us`, or a region). All Gemini calls go to Vertex AI in the Cloud Run project, as the runtime service account, which needs `roles/aiplatform.user`. `us` keeps processing in the United States. `scripts/setup.sh` defaults to `us`; the backend falls back to `global` only when the variable is unset |
 | `VIDEO_BUCKET` | No | — | Temporary Cloud Storage bucket for video uploads (uniform access, public access prevention, 1-day delete lifecycle rule, `roles/storage.objectAdmin` for the runtime service account only) |
 | `GOOGLE_CLIENT_ID` | Yes | — | OAuth client ID for Google Sign-In |
 | `ALLOWED_DOMAIN` | No | `psd401.net` | Google Workspace domain to restrict login |
