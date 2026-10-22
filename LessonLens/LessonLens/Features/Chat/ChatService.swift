@@ -5,9 +5,6 @@ import Foundation
 final class ChatService: ObservableObject {
     private let config: AppConfiguration
 
-    @Published var isSending = false
-    @Published var error: ChatError?
-
     init(config: AppConfiguration) {
         self.config = config
     }
@@ -24,11 +21,6 @@ final class ChatService: ObservableObject {
         techniqueNames: [String],
         sessionToken: String
     ) async throws -> String {
-        isSending = true
-        error = nil
-
-        defer { isSending = false }
-
         let url = config.backendURL.appendingPathComponent("chat")
 
         var request = URLRequest(url: url)

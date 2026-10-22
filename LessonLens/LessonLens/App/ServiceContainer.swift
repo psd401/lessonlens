@@ -50,7 +50,6 @@ struct AppConfiguration: Codable {
     let minRecordingDuration: TimeInterval
     let maxRecordingDuration: TimeInterval
     let whisperModel: String
-    let rateLimitPerHour: Int
     let devUseBundledModel: Bool
 
     static func load() -> AppConfiguration {
@@ -68,7 +67,6 @@ struct AppConfiguration: Codable {
             minRecordingDuration: 5 * 60,  // 5 minutes
             maxRecordingDuration: 90 * 60, // 90 minutes
             whisperModel: "openai_whisper-large-v3",
-            rateLimitPerHour: 20,
             devUseBundledModel: ProcessInfo.processInfo.environment["DEV_USE_BUNDLED_MODEL"] == "1"
         )
     }
