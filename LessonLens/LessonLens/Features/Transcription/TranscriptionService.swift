@@ -6,7 +6,12 @@ import WhisperKit
 @MainActor
 final class TranscriptionService: ObservableObject {
     private let config: AppConfiguration
-    private var whisperKit: WhisperKit?
+    /// The model (large-v3 is several GB) stays loaded only while
+    /// transcriptions run, plus 5 idle minutes so back-to-back work (a
+    /// re-analysis, chat preparing a transcript after a video) doesn't reload
+    private lazy var model = IdleUnloader<WhisperKit>(idleDelay: .seconds(5 * 60)) { [unowned self] in
+        try await self.loadModel()
+    }
     private var transcriptionTask: Task<Transcript, Error>?
 
     @Published var isLoading = false
@@ -14,7 +19,6 @@ final class TranscriptionService: ObservableObject {
     @Published var progress: Double = 0
     @Published var error: TranscriptionError?
 
-    private var isModelLoaded = false
     private var loadedModelName: String = ""
     private var progressTimer: Timer?
 
@@ -24,10 +28,9 @@ final class TranscriptionService: ObservableObject {
 
     // MARK: - Public Methods
 
-    /// Loads the WhisperKit model (should be called on app launch or before first transcription)
-    func loadModel() async throws {
-        guard !isModelLoaded else { return }
-
+    /// Loads the WhisperKit model. Called through `model`, which shares one
+    /// load among concurrent transcriptions and unloads it when idle.
+    private func loadModel() async throws -> WhisperKit {
         isLoading = true
         error = nil
 
@@ -67,9 +70,9 @@ final class TranscriptionService: ObservableObject {
                 )
             }
 
-            whisperKit = try await WhisperKit(whisperConfig)
-            isModelLoaded = true
+            let whisper = try await WhisperKit(whisperConfig)
             isLoading = false
+            return whisper
         } catch {
             isLoading = false
             let transcriptionError = TranscriptionError.modelLoadFailed(error)
@@ -80,19 +83,6 @@ final class TranscriptionService: ObservableObject {
 
     /// Transcribes audio from a recording
     func transcribe(recording: Recording) async throws -> Transcript {
-        // Ensure model is loaded
-        if !isModelLoaded {
-            try await loadModel()
-        }
-
-        guard let whisper = whisperKit else {
-            throw TranscriptionError.modelLoadFailed(NSError(
-                domain: "TranscriptionService",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "WhisperKit not initialized"]
-            ))
-        }
-
         guard let audioURL = recording.absoluteAudioPath else {
             throw TranscriptionError.processingFailed(NSError(
                 domain: "TranscriptionService",
@@ -100,6 +90,10 @@ final class TranscriptionService: ObservableObject {
                 userInfo: [NSLocalizedDescriptionKey: "Audio file not found"]
             ))
         }
+
+        // Loads the model if needed; end() starts the idle countdown however this exits
+        let whisper = try await model.begin()
+        defer { model.end() }
 
         isTranscribing = true
         progress = 0
@@ -160,7 +154,7 @@ final class TranscriptionService: ObservableObject {
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self, self.isTranscribing else { return }
-                self.progress = min(self.whisperKit?.progress.fractionCompleted ?? 0, 0.99)
+                self.progress = min(self.model.current?.progress.fractionCompleted ?? 0, 0.99)
             }
         }
     }
@@ -374,6 +368,73 @@ final class TranscriptionService: ObservableObject {
         } catch {
             print("Failed to set up model folder: \(error)")
             return nil
+        }
+    }
+}
+
+// MARK: - Idle Unloading
+
+/// Holds a loaded resource only while it's in use, plus an idle grace
+/// period. Callers wrap each use in begin() and end(). Concurrent callers
+/// share one load, a use that begins during the grace period reuses the
+/// loaded resource, and the resource is released once the period passes
+/// with nothing in use.
+@MainActor
+final class IdleUnloader<Resource> {
+    private let idleDelay: Duration
+    private let load: () async throws -> Resource
+    private var loading: Task<Resource, Error>?
+    private var unloadTask: Task<Void, Never>?
+    private var activeUses = 0
+
+    /// The loaded resource, or nil when unloaded
+    private(set) var current: Resource?
+
+    init(idleDelay: Duration, load: @escaping () async throws -> Resource) {
+        self.idleDelay = idleDelay
+        self.load = load
+    }
+
+    /// Starts a use and returns the resource, loading it if needed. Pair
+    /// every successful call with end(). On a failed load the use is ended
+    /// here, so the caller doesn't call end().
+    func begin() async throws -> Resource {
+        activeUses += 1
+        unloadTask?.cancel()
+        unloadTask = nil
+        do {
+            return try await loaded()
+        } catch {
+            end()
+            throw error
+        }
+    }
+
+    /// Ends a use. When none remain, the resource is released after the idle delay.
+    func end() {
+        activeUses = max(0, activeUses - 1)
+        guard activeUses == 0 else { return }
+        unloadTask?.cancel()
+        unloadTask = Task { [weak self, idleDelay] in
+            try? await Task.sleep(for: idleDelay)
+            guard !Task.isCancelled, let self, self.activeUses == 0 else { return }
+            self.current = nil
+        }
+    }
+
+    private func loaded() async throws -> Resource {
+        if let current { return current }
+        if let loading { return try await loading.value }
+        let task = Task { try await load() }
+        loading = task
+        do {
+            let resource = try await task.value
+            loading = nil
+            current = resource
+            return resource
+        } catch {
+            loading = nil
+            throw error
         }
     }
 }
