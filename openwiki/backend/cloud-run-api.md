@@ -51,7 +51,7 @@ sequenceDiagram
     API-->>App: snake_case analysis JSON
 ```
 
-Every protected route repeats the same sequence: `verifySession(Authorization)` -> `checkRateLimit` (bumps the counter at check time) -> parse JSON -> size validation -> prompt build -> `gemini.generateContent` -> response shaping. There is no shared middleware for auth; each route calls `verifySession` itself.
+Every protected route repeats the same sequence: `verifySession(Authorization)` -> `checkRateLimit` (bumps the counter at check time) -> parse JSON -> size validation (per-field caps and the 2 MiB body cap in [input size limits](input-limits.md)) -> prompt build -> `gemini.generateContent` -> response shaping. There is no shared middleware for auth; each route calls `verifySession` itself.
 
 ## Endpoints
 
