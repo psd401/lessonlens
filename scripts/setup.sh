@@ -118,27 +118,6 @@ prompt_value() {
   fi
 }
 
-prompt_secret() {
-  local var_name="$1"
-  local prompt_text="$2"
-
-  if [ "$DRY_RUN" = true ]; then
-    echo -e "${YELLOW}[DRY RUN]${NC} Would prompt (hidden): $prompt_text"
-    eval "$var_name='PLACEHOLDER_SECRET'"
-    return
-  fi
-
-  while true; do
-    read -r -s -p "$(echo -e "${BOLD}$prompt_text${NC}: ")" value
-    echo ""
-    if [ -n "$value" ]; then
-      eval "$var_name='$value'"
-      return
-    fi
-    print_error "This field is required."
-  done
-}
-
 # --- Main ---
 
 print_header "LessonLens Backend Setup Wizard"
@@ -200,7 +179,7 @@ echo ""
 prompt_value GCP_PROJECT "GCP Project ID"
 prompt_value GCP_REGION "GCP Region" "us-west1"
 prompt_value ALLOWED_DOMAIN "Email domain for login (e.g., mydistrict.org)"
-prompt_secret GEMINI_API_KEY "Gemini API key"
+prompt_value VERTEX_LOCATION "Vertex AI location (us keeps processing in the US)" "us"
 prompt_value GOOGLE_CLIENT_ID "Google OAuth Client ID (from GCP Console)"
 prompt_value RATE_LIMIT "Text analysis rate limit per user per hour" "20"
 prompt_value VIDEO_RATE_LIMIT "Video analysis rate limit per user per hour" "5"
@@ -211,10 +190,10 @@ echo -e "${BOLD}Configuration summary:${NC}"
 echo "  Project:        $GCP_PROJECT"
 echo "  Region:         $GCP_REGION"
 echo "  Domain:         $ALLOWED_DOMAIN"
+echo "  Vertex AI:      $VERTEX_LOCATION"
 echo "  Client ID:      $GOOGLE_CLIENT_ID"
 echo "  Rate limit:     $RATE_LIMIT/hr (text), $VIDEO_RATE_LIMIT/hr (video)"
 echo "  Alert email:    $ALERT_EMAIL"
-echo "  Gemini key:     ****${GEMINI_API_KEY: -4}"
 echo ""
 
 if ! confirm "Proceed with this configuration?"; then
@@ -236,6 +215,8 @@ APIS=(
   "secretmanager.googleapis.com"
   "artifactregistry.googleapis.com"
   "cloudbuild.googleapis.com"
+  "aiplatform.googleapis.com"
+  "storage.googleapis.com"
   "monitoring.googleapis.com"
   "logging.googleapis.com"
 )
@@ -245,8 +226,47 @@ for api in "${APIS[@]}"; do
     gcloud services enable "$api" --project "$GCP_PROJECT"
 done
 
-# --- Step 5: Generate JWT secret ---
-print_header "Step 5: Generating JWT Secret"
+# --- Step 5: Runtime service account and video bucket ---
+# The backend calls Gemini on Vertex AI as this service account (no API key)
+# and stages uploaded videos in a bucket only it can read.
+print_header "Step 5: Service Account and Video Bucket"
+
+SA_NAME="lessonlens-runtime"
+SA_EMAIL="$SA_NAME@$GCP_PROJECT.iam.gserviceaccount.com"
+VIDEO_BUCKET="$GCP_PROJECT-video-tmp"
+
+if [ "$DRY_RUN" != true ] && gcloud iam service-accounts describe "$SA_EMAIL" --project "$GCP_PROJECT" &>/dev/null; then
+  print_success "Service account $SA_EMAIL exists"
+else
+  run_cmd "Creating service account $SA_EMAIL" \
+    gcloud iam service-accounts create "$SA_NAME" --display-name "LessonLens runtime" --project "$GCP_PROJECT"
+fi
+
+run_cmd "Granting Vertex AI access (roles/aiplatform.user)" \
+  gcloud projects add-iam-policy-binding "$GCP_PROJECT" \
+    --member="serviceAccount:$SA_EMAIL" --role="roles/aiplatform.user" --condition=None --quiet
+
+if [ "$DRY_RUN" != true ] && gcloud storage buckets describe "gs://$VIDEO_BUCKET" &>/dev/null; then
+  print_success "Bucket gs://$VIDEO_BUCKET exists"
+else
+  run_cmd "Creating video bucket gs://$VIDEO_BUCKET" \
+    gcloud storage buckets create "gs://$VIDEO_BUCKET" --project "$GCP_PROJECT" --location "$GCP_REGION" \
+      --uniform-bucket-level-access --public-access-prevention --soft-delete-duration=0
+fi
+
+# Videos are deleted right after analysis; this 1-day rule is the backstop
+LIFECYCLE_FILE="$(mktemp)"
+echo '{"rule": [{"action": {"type": "Delete"}, "condition": {"age": 1}}]}' > "$LIFECYCLE_FILE"
+run_cmd "Setting 1-day delete rule on the video bucket" \
+  gcloud storage buckets update "gs://$VIDEO_BUCKET" --lifecycle-file="$LIFECYCLE_FILE"
+rm -f "$LIFECYCLE_FILE"
+
+run_cmd "Granting the service account access to the video bucket" \
+  gcloud storage buckets add-iam-policy-binding "gs://$VIDEO_BUCKET" \
+    --member="serviceAccount:$SA_EMAIL" --role="roles/storage.objectAdmin"
+
+# --- Step 6: Generate JWT secret ---
+print_header "Step 6: Generating JWT Secret"
 
 if [ "$DRY_RUN" = true ]; then
   echo -e "${YELLOW}[DRY RUN]${NC} Would generate JWT secret with: openssl rand -base64 48"
@@ -256,8 +276,8 @@ else
   print_success "JWT secret generated (${#JWT_SECRET} characters)"
 fi
 
-# --- Step 6: Store secrets in Secret Manager ---
-print_header "Step 6: Storing Secrets in Secret Manager"
+# --- Step 7: Store secrets in Secret Manager ---
+print_header "Step 7: Storing Secrets in Secret Manager"
 
 store_secret() {
   local secret_name="$1"
@@ -280,11 +300,16 @@ store_secret() {
 }
 
 store_secret "jwt-secret" "$JWT_SECRET"
-store_secret "gemini-api-key" "$GEMINI_API_KEY"
 store_secret "google-client-id" "$GOOGLE_CLIENT_ID"
 
-# --- Step 7: Deploy to Cloud Run ---
-print_header "Step 7: Deploying to Cloud Run"
+for secret_name in jwt-secret google-client-id; do
+  run_cmd "Letting the service account read $secret_name" \
+    gcloud secrets add-iam-policy-binding "$secret_name" --project "$GCP_PROJECT" \
+      --member="serviceAccount:$SA_EMAIL" --role="roles/secretmanager.secretAccessor" --quiet
+done
+
+# --- Step 8: Deploy to Cloud Run ---
+print_header "Step 8: Deploying to Cloud Run"
 
 if ! confirm "Deploy backend to Cloud Run in $GCP_REGION?"; then
   echo "Skipping deployment. You can deploy manually later."
@@ -294,8 +319,9 @@ else
     --source "$REPO_ROOT"
     --region "$GCP_REGION"
     --allow-unauthenticated
-    --set-secrets="JWT_SECRET=jwt-secret:latest,GEMINI_API_KEY=gemini-api-key:latest,GOOGLE_CLIENT_ID=google-client-id:latest"
-    --set-env-vars="ALLOWED_DOMAIN=$ALLOWED_DOMAIN,RATE_LIMIT_PER_HOUR=$RATE_LIMIT,GEMINI_TEXT_MODEL=gemini-3-pro-preview,GEMINI_VIDEO_MODEL=gemini-3-flash-preview,VIDEO_RATE_LIMIT_PER_HOUR=$VIDEO_RATE_LIMIT,CHAT_RATE_LIMIT_PER_HOUR=50"
+    --service-account="$SA_EMAIL"
+    --set-secrets="JWT_SECRET=jwt-secret:latest,GOOGLE_CLIENT_ID=google-client-id:latest"
+    --set-env-vars="ALLOWED_DOMAIN=$ALLOWED_DOMAIN,VERTEX_LOCATION=$VERTEX_LOCATION,VIDEO_BUCKET=$VIDEO_BUCKET,RATE_LIMIT_PER_HOUR=$RATE_LIMIT,GEMINI_TEXT_MODEL=gemini-3.8-flash,GEMINI_VIDEO_MODEL=gemini-3.8-flash,VIDEO_RATE_LIMIT_PER_HOUR=$VIDEO_RATE_LIMIT,CHAT_RATE_LIMIT_PER_HOUR=50"
     --project "$GCP_PROJECT"
   )
 
@@ -309,8 +335,8 @@ else
   fi
 fi
 
-# --- Step 8: Validate deployment ---
-print_header "Step 8: Validating Deployment"
+# --- Step 9: Validate deployment ---
+print_header "Step 9: Validating Deployment"
 
 if [ "$DRY_RUN" = true ]; then
   echo -e "${YELLOW}[DRY RUN]${NC} Would fetch Cloud Run URL and run health check"
@@ -339,8 +365,8 @@ else
   fi
 fi
 
-# --- Step 9: Set up monitoring & alerting ---
-print_header "Step 9: Setting Up Monitoring & Alerting"
+# --- Step 10: Set up monitoring & alerting ---
+print_header "Step 10: Setting Up Monitoring & Alerting"
 
 if [ -z "$CLOUD_RUN_URL" ] || [ "$CLOUD_RUN_URL" = "https://lessonlens-api-PLACEHOLDER.$GCP_REGION.run.app" ]; then
   print_warn "No Cloud Run URL available — skipping monitoring setup."
@@ -536,10 +562,11 @@ echo "  GCP Project:       $GCP_PROJECT"
 echo "  Region:            $GCP_REGION"
 echo "  Cloud Run service: $SERVICE_NAME"
 echo "  Cloud Run URL:     ${CLOUD_RUN_URL:-N/A}"
+echo "  Service account:   $SA_EMAIL (Vertex AI in $VERTEX_LOCATION)"
+echo "  Video bucket:      gs://$VIDEO_BUCKET (1-day delete rule)"
 echo ""
 echo "  Secrets stored in Secret Manager:"
 echo "    - jwt-secret"
-echo "    - gemini-api-key"
 echo "    - google-client-id"
 echo ""
 echo "  Monitoring:"

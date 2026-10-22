@@ -97,6 +97,8 @@ gcloud services enable \
 
 The backend calls Gemini on Vertex AI as its own service account, so there is no API key to create or rotate. Videos are uploaded to a temporary bucket, analyzed, and deleted.
 
+> If you'll use the setup script (Phase 2, Option A), skip this step — the script does it for you.
+
 ```bash
 PROJECT=YOUR_PROJECT_ID
 REGION=YOUR_REGION
@@ -148,11 +150,12 @@ bash scripts/setup.sh
 
 The script will:
 - Verify prerequisites (gcloud CLI, authentication, bun)
-- Prompt for your project ID, region, email domain, and Gemini API key
+- Prompt for your project ID, region, email domain, and Vertex AI location
 - Enable required GCP APIs
+- Create the runtime service account and temporary video bucket (step 1.3)
 - Generate a secure JWT secret
 - Store secrets in Google Secret Manager
-- Deploy the backend to Cloud Run
+- Deploy the backend to Cloud Run as that service account
 - Validate the deployment with a health check
 
 Run with `--dry-run` to preview all steps without executing them.
@@ -331,9 +334,9 @@ Replace the icon set in `LessonLens/Assets.xcassets/AppIcon.appiconset/`:
 
 | Problem | Solution |
 |---------|----------|
-| "Domain not allowed" on login | Check `allowedDomain` in ServiceContainer.swift matches your Google Workspace domain |
+| "Domain not allowed" on login | Check `LL_ALLOWED_DOMAIN` in `LessonLens/Config/Local.xcconfig` matches your Google Workspace domain (and `ALLOWED_DOMAIN` on Cloud Run) |
 | Google Sign-In fails | Verify the OAuth Client ID bundle ID matches your app's bundle ID exactly |
-| Can't connect to backend | Check the `backendURL` in ServiceContainer.swift — try `curl`-ing it from Terminal |
+| Can't connect to backend | Check `LL_BACKEND_HOST` in `LessonLens/Config/Local.xcconfig` (host only, no `https://`) — try `curl`-ing it from Terminal |
 | Recordings not saving | Check disk permissions for `~/Library/Application Support/your.bundle.id/` |
 | Code signing errors in Xcode | Ensure your Apple Developer team is selected and provisioning profiles are current |
 
