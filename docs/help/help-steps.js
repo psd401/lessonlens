@@ -4,8 +4,8 @@
 // image: null renders a placeholder frame that still shows the hotspot areas.
 // UI labels below are quoted from the app; keep them in sync when the app changes.
 window.LESSONLENS_HELP = {
-  "updated": "2026-09-29",
-  "appVersion": "1.2.0",
+  "updated": "2026-10-22",
+  "appVersion": "1.3.0",
   "sections": [
     {
       "id": "capture",
