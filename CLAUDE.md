@@ -23,7 +23,7 @@ Privacy-first AI coaching tool for PSD teachers (native macOS, Apple Silicon). R
 - The backend stores no user data; analysis runs through Gemini; transcription stays on-device. Keep it that way.
 - Backend: `JWT_SECRET` must stay >= 32 chars (`CloudRunBackend/src/index.ts` enforces it at startup). Rate limiting is in-memory by design; read the comments in `CloudRunBackend/src/index.ts` before changing it.
 - All copy must stay "coaching, not evaluation."
-- Current phase is largely non-code: productization, cross-platform porting, press/blog drafts. Discuss before editing app code.
+- Discuss before editing code. Changes go in small approved slices, one PR each, merged by James. Releases follow `RELEASING.md`.
 
 ## Public docs pages (`docs/`, GitHub Pages)
 - `docs/history/`: project timeline for external audiences. Content lives in `history.js`.
