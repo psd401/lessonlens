@@ -57,6 +57,21 @@ then published as a GitHub Release. PSD IT's AutoPkg recipe picks up
 
 ## Released
 
+- **v1.3.0** — 2026-10-23, built from `9a8b19a` (main, after the 2026-10-23
+  history rewrite). Data safety: the store is set aside instead of deleted and
+  moves into `com.peninsula.lessonlens/LessonLens.store` on first launch;
+  deleting a session removes its media, and Settings > General > Remove Unused
+  Files clears leftovers; failed saves are reported and failed deletes or
+  renames roll back; no sessions stuck at "Recording". New rating labels
+  (Emerging, Developing, Established, Refining, Extending), shipped after
+  server v1.4.6 so the prompt uses the same scale. Whisper model unloads after
+  5 idle minutes. Hardened runtime with only
+  `com.apple.security.device.audio-input` (matches
+  `expected-entitlements.txt`), unsandboxed on purpose; no re-sign needed.
+  Config check passed; app and pkg notarized (Accepted) and stapled;
+  `releases/latest` resolves to v1.3.0. Store move tested on a copy of a real
+  library (21 sessions). Not yet confirmed on the fleet: live microphone
+  recording on the signed build.
 - **v1.2.0** — 2026-09-28, built from `3938e81` (main). Video analysis on
   Vertex AI through a temporary Cloud Storage bucket with 720p compression and
   a transcript fallback; analysis saved before the transcript finishes;
