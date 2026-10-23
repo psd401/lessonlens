@@ -3,8 +3,8 @@
 // Sources: git log and GitHub Releases. Keep claims tied to that record.
 // Audience is non-developers: avoid dev jargon such as "commits".
 window.LESSONLENS_HISTORY = {
-  updated: "2026-10-22",
-  currentVersions: "App v1.3.0 · Server v1.4.5",
+  updated: "2026-10-23",
+  currentVersions: "App v1.3.0 · Server v1.4.6",
   stats: [
     { value: "Jan 2026", label: "project start" },
     { value: "7", label: "teaching frameworks" },
