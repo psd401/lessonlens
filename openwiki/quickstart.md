@@ -65,7 +65,6 @@ Run commands from the repository root. Backend checks use bun (`bun test`, optio
 
 Areas identified but not given dedicated coverage (source anchor - reason):
 
-- Theme and shared UI (`LessonLens/LessonLens/Core/Theme/`, `Core/Views/ContentView.swift` sidebar/welcome views) - presentational, low change-risk; only navigation structure is described in [app overview](app/overview.md).
 - `scripts/setup.sh` monitoring/alerting section - summarized, not step-by-step; see `docs/DEPLOYMENT.md` (partly stale versus the Vertex/Cloud Storage path).
 - `CloudRunBackend` bucket and IAM provisioning beyond what `scripts/setup.sh` creates - the Cloud Storage lifecycle rule is described in [video pipeline](backend/video-analysis-pipeline.md); other project IAM is not in the repository.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
