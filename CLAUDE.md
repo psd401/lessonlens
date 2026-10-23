@@ -20,7 +20,7 @@ Privacy-first AI coaching tool for PSD teachers (native macOS, Apple Silicon). R
 
 ## Conventions & guardrails
 - Public repo: never hardcode infrastructure identifiers (backend URL/project number, OAuth client ID, Apple Team ID) in source, Info.plist, or project.pbxproj; they belong in `Local.xcconfig`. Never reintroduce dev auth bypasses. (The dev bypass and script identifiers were removed in March 2026; the app-source identifiers stayed until the September 2026 xcconfig move and remain in git history.)
-- The backend stores no user data; analysis runs through Gemini; transcription stays on-device. Keep it that way.
+- The backend stores no user data; analysis runs through Gemini on Vertex AI (us multi-region; the AI Studio API-key path was removed in #57 — don't reintroduce it); transcription stays on-device. Keep it that way.
 - Backend: `JWT_SECRET` must stay >= 32 chars (`CloudRunBackend/src/index.ts` enforces it at startup). Rate limiting is in-memory by design; read the comments in `CloudRunBackend/src/index.ts` before changing it.
 - All copy must stay "coaching, not evaluation."
 - Discuss before editing code. Changes go in small approved slices, one PR each, merged by James. Releases follow `RELEASING.md`.
