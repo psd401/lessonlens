@@ -155,6 +155,70 @@ describe('fetchJson_', () => {
   });
 });
 
+describe('sendWeeklyReport', () => {
+  function stubServices(props: Record<string, string>) {
+    const sent: any[] = [];
+    sandbox.PropertiesService = {
+      getScriptProperties: () => ({ getProperty: (key: string) => props[key] ?? null }),
+    };
+    sandbox.ScriptApp = { getOAuthToken: () => 'test-token' };
+    sandbox.UrlFetchApp = {
+      fetch: () => ({
+        getResponseCode: () => 200,
+        getContentText: () => JSON.stringify({ timeSeries: [series('gemini-a', { response_code: '200' }, 8)] }),
+      }),
+    };
+    sandbox.MailApp = { sendEmail: (message: any) => sent.push(message) };
+    return sent;
+  }
+
+  test('emails the text and HTML report to REPORT_TO', () => {
+    const sent = stubServices({ GCP_PROJECT: 'p1', BILLING_ACCOUNT: 'AAA-BBB', REPORT_TO: 'someone@example.test' });
+    report.sendWeeklyReport();
+    expect(sent).toHaveLength(1);
+    expect(sent[0].to).toBe('someone@example.test');
+    expect(sent[0].subject).toStartWith('LessonLens Vertex usage — week ending ');
+    expect(sent[0].body).toContain('gemini-a: 8 requests');
+    expect(sent[0].htmlBody).toContain('<table');
+  });
+
+  test('stops without sending when REPORT_TO is not set', () => {
+    const sent = stubServices({ GCP_PROJECT: 'p1' });
+    expect(() => report.sendWeeklyReport()).toThrow('REPORT_TO');
+    expect(sent).toHaveLength(0);
+  });
+
+  test('subject names the local date', () => {
+    expect(report.reportSubject(new Date(2026, 10, 2, 7, 15)))
+      .toBe('LessonLens Vertex usage — week ending 2026-11-02');
+  });
+});
+
+describe('installWeeklyTrigger', () => {
+  test('replaces an earlier weekly trigger and schedules Mondays at 7', () => {
+    const trigger = (handler: string) => ({ getHandlerFunction: () => handler });
+    const old = trigger('sendWeeklyReport');
+    const other = trigger('somethingElse');
+    const deleted: any[] = [];
+    const schedule: Record<string, any> = {};
+    const builder = {
+      timeBased: () => builder,
+      onWeekDay: (day: string) => { schedule.day = day; return builder; },
+      atHour: (hour: number) => { schedule.hour = hour; return builder; },
+      create: () => { schedule.created = true; },
+    };
+    sandbox.ScriptApp = {
+      WeekDay: { MONDAY: 'MONDAY' },
+      getProjectTriggers: () => [old, other],
+      deleteTrigger: (t: any) => deleted.push(t),
+      newTrigger: (handler: string) => { schedule.handler = handler; return builder; },
+    };
+    report.installWeeklyTrigger();
+    expect(deleted).toEqual([old]);
+    expect(schedule).toEqual({ handler: 'sendWeeklyReport', day: 'MONDAY', hour: 7, created: true });
+  });
+});
+
 describe('buildReport', () => {
   const now = new Date(2026, 9, 26, 9, 0);
 

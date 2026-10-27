@@ -12,9 +12,14 @@ The district blocks clasp sign-in (`admin_policy_enforced`), so set it up in the
 2. In Project Settings > Script Properties, add:
    - `GCP_PROJECT`: the Cloud project that runs the LessonLens backend
    - `BILLING_ACCOUNT`: its billing account ID (for the cost link only)
+   - `REPORT_TO`: who gets the weekly email (comma-separated for more than one)
 
    These stay out of the repo, which is public.
-3. Run `previewReport` and approve the permissions it asks for (read Cloud Monitoring, call external URLs). The report appears in the execution log.
+3. Run `previewReport` and approve the permissions it asks for (read Cloud Monitoring, call external URLs, send email as you, manage the script's triggers). The report appears in the execution log.
+4. Run `sendWeeklyReport` once to check the email arrives.
+5. Run `installWeeklyTrigger` once. It schedules `sendWeeklyReport` for Mondays between 7 and 8 AM Pacific; running it again replaces the schedule rather than adding a second one. If a scheduled run fails, Apps Script emails the script's owner.
+
+The report runs as the person who set it up. If that account loses access, the weekly email stops.
 
 The person running it needs Monitoring Viewer and `serviceusage.services.use` on the project (the script bills its Monitoring calls to that project), and Billing Account Viewer on the billing account (for the cost link to open).
 
@@ -26,7 +31,7 @@ After changing `Code.gs` in the repo, paste it into the editor again.
 bun test scripts/vertex-usage-report
 ```
 
-The tests cover the report logic in `Code.gs` (windows, totals, error grouping, paging, formatting) with sample data. CI does not run them.
+The tests cover the report logic in `Code.gs` (windows, totals, error grouping, paging, formatting), the Monitoring request headers, the weekly email, and the trigger setup, with sample data and stand-ins for the Apps Script services. CI does not run them.
 
 ## Notes
 

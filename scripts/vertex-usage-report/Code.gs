@@ -9,8 +9,10 @@
  * Script Properties (Project Settings > Script Properties):
  *   GCP_PROJECT      - the Cloud project that runs the LessonLens backend
  *   BILLING_ACCOUNT  - its billing account ID, used only for the cost link
+ *   REPORT_TO        - email address(es) for sendWeeklyReport, comma-separated
  *
  * Run previewReport() from the editor to log the report without sending it.
+ * Run installWeeklyTrigger() once to email the report every Monday morning.
  */
 
 var METRIC_PREFIX = 'aiplatform.googleapis.com/publisher/online_serving/';
@@ -25,11 +27,45 @@ function previewReport() {
   Logger.log(report.text);
 }
 
+/** Emails the report to REPORT_TO. The weekly trigger runs this. */
+function sendWeeklyReport() {
+  var config = getConfig_();
+  if (!config.reportTo) throw new Error('Set the REPORT_TO script property.');
+  var now = new Date();
+  var report = buildReport(config, now);
+  MailApp.sendEmail({
+    to: config.reportTo,
+    subject: reportSubject(now),
+    body: report.text,
+    htmlBody: report.html,
+  });
+}
+
+/**
+ * Schedules sendWeeklyReport for Mondays in the 7-8 AM hour (the script's
+ * time zone). Replaces any earlier schedule, so running it twice is safe.
+ */
+function installWeeklyTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'sendWeeklyReport') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('sendWeeklyReport').timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(7).create();
+}
+
 function getConfig_() {
   var props = PropertiesService.getScriptProperties();
   var project = props.getProperty('GCP_PROJECT');
   if (!project) throw new Error('Set the GCP_PROJECT script property.');
-  return { project: project, billingAccount: props.getProperty('BILLING_ACCOUNT') || '' };
+  return {
+    project: project,
+    billingAccount: props.getProperty('BILLING_ACCOUNT') || '',
+    reportTo: props.getProperty('REPORT_TO') || '',
+  };
+}
+
+function reportSubject(now) {
+  return 'LessonLens Vertex usage — week ending ' + formatDate(now);
 }
 
 /** Builds the report for all windows ending at `now`. Returns {text, html}. */
@@ -221,6 +257,7 @@ function renderHtml(sections, billingLink) {
 // Lets bun tests load the pure functions; Apps Script has no `module`.
 if (typeof module !== 'undefined') {
   module.exports = {
+    sendWeeklyReport: sendWeeklyReport, installWeeklyTrigger: installWeeklyTrigger, reportSubject: reportSubject,
     buildReport: buildReport, reportWindows: reportWindows, fetchSeries: fetchSeries, fetchJson_: fetchJson_,
     sumPoints: sumPoints, summarize: summarize, billingReportUrl: billingReportUrl,
     formatErrors: formatErrors, formatDate: formatDate, formatNumber: formatNumber, renderText: renderText, renderHtml: renderHtml,
