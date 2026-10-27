@@ -1,0 +1,9 @@
+{
+  "timeZone": "America/Los_Angeles",
+  "runtimeVersion": "V8",
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/monitoring.read",
+    "https://www.googleapis.com/auth/script.external_request"
+  ]
+}

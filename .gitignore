@@ -81,3 +81,6 @@ playground.xcworkspace
 
 # WhisperKit Models (large files, downloaded on demand)
 TeacherCoach/TeacherCoach/Resources/Models/
+
+# Apps Script project ID for scripts/vertex-usage-report (local only)
+.clasp.json
