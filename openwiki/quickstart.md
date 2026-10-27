@@ -70,5 +70,3 @@ Areas identified but not given dedicated coverage (source anchor - reason):
 - `CloudRunBackend` bucket and IAM provisioning beyond what `scripts/setup.sh` creates - the Cloud Storage lifecycle rule is described in [video pipeline](backend/video-analysis-pipeline.md); other project IAM is not in the repository.
 - Git history and `.xcodeproj` build settings (`project.pbxproj`) - not available to this generation run (history excluded by `.openwikiignore` rules; project file not inspected).
 - `THIRD-PARTY-LICENSES.md` (root) - attribution list for Swift and JavaScript dependencies and bundled assets; a legal reference, not runtime behavior. The license gate is the `.github/workflows/license-check.yml` job listed in [build, test and CI](operations/build-test-ci.md).
- (history excluded by `.openwikiignore` rules; project file not inspected).
-- `THIRD-PARTY-LICENSES.md` (root) - attribution list for Swift and JavaScript dependencies and bundled assets; a legal reference, not runtime behavior. The license gate is the `.github/workflows/license-check.yml` job listed in [build, test and CI](operations/build-test-ci.md).
