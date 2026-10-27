@@ -80,16 +80,22 @@ function fetchSeries(project, metric, groupBy, start, end, fetchFn) {
       .map(function (p) { return encodeURIComponent(p[0]) + '=' + encodeURIComponent(p[1]); })
       .join('&');
     var body = fetch('https://monitoring.googleapis.com/v3/projects/' +
-      encodeURIComponent(project) + '/timeSeries?' + query);
+      encodeURIComponent(project) + '/timeSeries?' + query, project);
     series = series.concat(body.timeSeries || []);
     pageToken = body.nextPageToken || '';
   } while (pageToken);
   return series;
 }
 
-function fetchJson_(url) {
+// X-Goog-User-Project bills the API call to the LessonLens project. Without
+// it, the call counts against Apps Script's hidden default project, where the
+// Monitoring API is off (HTTP 403).
+function fetchJson_(url, quotaProject) {
   var response = UrlFetchApp.fetch(url, {
-    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    headers: {
+      Authorization: 'Bearer ' + ScriptApp.getOAuthToken(),
+      'X-Goog-User-Project': quotaProject,
+    },
     muteHttpExceptions: true,
   });
   var code = response.getResponseCode();

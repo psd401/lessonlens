@@ -98,6 +98,7 @@ describe('formatting', () => {
 describe('fetchSeries', () => {
   test('sends the aggregation query and follows pages', () => {
     const urls: string[] = [];
+    const quotaProjects: string[] = [];
     const pages = [
       { timeSeries: [series('a', { response_code: '200' }, 1)], nextPageToken: 'p2' },
       { timeSeries: [series('b', { response_code: '200' }, 2)] },
@@ -105,9 +106,14 @@ describe('fetchSeries', () => {
     const result = report.fetchSeries(
       'my-project', 'model_invocation_count', ['resource.label.model_user_id', 'metric.label.response_code'],
       new Date('2026-10-19T00:00:00Z'), new Date('2026-10-26T00:00:00Z'),
-      (url: string) => { urls.push(url); return pages[urls.length - 1]; },
+      (url: string, quotaProject: string) => {
+        urls.push(url);
+        quotaProjects.push(quotaProject);
+        return pages[urls.length - 1];
+      },
     );
     expect(result).toHaveLength(2);
+    expect(quotaProjects).toEqual(['my-project', 'my-project']);
     const first = new URL(urls[0]);
     expect(first.pathname).toBe('/v3/projects/my-project/timeSeries');
     expect(first.searchParams.get('filter'))

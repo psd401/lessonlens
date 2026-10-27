@@ -6,22 +6,19 @@ It reads project-wide totals from Cloud Monitoring (`aiplatform.googleapis.com/p
 
 ## Setup
 
-1. Create the Apps Script project and push these files with [clasp](https://github.com/google/clasp):
-   ```bash
-   cd scripts/vertex-usage-report
-   bunx @google/clasp login
-   bunx @google/clasp create --type standalone --title "LessonLens Vertex usage report" --rootDir .
-   bunx @google/clasp push
-   ```
-   `clasp create` writes `.clasp.json` with the script's ID. It is git-ignored; keep it local.
-2. In the Apps Script editor, open Project Settings > Script Properties and add:
+The district blocks clasp sign-in (`admin_policy_enforced`), so set it up in the Apps Script editor:
+
+1. At script.google.com, create a new project and paste `Code.gs` over the default file. In Project Settings, tick **Show "appsscript.json" manifest file in editor**, then replace that file's contents with `appsscript.json`.
+2. In Project Settings > Script Properties, add:
    - `GCP_PROJECT`: the Cloud project that runs the LessonLens backend
    - `BILLING_ACCOUNT`: its billing account ID (for the cost link only)
 
    These stay out of the repo, which is public.
 3. Run `previewReport` and approve the permissions it asks for (read Cloud Monitoring, call external URLs). The report appears in the execution log.
 
-The person running it needs Monitoring Viewer on the project and Billing Account Viewer on the billing account (for the cost link to open).
+The person running it needs Monitoring Viewer and `serviceusage.services.use` on the project (the script bills its Monitoring calls to that project), and Billing Account Viewer on the billing account (for the cost link to open).
+
+After changing `Code.gs` in the repo, paste it into the editor again.
 
 ## Tests
 
