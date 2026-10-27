@@ -6,7 +6,7 @@ import vm from 'node:vm';
 
 // Code.gs is plain Apps Script JavaScript, so load it in a sandbox with a
 // `module` object instead of importing it.
-const sandbox: { module: { exports: any } } = { module: { exports: {} } };
+const sandbox: Record<string, any> = { module: { exports: {} } };
 vm.runInNewContext(readFileSync(join(import.meta.dir, 'Code.gs'), 'utf8'), sandbox);
 const report = sandbox.module.exports;
 
@@ -123,6 +123,35 @@ describe('fetchSeries', () => {
       .toEqual(['resource.label.model_user_id', 'metric.label.response_code']);
     expect(first.searchParams.has('pageToken')).toBe(false);
     expect(new URL(urls[1]).searchParams.get('pageToken')).toBe('p2');
+  });
+});
+
+describe('fetchJson_', () => {
+  // Stand-ins for the Apps Script services fetchJson_ calls.
+  function stubFetch(code: number, body: string) {
+    const calls: { url: string; options: any }[] = [];
+    sandbox.ScriptApp = { getOAuthToken: () => 'test-token' };
+    sandbox.UrlFetchApp = {
+      fetch: (url: string, options: any) => {
+        calls.push({ url, options });
+        return { getResponseCode: () => code, getContentText: () => body };
+      },
+    };
+    return calls;
+  }
+
+  test('bills the call to the LessonLens project', () => {
+    const calls = stubFetch(200, '{"timeSeries":[]}');
+    expect(report.fetchJson_('https://example.test/x', 'my-project')).toEqual({ timeSeries: [] });
+    expect(calls[0].options.headers).toEqual({
+      Authorization: 'Bearer test-token',
+      'X-Goog-User-Project': 'my-project',
+    });
+  });
+
+  test('throws with the HTTP status on an error', () => {
+    stubFetch(403, '{"error":{"code":403}}');
+    expect(() => report.fetchJson_('https://example.test/x', 'my-project')).toThrow('HTTP 403');
   });
 });
 

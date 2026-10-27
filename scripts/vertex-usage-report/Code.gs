@@ -221,7 +221,7 @@ function renderHtml(sections, billingLink) {
 // Lets bun tests load the pure functions; Apps Script has no `module`.
 if (typeof module !== 'undefined') {
   module.exports = {
-    buildReport: buildReport, reportWindows: reportWindows, fetchSeries: fetchSeries,
+    buildReport: buildReport, reportWindows: reportWindows, fetchSeries: fetchSeries, fetchJson_: fetchJson_,
     sumPoints: sumPoints, summarize: summarize, billingReportUrl: billingReportUrl,
     formatErrors: formatErrors, formatDate: formatDate, formatNumber: formatNumber, renderText: renderText, renderHtml: renderHtml,
   };
