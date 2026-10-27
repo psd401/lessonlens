@@ -87,7 +87,7 @@ The Gemini Developer API (API key) path was retired in October 2026 (the `gemini
 
 `createGeminiClient({vertexLocation, auth, fetch?})` returns `generateContent(model, body)`, which posts to `https://<vertexHost(location)>/v1/projects/<project>/locations/<location>/publishers/google/models/<model>:generateContent` with a bearer token. `vertexHost`: `global` -> `aiplatform.googleapis.com`; `us`/`eu` -> `aiplatform.<loc>.rep.googleapis.com` (keeps ML processing in that jurisdiction; the global endpoint does not); otherwise `<loc>-aiplatform.googleapis.com`.
 
-`createMetadataAuth` reads project ID and service-account access token from the Cloud Run metadata server (cached, refreshed 60 s before expiry), so no project identifier lives in source. `src/index.ts` creates one shared client, `gemini`, used by the text, chat and video routes, and `videoStorage`, which uses the same auth object for Cloud Storage.
+`createMetadataAuth` reads project ID and service-account access token from the Cloud Run metadata server (cached, refreshed 60 s before expiry), so no project identifier lives in source. `src/index.ts` creates one shared client, `gemini`, used by the text, chat and video routes, and `videoStorage`, which uses the same auth object for Cloud Storage. Vertex records each `generateContent` call in Cloud Monitoring; the operator-run [Vertex AI usage report](../operations/vertex-usage-report.md) reads those project-wide totals per model, without any per-request data.
 
 ## Environment
 

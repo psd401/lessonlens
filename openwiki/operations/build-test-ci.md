@@ -20,6 +20,7 @@ openwiki:
   test_paths:
     - CloudRunBackend/tests
     - LessonLens/LessonLensTests
+    - scripts/vertex-usage-report/report.test.ts
   invariants:
     - The backend uses bun only (never npm/npx) and CI uses frozen lockfiles.
     - CI gates must not be weakened (no removing tests, loosening gates, or allow-no-tests on backend jobs).
@@ -56,6 +57,8 @@ Suites, and the behaviour each one owns:
 - `prompt-builder.test.ts`: `analysis prompt`, `chat prompt`. It pins escaping of user content inside data tags (see [shared prompts](../backend/shared-prompts.md)); also imports the builders directly.
 - `input-limits.test.ts`: `/analyze field caps`, `/analyze/video field caps`, `/chat field caps`, `total body cap`. Real requests through the server that assert 400/413 and zero Gemini calls; see [input size limits](../backend/input-limits.md).
 
+Outside the service gate, `bun test scripts/vertex-usage-report` runs the Apps Script usage-report logic in `report.test.ts`. CI does not run it; see [Vertex AI usage report](vertex-usage-report.md).
+
 ## macOS app
 
 - Build: `xcodebuild -project LessonLens/LessonLens.xcodeproj -scheme LessonLens -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build`, then launch the Debug app and check for dyld errors.
@@ -65,9 +68,9 @@ Suites, and the behaviour each one owns:
 
 ## CI
 
-`.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds one service job, `psd-ci-cloudrun-backend`, which calls the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml` with `working-directory: CloudRunBackend`. The reference is pinned to a commit SHA (`@1aa5f5351a78b15f5c71668037f5d35b9613ae41 # v1.0.0`), not a branch, so updating the org gate is a deliberate edit of that pin. A combined job named `psd-ci` (`if: always()`, `needs` the service job) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. The former Cloudflare job is gone ([Cloudflare Worker (removed)](../backend/cloudflare-worker.md)). A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner).
+`.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds one service job, `psd-ci-cloudrun-backend`, which calls the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml` with `working-directory: CloudRunBackend`. The reference is pinned to a commit SHA (`@8c4dbb4e6ae79345ec5f56a96de522e9528e3fb4 # v1.1.0`), not a branch, so updating the org gate is a deliberate edit of that pin. A combined job named `psd-ci` (`if: always()`, `needs` the service job) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. The former Cloudflare job is gone ([Cloudflare Worker (removed)](../backend/cloudflare-worker.md)). A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner).
 
-Other workflows: `security-scan.yml` (calls org `reusable-security-scan.yml`), `license-check.yml`, `claude-review.yml`, and `openwiki-update.yml`. All org reusable references are pinned to the same SHA as the backend gate. `openwiki-update.yml` runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`) by calling the org reusable `reusable-openwiki.yml`; it shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller. `.github/dependabot.yml` configures dependency update PRs.
+Other workflows: `security-scan.yml` (calls org `reusable-security-scan.yml`), `license-check.yml`, `claude-review.yml`, and `openwiki-update.yml`. Their org reusable references share the backend gate's pin (`8c4dbb4e…`, v1.1.0), with one exception: the no-op `reusable-claude-review-skip.yml` still uses `1aa5f535…` (v1.0.0). `claude-review.yml` has two jobs: `claude-review` calls the org review for pull requests that are not from Dependabot, and `claude-review-dependabot` uses the same `claude-review` check name to call the no-op skip workflow, so Dependabot PRs still report the required check. `openwiki-update.yml` runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`) by calling the org reusable `reusable-openwiki.yml`; it shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller. `.github/dependabot.yml` configures dependency update PRs.
 
 Never weaken CI.
 
@@ -75,4 +78,6 @@ Never weaken CI.
 
 - Full Xcode build + launch: only when Swift code, project settings, entitlements, or package pins change.
 - `bun run build`: when changing imports across `../../../shared` or Dockerfile layout (see [shared prompts](../backend/shared-prompts.md)).
+- Docker image build / `gcloud` deploys: only for deployment changes ([deployment and release](deployment-and-release.md)); never as a routine check.
+./backend/shared-prompts.md)).
 - Docker image build / `gcloud` deploys: only for deployment changes ([deployment and release](deployment-and-release.md)); never as a routine check.
