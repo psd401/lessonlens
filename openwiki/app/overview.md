@@ -13,7 +13,8 @@ openwiki:
     - LessonLens/LessonLens/Core/Models/Recording.swift
     - LessonLens/LessonLens/Core/Views/ContentView.swift
     - LessonLens/LessonLens/Core/Theme/PSDTheme.swift
-  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique, Recording.finalizeInterruptedRecordings, PSDTheme.ratingColor]
+    - LessonLens/LessonLens/Core/Theme/PSDTypography.swift
+  symbols: [LessonLensApp, AppState, ServiceContainer, AppConfiguration, Recording, RecordingStatus, Transcript, Analysis, TechniqueEvaluation, Reflection, ChatSession, ChatMessage, Technique, Recording.finalizeInterruptedRecordings, PSDTheme.ratingColor, PSDFonts.registerFonts]
   test_paths:
     - LessonLens/LessonLensTests/InterruptedProcessingTests.swift
     - LessonLens/LessonLensTests/InterruptedRecordingTests.swift
@@ -100,7 +101,7 @@ erDiagram
 
 ## Theme and shared UI
 
-`Core/Theme/` holds the PSD brand layer used across feature views. `PSDTheme` (`PSDTheme.swift`) is the semantic palette: `accent` (a darker Sea Glass in light mode for WCAG AA contrast), backgrounds, feedback colors and `ratingColor(_:)`, the 1-5 scale from red through driftwood, meadow to whulge. `ratingNeedsBorder(_:)` returns true only for level 3, which would otherwise disappear on the page background. Recording and error states stay plain red by design, since they are functional rather than branded. `PSDViewModifiers.swift` provides the `psdCard()` modifier and `LessonLensLogoView`/`PSDLogoView`, which fall back to SF Symbols when the logo PNGs are missing from the bundle. The rating palette is shared by `AnalysisFeedbackView`, the PDF/Markdown export views, the [growth dashboard](growth-dashboard.md), and the self-rating and comparison views in the [reflection flow](reflection-chat-export.md).
+`Core/Theme/` holds the PSD brand layer used across feature views. `PSDTheme` (`PSDTheme.swift`) is the semantic palette: `accent` (a darker Sea Glass in light mode for WCAG AA contrast), backgrounds, feedback colors and `ratingColor(_:)`, the 1-5 scale from red through driftwood, meadow to whulge. `ratingNeedsBorder(_:)` returns true only for level 3, which would otherwise disappear on the page background. Recording and error states stay plain red by design, since they are functional rather than branded. `PSDTypography.swift` defines `PSDFonts`, whose `registerFonts()` is called once from `LessonLensApp` at launch to register the bundled Josefin Sans and Josefin Slab fonts (a font that fails to register is logged, not fatal) and provides the semantic font helpers. `PSDViewModifiers.swift` provides the `psdCard()` modifier and `LessonLensLogoView`/`PSDLogoView`, which fall back to SF Symbols when the logo PNGs are missing from the bundle. The rating palette is shared by `AnalysisFeedbackView`, the PDF/Markdown export views, the [growth dashboard](growth-dashboard.md), and the self-rating and comparison views in the [reflection flow](reflection-chat-export.md).
 
 Change notes: a new rating color or palette entry belongs in `PSDTheme`, not in a view. No automated test covers the theme; verify visually with the Debug app build (see [build, test and CI](../operations/build-test-ci.md)).
 
