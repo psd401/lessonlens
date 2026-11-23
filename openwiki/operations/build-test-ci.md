@@ -10,13 +10,12 @@ openwiki:
     - .github/workflows/psd-ci.yml
     - .github/workflows/psd-ci-jobs.yml
     - .github/workflows/security-scan.yml
-    - .github/workflows/license-check.yml
     - .github/workflows/claude-review.yml
     - .github/workflows/openwiki-update.yml
     - CloudRunBackend/package.json
     - CloudRunBackend/tests/test-env.ts
     - LessonLens/LessonLensTests
-    - CLAUDE.md
+    - AGENTS.md
   test_paths:
     - CloudRunBackend/tests
     - LessonLens/LessonLensTests
@@ -33,7 +32,7 @@ openwiki:
 
 # Build, test and CI commands
 
-Sources of truth: `CLAUDE.md` (verified commands, anti-patterns), `CloudRunBackend/package.json`, `.github/workflows/`.
+Sources of truth: `AGENTS.md` (verified commands, anti-patterns; `CLAUDE.md` imports it), `CloudRunBackend/package.json`, `.github/workflows/`.
 
 ## Backend (Bun)
 
@@ -70,7 +69,12 @@ Outside the service gate, `bun test scripts/vertex-usage-report` runs the Apps S
 
 `.github/workflows/psd-ci.yml` runs on pull requests and pushes to `main` and only calls `.github/workflows/psd-ci-jobs.yml` (`workflow_call`). That file holds one service job, `psd-ci-cloudrun-backend`, which calls the org reusable workflow `PSD401/.github/.github/workflows/reusable-psd-ci.yml` with `working-directory: CloudRunBackend`. The reference is pinned to a commit SHA (`@8c4dbb4e6ae79345ec5f56a96de522e9528e3fb4 # v1.1.0`), not a branch, so updating the org gate is a deliberate edit of that pin. A combined job named `psd-ci` (`if: always()`, `needs` the service job) fails unless every service job succeeded; because the caller job is also named `psd-ci`, the required check reports as `psd-ci / psd-ci`, so keep that naming when editing either file. The former Cloudflare job is gone ([Cloudflare Worker (removed)](../backend/cloudflare-worker.md)). A TODO in `psd-ci-jobs.yml` notes the Swift app is not covered (needs a macOS runner).
 
-Other workflows: `security-scan.yml` (calls org `reusable-security-scan.yml`), `license-check.yml`, `claude-review.yml`, and `openwiki-update.yml`. Their org reusable references share the backend gate's pin (`8c4dbb4e…`, v1.1.0), with one exception: the no-op `reusable-claude-review-skip.yml` still uses `1aa5f535…` (v1.0.0). `claude-review.yml` has two jobs: `claude-review` calls the org review for pull requests that are not from Dependabot, and `claude-review-dependabot` uses the same `claude-review` check name to call the no-op skip workflow, so Dependabot PRs still report the required check. `openwiki-update.yml` runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`) by calling the org reusable `reusable-openwiki.yml`; it shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller. `.github/dependabot.yml` configures dependency update PRs.
+Other workflows (no license-check workflow exists any more):
+
+- `security-scan.yml` runs on pull requests, pushes to `main`, a weekly schedule (`0 9 * * 1`) and manual dispatch. It calls the org `reusable-security-scan.yml` pinned to `44b7d6ee…` (v1.9.0), a different pin from the backend gate, and picks its runner from the `PSD_LINUX_RUNNER` variable (default `github`). Secret-scanning rules are in [deployment and release](deployment-and-release.md#guardrails).
+- `claude-review.yml` has two jobs. `claude-review` calls the org `reusable-claude-review.yml` (pin `8c4dbb4e…`, v1.1.0) for pull requests not from Dependabot and passes the `BEDROCK_API_KEY` secret; it grants `id-token: write` because the reusable's OIDC exchange requires it. `claude-review-dependabot` uses the same `claude-review` check name to call the no-op `reusable-claude-review-skip.yml` (pin `1aa5f535…`, v1.0.0), so Dependabot PRs still report the required check.
+- `openwiki-update.yml` runs on manual dispatch, on pushes to `main`, and weekly (`cron: "0 8 * * 1"`). It calls the org `reusable-openwiki.yml` (pin `8c4dbb4e…`) with `base_branch: main` and passes `BEDROCK_API_KEY` and `PSD_AUTOMATION_APP_PRIVATE_KEY`. It shares an `openwiki` concurrency group that cancels superseded runs, and the job needs `contents: write` and `pull-requests: write` granted by the caller.
+- `.github/dependabot.yml` configures weekly updates for GitHub Actions and for the backend's npm ecosystem, which reads `bun.lock`; minor and patch backend updates are grouped.
 
 Never weaken CI.
 

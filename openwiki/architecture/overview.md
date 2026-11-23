@@ -7,7 +7,7 @@ openwiki:
   roles: [architecture]
   change_kinds: [cross-system, privacy, api-contract]
   source_paths:
-    - CLAUDE.md
+    - AGENTS.md
     - README.md
     - LessonLens/LessonLens/App/ServiceContainer.swift
     - CloudRunBackend/src/index.ts
@@ -21,7 +21,7 @@ openwiki:
 
 # LessonLens system architecture
 
-LessonLens is a voluntary, privacy-first AI coaching tool for Peninsula School District teachers on Apple Silicon Macs: record or import a lesson, get Gemini feedback against a chosen teaching framework, reflect, and chat with a coach. It is **explicitly not an evaluation tool** (`CLAUDE.md`, `README.md`).
+LessonLens is a voluntary, privacy-first AI coaching tool for Peninsula School District teachers on Apple Silicon Macs: record or import a lesson, get Gemini feedback against a chosen teaching framework, reflect, and chat with a coach. It is **explicitly not an evaluation tool** (`AGENTS.md`, `README.md`).
 
 ## Components
 
