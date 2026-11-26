@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: write # caller must grant; org default token is read-only
       pull-requests: write
-    uses: PSD401/.github/.github/workflows/reusable-openwiki.yml@406c3d2a3881c95086e2b92981b95992e78344d8 # v1.21.0
+    uses: PSD401/.github/.github/workflows/reusable-openwiki.yml@bf041d7e251023502d143a5af3b19bdf449ac65c # v1.22.4
     with:
       base_branch: main
     secrets:
