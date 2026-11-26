@@ -14,4 +14,3 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/psd-ci-jobs.yml
-    secrets: inherit
